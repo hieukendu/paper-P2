@@ -48,7 +48,8 @@ def compact_e2_cell_count():
 
 
 def _profile_context(cfg, root):
-    profiles = load_tuning_profiles(root / cfg["tuning"]["lock_path"])
+    profile_lock = root / cfg["tuning"]["lock_path"]
+    profiles = load_tuning_profiles(profile_lock) if profile_lock.exists() else {"profiles": {}}
     key = cfg["experiment"]["profile_hash"]
     if key not in profiles["profiles"]:
         raise ValueError("TUNING_REQUIRED: specify a frozen profile hash")
@@ -62,9 +63,13 @@ def _profile_context(cfg, root):
     validate_tuning_profile({"phase": "official", "profile_hash": key,
                              "tuning_scope": profile["scope"], "input_refs": profile["inputs"],
                              "variant_id": variant, "overrides": overrides}, cfg, profiles)
-    if (cfg["dataset"]["name"], cfg["models"]["pair"], cfg["dataset"]["subset_size"]) != (
-            "fiqa", "minilm_mpnet", None):
-        raise ValueError("This runner requires full FiQA/MiniLM-MPNet; other cases need their own scope")
+    case = (cfg["dataset"]["name"], cfg["models"]["pair"], cfg["dataset"]["subset_size"])
+    if case not in {("fiqa", "minilm_mpnet", None), ("trec-covid", "minilm_mpnet", None)}:
+        raise ValueError("This runner requires a validated full FiQA or TREC-COVID MiniLM/MPNet case")
+    if case[0] == "trec-covid" and profile["scope"] != "case.trec-covid.minilm_mpnet":
+        raise ValueError("TREC-COVID official cells require the scoped T0.case profile")
+    if case[0] == "fiqa" and profile["scope"] != "core":
+        raise ValueError("FiQA official cells require the scoped T0.core profile")
     require_target_hardware(cfg, probe_hardware())
     prepared = Path(cfg["paths"]["data"]) / "processed" / cfg["dataset"]["name"]
     manifest = validate_prepared(prepared)
@@ -288,11 +293,18 @@ def _preflight_for_cell(cfg, root, profile):
     sync_path = path / "sync.json"
     sync_verified = (not cfg["sync"]["enabled"] or
                      (sync_path.exists() and read_json(sync_path).get("status") == "VERIFIED"))
-    if (summary.get("compute_status") != "COMPUTE_DONE" or
-            not sync_verified or
-            summary.get("profile_hash") != cfg["experiment"]["profile_hash"] or
-            locked.get("input_refs") != profile["inputs"] or
-            locked.get("source_hash") != source_hash(root) or
+    common = (summary.get("compute_status") == "COMPUTE_DONE" and sync_verified and
+              summary.get("profile_hash") == cfg["experiment"]["profile_hash"] and
+              locked.get("input_refs") == profile["inputs"] and
+              locked.get("source_hash") == source_hash(root))
+    if cfg["dataset"]["name"] == "trec-covid":
+        if not common or profile["scope"] != "case.trec-covid.minilm_mpnet":
+            raise ValueError("E2_PREFLIGHT_REQUIRED: TREC case profile/source/sync differ")
+        checkpoint = path / "checkpoints" / "bootstrap-op" / "checkpoint.json"
+        if not checkpoint.exists() or not read_json(checkpoint).get("complete"):
+            raise ValueError("E2_PREFLIGHT_REQUIRED: TREC case bootstrap is incomplete")
+        return path
+    if (not common or
             summary.get("checked_cells") != len(COMPACT_E2_MAPPING) * len(COMPACT_E2_MAP_SEEDS) or
             summary.get("map_seeds") != list(COMPACT_E2_MAP_SEEDS) or
             summary.get("variants") != ["primary"] or
@@ -357,7 +369,8 @@ def run_static_cell(cfg, root):
               "profile_hash": seeds["profile_hash"], "input_refs": profile["inputs"],
               "run_budget_policy": RUN_BUDGET_POLICY, "cell_role": cell_role,
               "preflight_hash": file_digest(preflight / "summary.json")}
-    run_id = (f"E2-fiqa-{cell_role}-{cfg['mapping']['kind']}-{seeds['variant']}-{cfg['scheduler']['kind']}"
+    dataset_tag = cfg["dataset"]["name"]
+    run_id = (f"E2-{dataset_tag}-{cell_role}-{cfg['mapping']['kind']}-{seeds['variant']}-{cfg['scheduler']['kind']}"
               f"-m{seeds['map_seed']}-t{seeds['traffic_seed']}-{digest(locked)[:12]}")
     run_dir = Path(cfg["paths"]["runs"]) / run_id
     run_dir.mkdir(parents=True, exist_ok=True)
@@ -471,6 +484,15 @@ def build_static_tasks(cfg, root):
         raise ValueError(f"E2 runner requires run_budget_policy={RUN_BUDGET_POLICY}")
     profile, source, _, _, _ = _profile_context(cfg, root)
     revision = digest({"source": source_hash(root), "config": redacted_config(cfg)})[:12]
+    profile_lock = root / cfg["tuning"]["lock_path"]
+    profiles = load_tuning_profiles(profile_lock) if profile_lock.exists() else {"profiles": {}}
+    case_profiles = [(profile_hash, entry) for profile_hash, entry in profiles["profiles"].items()
+                     if entry.get("scope") == "case.trec-covid.minilm_mpnet"
+                     and entry.get("inputs", {}).get("dataset") == "trec-covid"
+                     and entry.get("inputs", {}).get("pair") == "minilm_mpnet"]
+    trec_profile_hash, trec_profile = (case_profiles[0] if len(case_profiles) == 1 else (None, None))
+    trec_revision = digest({"source": source_hash(root), "config": redacted_config(cfg),
+                            "trec_profile_hash": trec_profile_hash})[:12]
     preflight_id = f"E2.exact.preflight.{revision}"
     dependencies = []
     state_path = Path(cfg["paths"]["state"]) / "tasks.json"
@@ -518,9 +540,14 @@ def build_static_tasks(cfg, root):
                                        preflight_run=preflight_run)
         if is_trec:
             resolved["dataset"]["name"] = "trec-covid"
-            resolved["experiment"]["profile_hash"] = None
+            resolved["tuning"]["scope"] = (trec_profile["scope"] if trec_profile else
+                                               "case.trec-covid.minilm_mpnet")
+            resolved["experiment"]["profile_hash"] = trec_profile_hash
+            resolved["experiment"]["preflight_run"] = (
+                trec_profile["selections"]["source_run"] if trec_profile else None)
         dataset_tag = "trec" if is_trec else "fiqa"
-        task_id = f"E2.{dataset_tag}.{cell_role}.{kind}.{variant}.{scheduler}.m{seed}.t{traffic_seed}.{revision}"
+        task_revision = trec_revision if is_trec else revision
+        task_id = f"E2.{dataset_tag}.{cell_role}.{kind}.{variant}.{scheduler}.m{seed}.t{traffic_seed}.{task_revision}"
         overrides = {} if variant == "primary" else {
             "mapping.regional": resolved["mapping"]["regional"],
             "calibration.enabled": resolved["calibration"]["enabled"]}
@@ -543,8 +570,11 @@ def build_static_tasks(cfg, root):
             # immutable queue revision is enqueued.
             depends.append(mapping_ids[-1])
         tasks.append({**common, "task_id": task_id, "experiment": "E2", "phase": "official",
-            "config_overrides": resolved, "profile_hash": None if is_trec else cfg["experiment"]["profile_hash"],
-            "tuning_scope": profile["scope"], "input_refs": profile["inputs"] if not is_trec else {"dataset": "trec-covid"},
+            "config_overrides": resolved,
+            "profile_hash": trec_profile_hash if is_trec else cfg["experiment"]["profile_hash"],
+            "tuning_scope": trec_profile["scope"] if is_trec and trec_profile else profile["scope"],
+            "input_refs": trec_profile["inputs"] if is_trec and trec_profile else
+                          profile["inputs"] if not is_trec else {"dataset": "trec-covid"},
             "variant_id": variant, "overrides": overrides,
             "run_budget_policy": RUN_BUDGET_POLICY, "cell_role": cell_role,
             "dataset_case": "trec-covid" if is_trec else "fiqa",

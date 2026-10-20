@@ -12,7 +12,7 @@ import numpy as np
 import pyarrow as pa
 import pyarrow.parquet as pq
 
-from .config import freeze_tuning_profile, redacted_config
+from .config import freeze_tuning_profile, load_tuning_profiles, redacted_config
 from .data.prepare import open_validated_data, validate_prepared
 from .data.splits import sample_document_pools, stable_key
 from .encoders import build_encoder, model_specs, resolve_model
@@ -194,6 +194,37 @@ def run_e0(cfg, root, development_hardware=False):
 
 def build_presetup_tasks(scope, cfg, root):
     """Explicit core preparation DAG; no official experiment is launched by setup."""
+    if scope == "case.trec-covid.minilm_mpnet":
+        # TREC-COVID has a validated corpus and pinned MiniLM/MPNet smoke, but
+        # no independent development query population.  Its case T0 therefore
+        # tunes the map on document train/validation pools and explicitly
+        # transfers the already measured FiQA runtime/search settings.  The
+        # transfer is recorded in the new scoped profile; it never reuses the
+        # FiQA profile as an official dependency.
+        overrides = deepcopy(cfg)
+        overrides["dataset"]["name"] = "trec-covid"
+        overrides["models"]["pair"] = "minilm_mpnet"
+        overrides["models"]["batch_size"] = 64
+        overrides["search"]["threads"] = 8
+        overrides["execution"]["phase"] = "development"
+        overrides["execution"]["mode"] = "live_encode"
+        overrides["tuning"]["scope"] = scope
+        task = {
+            "task_id": scope,
+            "config": "configs/base.yaml",
+            "phase": "development",
+            "experiment": "T0",
+            "config_overrides": overrides,
+            "depends_on": [],
+            "measurement_mode": "exclusive",
+            "development_hardware": not cfg["execution"]["require_target"],
+            "resources": {"gpu_device": 0, "gpu_memory_gib": 2,
+                          "host_ram_gib": 8, "cpu_cores": 8,
+                          "disk_scratch_gib": 4, "io_heavy": False},
+            "priority": 95,
+        }
+        from .queue import validate_jobs
+        return validate_jobs([task])
     if scope != "core":
         raise ValueError("Scale preparation requires the MS MARCO/ORCAS adapter and E3 gate")
     if scope == "core" and (cfg["dataset"]["name"], cfg["models"]["pair"]) != ("fiqa", "minilm_mpnet"):
@@ -262,6 +293,177 @@ def estimate_experiment_time(task_specs, probes):
             "scope_limit": "No linear extrapolation of HNSW build/update or regional remap to full corpus"}
 
 
+def _run_case_trec_presetup(task, cfg):
+    """Run the scoped TREC-COVID/MiniLM-MPNet T0 case gate.
+
+    TREC-COVID has no non-test query groups in the validated release.  The
+    case gate consequently selects mapping learning rates from document
+    train/validation pools, keeps calibration explicitly data-unavailable,
+    and transfers only the FiQA runtime/search profile with a recorded
+    ``UNTUNED_TRANSFER`` status.  It still writes the common OP bootstrap
+    consumed by the exact E2 mapping cells.
+    """
+    root = Path(task["root"])
+    cfg = deepcopy(cfg)
+    cfg["execution"]["mode"] = "live_encode"
+    scope = cfg["tuning"]["scope"]
+    if scope != "case.trec-covid.minilm_mpnet":
+        raise ValueError("Unsupported scoped case presetup")
+    if (cfg["dataset"]["name"], cfg["models"]["pair"], cfg["dataset"]["subset_size"]) != (
+            "trec-covid", "minilm_mpnet", None):
+        raise ValueError("T0.case requires complete TREC-COVID and MiniLM/MPNet")
+    environment = probe_hardware()
+    require_target_hardware(cfg, environment)
+    prepared = Path(cfg["paths"]["data"]) / "processed" / "trec-covid"
+    manifest = validate_prepared(prepared)
+    smoke_path = Path(cfg["paths"]["state"]) / "model-smoke-trec-covid-minilm_mpnet.json"
+    if not smoke_path.exists():
+        raise ValueError("MODEL_SMOKE_REQUIRED: run the TREC-COVID MiniLM/MPNet smoke first")
+    specs = {role: resolve_model(spec, cfg["paths"], root)
+             for role, spec in model_specs("minilm_mpnet", root).items()}
+    smoke = read_json(smoke_path)
+    for role, spec in specs.items():
+        if (smoke.get(role, {}).get("revision") != spec["resolved_revision"] or
+                smoke.get(role, {}).get("smoke", {}).get("status") != "PASS"):
+            raise ValueError("MODEL_SMOKE_REQUIRED: TREC-COVID smoke does not match pinned revisions")
+
+    profiles = load_tuning_profiles(root / cfg["tuning"]["lock_path"])
+    transfer_candidates = [
+        (profile_hash, profile) for profile_hash, profile in profiles["profiles"].items()
+        if profile.get("scope") == "core"
+        and profile.get("inputs", {}).get("dataset") == "fiqa"
+        and profile.get("inputs", {}).get("pair") == "minilm_mpnet"
+    ]
+    if len(transfer_candidates) != 1:
+        raise ValueError("T0.case requires exactly one frozen FiQA runtime/search transfer profile")
+    transfer_hash, transfer = transfer_candidates[0]
+    runtime = transfer["selections"]["runtime"]
+    batch_size = int(runtime["batches"]["new"])
+    if cfg["models"]["batch_size"] != batch_size or cfg["search"]["threads"] != int(
+            runtime["threads"]["selected_threads"]):
+        raise ValueError("T0.case runtime settings differ from the transferred measured profile")
+    refs = {"dataset": "trec-covid", "release": manifest["release_hash"],
+            "split_hash": manifest["split_hash"], "pair": "minilm_mpnet",
+            "models": {role: {k: v for k, v in spec.items() if k != "snapshot"}
+                       for role, spec in specs.items()}, "hardware": hardware_identity(environment)}
+    locked = {"source_hash": source_hash(root), "config": redacted_config(cfg),
+              "input_refs": refs, "data_release": manifest["release_hash"],
+              "scope": scope, "runtime_transfer_profile": transfer_hash,
+              "calibration_status": "N/A_NO_DEVELOPMENT_QUERY_POPULATION"}
+    run_dir = Path(cfg["paths"]["runs"]) / f"T0-case-trec-covid-minilm_mpnet-{digest(locked)[:12]}"
+    run_dir.mkdir(parents=True, exist_ok=True)
+    if (run_dir / "summary.json").exists():
+        return finalize_run(run_dir, read_json(run_dir / "summary.json"), cfg, root)
+    write_json(run_dir / "config.lock.json", locked)
+    write_json(run_dir / "dataset_manifest.json", manifest)
+    write_json(run_dir / "environment.json", environment)
+    write_json(run_dir / "models.lock.json", refs["models"])
+    snapshot_source(root, run_dir)
+    timing = []
+    summary = {"compute_status": "FAILED", "phase": "development", "outcome": "diagnostic",
+               "target_hardware_pass": target_hardware_matches(cfg, environment),
+               "performance_claim": False, "exclusive": "unverified",
+               "case_scope": scope, "runtime_transfer": "UNTUNED_TRANSFER",
+               "calibration_status": "N/A_NO_DEVELOPMENT_QUERY_POPULATION"}
+    new_encoder = None
+    try:
+        from .data.store import DocumentStore
+        store = DocumentStore(prepared)
+        doc_ids = (prepared / "doc_ids.txt").read_text().splitlines()
+        n = len(doc_ids)
+        pools = sample_document_pools(doc_ids, cfg)
+        cache = Path(cfg["paths"]["cache"])
+        old_encoder = build_encoder(specs["old"], cfg["execution"]["device"],
+                                    int(runtime["batches"]["old"]))
+        try:
+            key = vector_cache_key(manifest, specs["old"], "old_documents")
+            with cost_scope("case_old_corpus_encode_or_cache", timing):
+                vectors = encode_corpus(store, old_encoder, cache / "vectors" / key, key)
+            old = np.empty((n, specs["old"]["dim"]), dtype=np.float32)
+            for start, values in vectors.iter_batches():
+                old[start:start + len(values)] = values
+        finally:
+            old_encoder.close()
+        new_encoder = build_encoder(specs["new"], cfg["execution"]["device"], batch_size)
+
+        def live_source(rows):
+            return new_encoder.encode_documents([doc.text for doc in store.get_documents(rows)])
+
+        accessor = PaidEmbeddingAccessor(live_source, {"train": pools["train"],
+                     "validation": pools["validation"],
+                     "backfill": set(range(n)) - set(pools["train"]) - set(pools["validation"])},
+                     n, mode="live_encode", journal=run_dir / "access-journal.json")
+        if accessor.paid:
+            raise ValueError("Interrupted case presetup has paid reads; inspect checkpoint before resume")
+        cap = len(pools["train"]) + len(pools["validation"]) + 2 * pools["cal_cap"]
+        with cost_scope("case_paid_train_validation_encode", timing):
+            y_train = accessor.request(pools["train"], "train", cap)
+            y_val = accessor.request(pools["validation"], "validation", cap)
+        with cost_scope("case_validation_lr_grid", timing):
+            selected, table = select_map_hyperparameters(
+                (old[pools["train"]], y_train), (old[pools["validation"]], y_val), cfg)
+        pq.write_table(pa.Table.from_pylist(table), run_dir / "selection.parquet")
+
+        # The TREC release has no train/dev query groups, so there is no valid
+        # calibration proposal.  The common OP bootstrap remains exact and
+        # records an identity/insufficient calibration state for E2 reuse.
+        candidate = deepcopy(cfg)
+        candidate["mapping"]["kind"] = "op"
+        candidate["search"]["backend"] = "exact"
+        with cost_scope("case_bootstrap_op", timing):
+            state = bootstrap_migration(doc_ids, pools, old, accessor, candidate,
+                                        calibration_queries=None, fixed_calibration_pools=None)
+        checkpoint = emit_checkpoint(state, run_dir / "checkpoints", "bootstrap-op", digest(locked))
+        restored_accessor = PaidEmbeddingAccessor(live_source, accessor.roles, n, mode="live_encode")
+        restored = restore_migration(checkpoint, old, restored_accessor, candidate, digest(locked))
+        probe_queries = state.index.vectors[:min(8, n)]
+        restored_pass = (np.array_equal(state.index.vectors, restored.index.vectors) and
+                         np.array_equal(state.index.search(probe_queries).rows,
+                                        restored.index.search(probe_queries).rows))
+        if not restored_pass:
+            raise ValueError("T0.case checkpoint restore differs from the live bootstrap")
+        write_json(run_dir / "timing.json", {"records": timing,
+                   "old_encoder_original_cache_cost": vectors.manifest["encoder_cost"],
+                   "new_encoder": dict(new_encoder.cost), "performance_claim": False,
+                   "exclusive": "unverified", "runtime_transfer_profile": transfer_hash})
+        estimate = {"scope": scope, "case": "trec-covid/minilm_mpnet",
+                    "runtime_transfer": {"profile_hash": transfer_hash, "status": "UNTUNED_TRANSFER"},
+                    "calibration": {"status": "N/A_NO_DEVELOPMENT_QUERY_POPULATION"},
+                    "required_cells": 3, "full_case_old_encode": "measured_in_timing.json",
+                    "official_mapping_compute": "unmeasured", "performance_claim": False,
+                    "concurrency": 1}
+        write_json(run_dir / "estimate.json", estimate)
+        selections = {"map": selected, "search": transfer["selections"]["search"],
+                      "ann_status": "UNTUNED_TRANSFER", "runtime": runtime,
+                      "correctness_pass": True, "local_restore_pass": True,
+                      "target_hardware_pass": target_hardware_matches(cfg, environment),
+                      "timing_ref": f"{run_dir.name}/timing.json",
+                      "estimate_ref": f"{run_dir.name}/estimate.json",
+                      "source_run": run_dir.name, "lr_selection": cfg["tuning"]["policy_version"],
+                      "case_calibration": "N/A_NO_DEVELOPMENT_QUERY_POPULATION",
+                      "runtime_transfer_profile": transfer_hash}
+        if source_hash(root) != locked["source_hash"]:
+            raise ValueError("SOURCE_CHANGED_DURING_RUN")
+        profile_hash = freeze_tuning_profile(scope, selections, refs, cfg, root)
+        write_json(run_dir / "tuning_profile.json", {"profile_hash": profile_hash, "scope": scope,
+                                                    "selections": selections, "inputs": refs})
+        np.savez(run_dir / "accessed_ids.npz", train=pools["train"], validation=pools["validation"],
+                 paid=np.array(accessor.order))
+        summary.update(compute_status="COMPUTE_DONE", profile_hash=profile_hash,
+                       local_restore="PASS", documents=n, paid_documents=len(accessor.paid),
+                       ann_status="UNTUNED_TRANSFER", map_selection=selected,
+                       runtime_transfer_profile=transfer_hash)
+    except Exception as exc:
+        summary.update(error_type=type(exc).__name__,
+                       reason=str(exc) if isinstance(exc, ValueError) else "See local worker output")
+        if not (run_dir / "timing.json").exists():
+            write_json(run_dir / "timing.json", {"records": timing, "performance_claim": False})
+    finally:
+        if new_encoder is not None:
+            new_encoder.close()
+    return finalize_run(run_dir, summary, cfg, root)
+
+
 def run_presetup(task, inputs, cfg):
     """Tune on paid document pools and Q_tune; never construct a test evaluator."""
     root = Path(task["root"])
@@ -269,7 +471,7 @@ def run_presetup(task, inputs, cfg):
     cfg["execution"]["mode"] = "live_encode"
     scope = cfg["tuning"]["scope"]
     if scope != "core":
-        raise ValueError("Only T0.core is integrated; case/scale profiles must not be certified yet")
+        return _run_case_trec_presetup(task, cfg)
     environment = probe_hardware()
     require_target_hardware(cfg, environment)
     dataset, pair = cfg["dataset"]["name"], cfg["models"]["pair"]
