@@ -213,13 +213,19 @@ def _prepare_orcas(name, cfg, root, spec):
             db.execute("create table source_queries(qid text primary key, text text not null, normalized_text text not null, group_id text not null, conflict integer not null default 0)")
             db.execute("create table raw_edges(qid text not null, did text not null, primary key(qid,did))")
             raw_records = 0
+            empty_query_records = 0
             source_rows, edge_rows = [], []
             with gzip.open(raw_file, "rt", encoding="utf-8", newline="") as stream:
                 for line in stream:
                     fields = line.rstrip("\r\n").split("\t")
-                    if len(fields) != 4 or not all(fields[:3]):
+                    # ORCAS contains legitimate records whose query text is
+                    # empty (the source registry still counts these rows and
+                    # query IDs). Preserve those records for auditability;
+                    # qid and document ID remain required join keys.
+                    if len(fields) != 4 or not fields[0] or not fields[2]:
                         raise ValueError("Invalid ORCAS row schema")
                     qid, query, did, _url = fields
+                    empty_query_records += not bool(query)
                     normalized = normalize_query(query)
                     gid = __import__("hashlib").sha256(normalized.encode()).hexdigest()
                     source_rows.append((qid, query, normalized, gid))
@@ -274,6 +280,7 @@ def _prepare_orcas(name, cfg, root, spec):
         _empty_qrels(stage / "qrels.parquet")
         counts = {"documents": docs_manifest["counts"]["documents"], "raw_records": raw_records,
                   "records": raw_records, "source_query_ids": source_query_ids,
+                  "empty_query_records": empty_query_records,
                   "query_groups": len(group_ids), "eligible_groups": len(ordered),
                   "excluded_dev_groups": excluded_group_count, "unique_edges": unique_edges,
                   "missing_documents": missing_documents, "duplicate_edges": duplicate_edges,
@@ -287,7 +294,8 @@ def _prepare_orcas(name, cfg, root, spec):
                                "license": spec["license"], "file": {"bytes": raw_file.stat().st_size,
                                "sha256": file_digest(raw_file), "source_md5": spec["md5"]}},
                     "counts": counts, "files": _artifact_manifest(stage),
-                    "split_hash": digest(roles), "row_policy": "group-and-document-row-v1",
+                    "split_hash": digest(roles),
+                    "row_policy": "group-and-document-row-v2-empty-query-preserved",
                     "documents_release_hash": docs_manifest["release_hash"]}
         manifest["release_hash"] = digest(manifest)
         write_json(stage / "manifest.json", manifest)
