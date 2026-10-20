@@ -244,7 +244,12 @@ def _prepare_orcas(name, cfg, root, spec):
             if conflict:
                 raise ValueError(f"ORCAS has {conflict} conflicting source query IDs")
             db.execute("create table groups(group_id text primary key, normalized_text text not null, text text not null, representative_id text not null, source_count integer not null, excluded_dev integer not null default 0)")
-            db.execute("insert into groups select group_id, min(normalized_text), (select s2.text from source_queries s2 where s2.group_id=s.group_id order by s2.qid limit 1), min(qid), count(*), 0 from source_queries s group by group_id")
+            # Aggregate once, then join the representative query by its primary
+            # key.  A correlated scan over source_queries is quadratic when
+            # ORCAS contains millions of mostly-unique normalized groups.
+            db.execute("create index source_queries_group_qid on source_queries(group_id, qid)")
+            db.execute("create temporary table group_summary as select group_id, min(normalized_text) normalized_text, min(qid) representative_id, count(*) source_count from source_queries group by group_id")
+            db.execute("insert into groups select g.group_id, g.normalized_text, s.text, g.representative_id, g.source_count, 0 from group_summary g join source_queries s on s.qid=g.representative_id")
             db.executemany("update groups set excluded_dev=1 where normalized_text=?", ((value,) for value in excluded_norm))
             excluded_group_count = db.execute("select count(*) from groups where excluded_dev=1").fetchone()[0]
             db.execute("attach database ? as docsdb", (str(docs_path / "lookup.sqlite"),))
