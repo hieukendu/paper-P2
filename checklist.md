@@ -124,6 +124,7 @@ Completed-run expectation audit against `expect.md`:
 - `T0-core-fiqa-b9698dc39c17`: bounded core tuning, restore and ANN fidelity pass; selected profile is frozen and remotely verified. Classification: **KHỚP** within T0.core scope; full T0 and scale/case gates remain open.
 - `E2_PREFLIGHT-fiqa-889d06a882c6`: all 45 exact bootstrap cells, fixed 25% restore and no-test-label constraint pass (`test_results_opened=false`); classification **KHỚP** with the preflight contract, not an E2 quality result.
 - `E2-fiqa-residual_mlp-primary-greedy-m17-t101-0b0e24d75fc0`: `RUNNING`; classification **ĐANG CHẠY**, so no quality expectation claim is made until the run reaches a valid terminal state.
+- `msmarco-docs-v1` preparation attempt 1: the raw corpus reached all 3,213,835 documents and the downloaded files passed gzip/SHA256 checks, but validation observed 5,193 unique qid/doc qrels while the old registry expected 5,478. Classification: **KHÔNG KHỚP** for this attempt because `expect.md` E4 requires source counts to match the manifest; no release was published. The failure is preserved in `state/msmarco-prepare-attempt-1.json`. Corrective registry commit `8aca6bf` records the verified 5,193-row artifact and a fresh validation is now `RUNNING`; ORCAS remains correctly `BLOCKED` until MS MARCO is validated.
 <!-- expect-audit:end -->
 
 ## Ghi chú ngắn
@@ -201,7 +202,7 @@ HotpotQA full validation PASSED:5,233,329 documents,97,844 unique query groups f
 <!-- live-official-check:end -->
 
 <!-- live-scale-check:begin -->
-Live scale check (2026-10-20 17:10 UTC+7): MS MARCO document-v1 ingest is `RUNNING`; the source-order temp store has 3,156,037 document IDs out of the registry target 3,213,835 (98.20%), with query/qrel join and manifest validation still pending. The ORCAS watcher is alive but gated on a `VALIDATED` MS MARCO manifest; no unvalidated scale release is published.
+Live scale check (2026-10-20 17:12 UTC+7): MS MARCO document-v1 preparation attempt 1 reached 3,213,835/3,213,835 documents but terminated `FAILED` on the old registry qrel count (observed 5,193, expected 5,478); no unvalidated release was published. The corrective input registry is committed as `8aca6bf`, and validation attempt 2 is now `RUNNING` against the verified 5,193-row artifact. ORCAS is `BLOCKED` on the failed dependency and will only start after a `VALIDATED` MS MARCO manifest.
 <!-- live-scale-check:end -->
 
 <!-- e1-verification:begin -->
