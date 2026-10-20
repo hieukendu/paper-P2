@@ -64,6 +64,7 @@ At the user's request, GitHub and all **project** Hugging Face repositories are 
 - [Code and pull request](https://github.com/hieukendu/paper-P2/pull/1)
 - [Validated FiQA, 57,638 documents](https://huggingface.co/datasets/deadgod3005/mixindex-data-fiqa)
 - [Validated TREC-COVID, 171,332 documents](https://huggingface.co/datasets/deadgod3005/mixindex-data-trec-covid)
+- [Validated NQ, 2,681,468 documents](https://huggingface.co/datasets/deadgod3005/mixindex-data-nq)
 - [Run artifacts and catalog](https://huggingface.co/datasets/deadgod3005/mixindex-runs-001)
 
 `sync.private: false` also applies to new project repositories. Prepared releases retain
@@ -76,11 +77,42 @@ completion markers; local copies remain intact.
 ```bash
 mixindex data publish --dataset fiqa
 mixindex data publish --dataset trec-covid
+mixindex data prepare --dataset nq
+mixindex data publish --dataset nq
 mixindex sync self-test
 mixindex sync --pending
 mixindex restore --receipt runs/RUN_ID/sync.json --output restored/RUN_ID
 mixindex status
 ```
+
+The reviewed BEIR publication recipes also cover HotpotQA and FEVER after their full
+input validation. New publications serialize documents into bounded Parquet files with
+explicit source row IDs. A complete read-back must reconstruct the canonical local
+document JSONL SHA256 before upload. Query/qrel joins, query roles, source attribution,
+upstream license revision and official archive MD5 remain attached to the release.
+MS MARCO and ORCAS use a separate scale publication recipe: the publisher requires a
+`VALIDATED` manifest, rechecks the raw source checksums, preserves the MS MARCO
+source-order corpus in bounded Parquet files, keeps ORCAS traffic/query tables separate,
+and verifies every uploaded file plus `COMPLETED.json` before recording a receipt. The
+scale commands are:
+
+```bash
+mixindex data publish --dataset msmarco-docs-v1
+mixindex data publish --dataset orcas
+```
+
+Publish MS MARCO before ORCAS because the ORCAS card records the exact MS MARCO
+document release it references. These releases retain source terms and attribution;
+the generated card does not make an independent redistribution-license claim.
+
+The original BGE-M3 snapshot publishes PyTorch binary weights. The resolver verifies
+the pinned upstream LFS SHA256, rejects unreviewed pickle globals, loads only tensors
+with `weights_only=True`, and creates a separate safetensors snapshot. Every converted
+tensor must match exactly, and all local snapshot files are checksummed on reuse.
+Original downloads remain intact. CPU document/query smoke and manual dense CLS
+reference checks passed for BGE base/M3; a matching H100 runtime/tuning profile is
+still required before official BGE cells. Nomic snapshots are downloaded for adapter
+review; custom model code remains disabled until that review is implemented.
 
 `scripts/ci-tests.yml` is an inactive GitHub Actions template: the available GitHub token
 lacks the workflow scope needed to publish `.github/workflows/`. Local validation does
