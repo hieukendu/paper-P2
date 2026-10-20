@@ -201,7 +201,7 @@ HotpotQA full validation PASSED:5,233,329 documents,97,844 unique query groups f
 <!-- live-official-check:end -->
 
 <!-- live-scale-check:begin -->
-Live scale check (2026-10-20 17:08 UTC+7): MS MARCO document-v1 ingest is `RUNNING`; the source-order temp store has 2,936,223 document IDs out of the registry target 3,213,835 (91.36%), with query/qrel join and manifest validation still pending. The ORCAS watcher is alive but gated on a `VALIDATED` MS MARCO manifest; no unvalidated scale release is published.
+Live scale check (2026-10-20 17:10 UTC+7): MS MARCO document-v1 ingest is `RUNNING`; the source-order temp store has 3,156,037 document IDs out of the registry target 3,213,835 (98.20%), with query/qrel join and manifest validation still pending. The ORCAS watcher is alive but gated on a `VALIDATED` MS MARCO manifest; no unvalidated scale release is published.
 <!-- live-scale-check:end -->
 
 <!-- e1-verification:begin -->
