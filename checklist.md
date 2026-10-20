@@ -92,7 +92,6 @@ Agent/runner cập nhật block sau mỗi run hoặc sync transition. Checkbox c
 
 <!-- progress:begin -->
 
-
 - [x] E1-debug-fiqa-e690dfc90eb5 — compute=COMPUTE_DONE; sync=VERIFIED; outcome=diagnostic; HF=https://huggingface.co/datasets/deadgod3005/mixindex-runs-001/tree/fd22a0a96e1a3c652a40186072f61aa6ead3585b/runs/E1-debug-fiqa-e690dfc90eb5/4c7aba85abcbf74d3f6c2037b0709ea6742c0b48816243875ea24f35bc3898ab
 - [x] E1-debug-fiqa-182b57d9b856 — compute=COMPUTE_DONE; sync=VERIFIED; outcome=diagnostic; HF=https://huggingface.co/datasets/deadgod3005/mixindex-runs-001/tree/948532f0f5a98bd5fcd9f24814969cc1650025aa/runs/E1-debug-fiqa-182b57d9b856/85ab2017880d55da613d1a6dfa415953e073a4fc9d28b68a7158285cfeefd5c0
 - [x] CORE_SMOKE-debug-fiqa-f661ce715552 — compute=COMPUTE_DONE; sync=VERIFIED; outcome=diagnostic; HF=https://huggingface.co/datasets/deadgod3005/mixindex-runs-001/tree/95570d2f2f91d5e22b86ffff8b06dd91c3e2439d/runs/CORE_SMOKE-debug-fiqa-f661ce715552/a03c1418cfb58ac955b4f6e937da2ca8220b358dabd95637ad4ec6031cdd2c99
@@ -107,8 +106,8 @@ Agent/runner cập nhật block sau mỗi run hoặc sync transition. Checkbox c
 - [x] T0-core-fiqa-b9698dc39c17 — compute=COMPUTE_DONE; sync=VERIFIED; outcome=diagnostic; HF=https://huggingface.co/datasets/deadgod3005/mixindex-runs-001/tree/713b740869cbd2d695a2386abfbbffd2cb270764/runs/T0-core-fiqa-b9698dc39c17/b70b9f54756ecb6e157b800273ed3940d9ad03ff93c224de098593f804c9a61c
 - [x] E2_PREFLIGHT-fiqa-889d06a882c6 — compute=COMPUTE_DONE; sync=VERIFIED; outcome=diagnostic; HF=https://huggingface.co/datasets/deadgod3005/mixindex-runs-001/tree/553a9f80fdf1d95949ede7f7a7961c0aaab5df12/runs/E2_PREFLIGHT-fiqa-889d06a882c6/c756ac540b91168ab560d8ac6a65159171d59c93954876143c81fc8d57dcd104
 - [x] E2-fiqa-residual_mlp-primary-greedy-m17-t101-0b0e24d75fc0 — correctness/provenance/scope gates PASS; compute=COMPUTE_DONE; sync=VERIFIED; exact agreement=1.0; outcome=inconclusive; HF=https://huggingface.co/datasets/deadgod3005/mixindex-runs-001/tree/da28eea4ec888713116a3fb3fe63881c5c5f7faa/runs/E2-fiqa-residual_mlp-primary-greedy-m17-t101-0b0e24d75fc0/e3b6e73c640f676f378c7ce4bc9d8001c59d9fb91f2a39d2d86d9932a0b64f22
-- [ ] E2-fiqa-la-diagonal-random-m29-t101-b25fae438a16 — compute=RUNNING; sync=NOT_READY; outcome=inconclusive; HF=pending
 - [x] E2-fiqa-la-diagonal-random-m17-t101-db4ac5ad0130 — compute=COMPUTE_DONE; sync=VERIFIED; outcome=inconclusive; HF=https://huggingface.co/datasets/deadgod3005/mixindex-runs-001/tree/28dfa53e72a08511e4c5b9e9767f39395018a37e/runs/E2-fiqa-la-diagonal-random-m17-t101-db4ac5ad0130/ac90e259759ac3228d51c2b006c6847ec570126f8a68b346dbdb1f8e1d484386
+- [x] E2-fiqa-la-diagonal-random-m29-t101-b25fae438a16 — compute=COMPUTE_DONE; sync=PENDING; outcome=inconclusive; HF=pending
 <!-- progress:end -->
 
 <!-- expect-audit-policy:begin -->
