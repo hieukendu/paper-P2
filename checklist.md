@@ -182,6 +182,10 @@ Live check (2026-10-20 16:51 UTC+7): official FiQA run `E2-fiqa-residual_mlp-pri
 HotpotQA full validation PASSED:5,233,329 documents,97,844 unique query groups from97,852 source IDs,7,405 test queries and14,810 test qrels; all joins and train/dev/test query roles validated. Its source-order Parquet semantic round-trip and public upload are remotely verified at `deadgod3005/mixindex-data-hotpotqa`. FEVER full validation PASSED with5,416,568 documents,6,666 test queries and7,937 test qrels; its public semantic upload is remotely VERIFIED at `deadgod3005/mixindex-data-fever` revision `f1f326e3ca213dc7ca93357492473d137769b1eb`. NQ public release is verified with complete semantic round-trip and anonymous access; BGE base/M3 CPU adapter and Nomic v1/v1.5 CPU adapter checks pass; MS MARCO/ORCAS scale ingest remains in progress.
 <!-- live-official-check:end -->
 
+<!-- live-scale-check:begin -->
+Live scale check (2026-10-20 16:58 UTC+7): MS MARCO document-v1 ingest is `RUNNING`; the committed source-order temp store has 1,750,240 document IDs out of the registry target 3,213,835, with query/qrel join and manifest validation still pending. The ORCAS watcher is alive but gated on a `VALIDATED` MS MARCO manifest; no unvalidated scale release is published.
+<!-- live-scale-check:end -->
+
 <!-- t0-threshold:begin -->
 T099% threshold clarification: **mean candidate recall@11 ≥0.99 AND serving recall@10 ≥0.99** are HNSW fidelity gates against exact retrieval over the same stored-vector snapshot on the case's Q_tune. FiQA selectedL50/ef200 achieves worst mean candidate recall@11=0.99654545 (99.65%) and worst serving recall@10=0.997 (99.70%) across OP/LA/MLP primary bootstrap snapshots. This is an ANN correctness/fidelity gate, not99% NDCG/ARR/model accuracy or proof of beating baselines. T0.core also requires finite map/validation selection, held-out/calibration/budget checks, runtime/hardware admission, checkpoint restore and immutable-profile checks; those core gates pass. Scale/other cases require their own gates; full T0 remains unticked.
 <!-- t0-threshold:end -->
