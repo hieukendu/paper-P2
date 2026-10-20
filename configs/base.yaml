@@ -70,6 +70,8 @@ experiment:
   traffic_seed: 101
   variant: primary
   profile_hash: null
+  run_budget_policy: compact_v1
+  cell_role: mapping
   preflight_run: null
 execution:
   phase: development

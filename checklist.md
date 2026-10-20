@@ -1,6 +1,6 @@
 # Tiến độ setup và chạy thí nghiệm MixIndex
 
-Checklist ở gốc project, bên ngoài `codex/`; dùng `PROJECT_ROOT/checklist.md` trên server. Target corrected by the user: **H100 80GB in this workspace**; A100 was a typo. Cgroup limit: 250GiB RAM / 16 CPU cores. FiQA and TREC-COVID validated releases and run bundles are public. E0 and E1 correctness have passed on H100; E1 exact completion and resumed prefix both match. The serial T0.core queue is running; shared-device timing is not an exclusive performance claim.
+Checklist ở gốc project, bên ngoài `codex/`; dùng `PROJECT_ROOT/checklist.md` trên server. Target corrected by the user: **H100 80GB in this workspace**; A100 was a typo. Cgroup limit: 250GiB RAM / 16 CPU cores. FiQA and TREC-COVID validated releases and run bundles are public. E0, E1 và T0.core correctness/profile gates đã qua trên H100; shared-device timing vẫn không phải exclusive performance claim. Ma trận chính đã khóa thành `compact_v1`; queue E2 factorial cũ đã dừng và được đánh dấu superseded, queue compact mới đã lập nhưng chưa mở worker mới.
 
 ## Chuẩn bị tài liệu và đọc protocol
 
@@ -23,6 +23,7 @@ Checklist ở gốc project, bên ngoài `codex/`; dùng `PROJECT_ROOT/checklist
 - [ ] M12 — Meaningful tests và acceptance gates.
 - [ ] M13 — CLI wiring/runbook end-to-end; progress.py cập nhật đúng file này.
 - [ ] M14 — Scoped pre-setup, bounded tuning/forecast, immutable profiles và gate trước official.
+- [x] M15 — `compact_v1` run budget đã được khóa trong `codex/15_run_budget.md`, runner và jobs manifest.
 
 ## Pre-setup và tuning trước nhóm thí nghiệm phụ thuộc
 
@@ -54,10 +55,10 @@ Runner cập nhật dự báo từ số đo thực tế. FiQA đã có timing de
 |---|---|
 | E2 FiQA greedy development, bootstrap→10% accessed | ĐÃ ĐO:375.42s ≈6 phút15 giây; cùng57,638 docs/4,400 scheduling queries, shared H100 |
 | E2 FiQA greedy development,10%→25% accessed | ĐÃ ĐO:844.38s ≈14 phút04 giây; tổng hai chặng≈20 phút19 giây, chưa gồm full100%/official evaluation/upload |
-| E2 FiQA cell chính thức đầu tiên, đến100% true | ĐANG CHẠY từ2026-10-20 khoảng16:10 UTC+7; thời gian full-cell CHƯA ĐO, chưa chốt ETA. Encode/reference cache ban đầu là chi phí dùng chung, ghi riêng |
-| E2 FiQA:102 unique official cells | CHƯA ĐỦ SỐ ĐỂ CHỐT ngày xong; cần full-cell timing theo từng scheduler/variant và chi phí dùng chung. Concurrency hiện1; không coi102 cells có cùng chi phí |
+| E2 compact preflight + cell đầu tiên | ĐÃ DỪNG để đổi policy; artifact pilot cũ vẫn giữ local/HF nhưng không tính vào compact aggregate. Preflight compact mới chưa chạy. |
+| E2 compact_v1:24 required cells | ĐÃ LẬP QUEUE: FiQA mapping9 + FiQA scheduler12 + TREC mapping3; 1 preflight diagnostic mới và TREC giữ dependency T0.case. Worker E2 cũ đã dừng; ETA chưa chốt vì cell compact mới chưa có timing. |
 | E2 TREC/E3/T0.scale | CHƯA ĐO; cần đúng-case gates và implementation tương ứng |
-| E5:60 cells tới10% accessed | CHƯA ĐO; shared encode/cache + per-cell costs, refine tại E4 full bootstrap |
+| E5:12 primary cells tới10% accessed (+ tối đa4 sensitivity) | CHƯA ĐO; shared encode/cache + per-cell costs, refine tại E4 full bootstrap |
 | E5:continuation25/50/100% true | CHƯA ĐO; forecast riêng refit/remap/update/checkpoint, không cộng thêm100% scheduled |
 | E7:20 dataset/model cases và eligible schedulers | CHƯA ĐO; cần đúng-case token/runtime profiles và actual task counts |
 | E6:AOL recovery + temporal replay | CHƯA ĐO; source/recovery time riêng, unavailable ghi BLOCKED_DATA |
@@ -73,17 +74,17 @@ Tick compute khi mọi required cells/gates đã hoàn tất hợp lệ. Tick sy
 - [x] E0.sync — Setup outputs + tiny round-trip đã verified trên HF.
 - [x] E1.compute — Exact smoke, budget/leakage/resume và100% true agreement.
 - [x] E1.sync — Run outputs/learned states đã sync verified.
-- [ ] E2.compute — FiQA/TREC mapping/pilot và required seed cells hoàn tất.
+- [ ] E2.compute — `compact_v1`: FiQA mapping9 + FiQA scheduler12 + TREC mapping3 hoàn tất; preflight/gates chưa chạy lại.
 - [ ] E2.sync — Pilot outputs/weights/checkpoints đã sync verified.
-- [ ] E3.compute — HNSW fidelity/update/lock/cadence/systems measurements hoàn tất.
+- [ ] E3.compute — 6 systems tasks theo `compact_v1`: exact/HNSW, cadence, synchronized serving và save/load recovery.
 - [ ] E3.sync — Config/measurements/index artifacts cần thiết đã sync verified.
-- [ ] E4.compute — MS MARCO subset/ORCAS probes + actual full-bootstrap stored-graph fidelity/footprint và forecast qua scale gate.
+- [ ] E4.compute — 3 tasks theo `compact_v1`: subset probe, actual full-bootstrap stored-graph gate và restore/footprint.
 - [ ] E4.sync — Subset IDs/probes/outputs đã sync verified.
-- [ ] E5.compute — Full-corpus static cells/contrasts và required checkpoints tới100% true hoàn tất.
+- [ ] E5.compute — Full-corpus 12 primary cells và required checkpoints tới100% true hoàn tất; sensitivity không chặn stage.
 - [ ] E5.sync — All required primary states/results đã sync verified.
 - [ ] E6.compute — Recovered AOL temporal study8 tuần/7 decisions và coverage hợp lệ.
 - [ ] E6.sync — Temporal states/metrics/coverage artifacts đã sync verified.
-- [ ] E7.compute —20 BEIR/model mapping cases, eligible schedulers và required baselines hoàn tất.
+- [ ] E7.compute —20 representative compact cells theo M15 và required baselines hoàn tất.
 - [ ] E7.sync — Matrix weights/results/aggregate tables đã sync verified.
 
 ## Run đang chạy và run đã xong
@@ -104,14 +105,6 @@ Agent/runner cập nhật block sau mỗi run hoặc sync transition. Checkbox c
 - [x] CORE_SMOKE-fiqa-04985698e65b — compute=COMPUTE_DONE; sync=VERIFIED; outcome=diagnostic; HF=https://huggingface.co/datasets/deadgod3005/mixindex-runs-001/tree/9103f78a6944a6f1b88c2501e14a68a0c830a62b/runs/CORE_SMOKE-fiqa-04985698e65b/01533d0572b302b6596ffa9cf168fa53f44e899fd3e39b7e1bffc5ef377f0cc0
 - [x] RUNTIME_PROBE-fiqa-minilm_mpnet-80c49dd823f1 — compute=COMPUTE_DONE; sync=VERIFIED; outcome=diagnostic; HF=https://huggingface.co/datasets/deadgod3005/mixindex-runs-001/tree/1d0d33e09676772e0bcf00e9921f7cf0615b2336/runs/RUNTIME_PROBE-fiqa-minilm_mpnet-80c49dd823f1/7209256bb4a77465a93821272a57a6180aeb0973b83927f5ac5a55af6ab6bf21
 - [x] T0-core-fiqa-b9698dc39c17 — compute=COMPUTE_DONE; sync=VERIFIED; outcome=diagnostic; HF=https://huggingface.co/datasets/deadgod3005/mixindex-runs-001/tree/713b740869cbd2d695a2386abfbbffd2cb270764/runs/T0-core-fiqa-b9698dc39c17/b70b9f54756ecb6e157b800273ed3940d9ad03ff93c224de098593f804c9a61c
-- [x] E2_PREFLIGHT-fiqa-889d06a882c6 — compute=COMPUTE_DONE; sync=VERIFIED; outcome=diagnostic; HF=https://huggingface.co/datasets/deadgod3005/mixindex-runs-001/tree/553a9f80fdf1d95949ede7f7a7961c0aaab5df12/runs/E2_PREFLIGHT-fiqa-889d06a882c6/c756ac540b91168ab560d8ac6a65159171d59c93954876143c81fc8d57dcd104
-- [x] E2-fiqa-residual_mlp-primary-greedy-m17-t101-0b0e24d75fc0 — correctness/provenance/scope gates PASS; compute=COMPUTE_DONE; sync=VERIFIED; exact agreement=1.0; outcome=inconclusive; HF=https://huggingface.co/datasets/deadgod3005/mixindex-runs-001/tree/da28eea4ec888713116a3fb3fe63881c5c5f7faa/runs/E2-fiqa-residual_mlp-primary-greedy-m17-t101-0b0e24d75fc0/e3b6e73c640f676f378c7ce4bc9d8001c59d9fb91f2a39d2d86d9932a0b64f22
-- [x] E2-fiqa-la-diagonal-random-m17-t101-db4ac5ad0130 — compute=COMPUTE_DONE; sync=VERIFIED; outcome=inconclusive; HF=https://huggingface.co/datasets/deadgod3005/mixindex-runs-001/tree/28dfa53e72a08511e4c5b9e9767f39395018a37e/runs/E2-fiqa-la-diagonal-random-m17-t101-db4ac5ad0130/ac90e259759ac3228d51c2b006c6847ec570126f8a68b346dbdb1f8e1d484386
-- [x] E2-fiqa-la-diagonal-random-m29-t101-b25fae438a16 — compute=COMPUTE_DONE; sync=VERIFIED; outcome=inconclusive; HF=https://huggingface.co/datasets/deadgod3005/mixindex-runs-001/tree/10f0de5093a47ea90df9a66474c8fe4b3b46e704/runs/E2-fiqa-la-diagonal-random-m29-t101-b25fae438a16/abc3b6dfc873c2693d70c68fdea839b87ac61bf0ccefd86ef4283be922094dfa
-- [x] E2-fiqa-la-diagonal-random-m43-t101-2fd748dab54c — compute=COMPUTE_DONE; sync=VERIFIED; outcome=inconclusive; HF=https://huggingface.co/datasets/deadgod3005/mixindex-runs-001/tree/a676cbcbb091ce42d158909e63b1da31a1d23ccc/runs/E2-fiqa-la-diagonal-random-m43-t101-2fd748dab54c/7658eab326134e8a6546215742672b6aec8e2ab4d5964e7477d7eb6271120b6f
-- [x] E2-fiqa-la-global-random-m17-t101-a263e90edbc4 — compute=COMPUTE_DONE; sync=VERIFIED; outcome=inconclusive; HF=https://huggingface.co/datasets/deadgod3005/mixindex-runs-001/tree/8a57ffcb0deaf243ba1a465377e64c5a066fb4ef/runs/E2-fiqa-la-global-random-m17-t101-a263e90edbc4/8981461218aadd678eff1a0425fe40fe3f2120584cc887c08a9814d058bbdda7
-- [x] E2-fiqa-la-global-random-m29-t101-39c15fbe39a2 — compute=COMPUTE_DONE; sync=PENDING; outcome=inconclusive; HF=pending
-- [x] E2-fiqa-la-global-random-m43-t101-62d6bca7e38c — compute=COMPUTE_DONE; sync=PENDING; outcome=inconclusive; HF=pending
 <!-- progress:end -->
 
 <!-- expect-audit-policy:begin -->
@@ -127,7 +120,7 @@ Completed-run expectation audit against `expect.md`:
 - `E1-debug-fiqa-e690dfc90eb5` and `E1-debug-fiqa-182b57d9b856`: exact completion/budget/resume diagnostics pass on development hardware, but `official_gate=false`. Classification: **KHỚP** with the debug-run role; not evidence for the H100 official gate.
 - `RUNTIME_PROBE-fiqa-minilm_mpnet-fb16c618c9df` and `RUNTIME_PROBE-fiqa-minilm_mpnet-80c49dd823f1`: finite/norm/agreement/headroom checks and target-hardware checks pass; exclusivity is explicitly unverified. Classification: **KHỚP** with the development timing-probe expectation, not an exclusive performance claim.
 - `T0-core-fiqa-b9698dc39c17`: bounded core tuning, restore and ANN fidelity pass; selected profile is frozen and remotely verified. Classification: **KHỚP** within T0.core scope; full T0 and scale/case gates remain open.
-- `E2_PREFLIGHT-fiqa-889d06a882c6`: all 45 exact bootstrap cells, fixed 25% restore and no-test-label constraint pass (`test_results_opened=false`); classification **KHỚP** with the preflight contract, not an E2 quality result.
+- `E2_PREFLIGHT-fiqa-889d06a882c6`: historical preflight with 45 exact bootstrap variants passed and is preserved as a superseded diagnostic artifact. It is not counted in `compact_v1`; the replacement compact preflight has 9 mapping checks and is still pending.
 - `E2-fiqa-residual_mlp-primary-greedy-m17-t101-0b0e24d75fc0`: terminal compute and remote bundle verification pass; 57,638/57,638 documents were completed with exact agreement 1.0, 57,638 unique paid IDs, six checkpoints, 5,184 finite metric rows over 648 evaluation queries, and no zero-IDCG rows. The run has 39 greedy selections and 55,579 fallback selections, so its quality outcome is `inconclusive` and `performance_claim=false`; classification **KHỚP** with E2's valid pilot/correctness role, without a positive scheduler-quality claim.
 - `msmarco-docs-v1` validated release `200a19df9868ff31a18cf860cf4e05ff71e8ff76db8b671b229cba117374ce68`: `status=VALIDATED`; counts are 3,213,835 documents, 5,193 grouped judged-dev queries and 5,193 qrels, with zero duplicate documents/qrels and every qrel joined to the document store. The source archive SHA256 values and split hash are recorded in `data/processed/msmarco-docs-v1/manifest.json`. Classification: **KHỚP** for the MS MARCO input-validation subgate in `expect.md`; E4 timing/throughput and ORCAS gates remain separate.
 <!-- expect-audit:end -->
@@ -158,11 +151,11 @@ User notification requirement: announce explicitly when the relevant T0 optimiza
 
 FiQA core optimization compute finished: batch64 both encoders, LR0.001 LA/MLP, HNSW L50/ef200. Worst mean candidate recall@11 across OP/LA/MLP is0.996545; worst serving recall@10 is0.997. All local bootstrap restores passed. The development preflight passed and the first official FiQA E2 cell is now running against this immutable profile. T0.scale/case remain pending.
 
-Official FiQA exact E2 runner passed its integration checks; 66 tests, Ruff and dependency checks pass. Planned comparison:45 map/variant/seed cells plus60 primary scheduler cells with3 duplicate random cells reused (102 unique official cells). One exact development preflight checks all45 bootstrap variants/seeds, then the fixed greedy development trajectory to10%/25% before test relevance is opened. The fixed first official cell is now running; the remaining cells are gated on its technical completion.
+The compact E2 runner now passes its matrix-planning checks. `configs/jobs-compact.yaml` contains 1 compact preflight plus 24 required cells: FiQA mapping9, FiQA scheduler12 and TREC mapping3. The old 102-cell queue was canceled as `SUPERSEDED_BY_COMPACT_V1`; completed old artifacts remain on disk/HF and are excluded from the new aggregate.
 
-Completed readiness run: `E2_PREFLIGHT-fiqa-889d06a882c6` / task `E2.exact.preflight.5c3d3b7c2746`. It completed45 exact bootstrap cells with fixed calibration IDs and the predetermined greedy development prefix, passed25% checkpoint restore and is remotely VERIFIED. The fixed first official cell has started; the rest of the102-cell matrix remains gated.
+Completed historical readiness run: `E2_PREFLIGHT-fiqa-889d06a882c6` / task `E2.exact.preflight.5c3d3b7c2746` completed45 exact bootstrap cells, fixed25% restore and no-test-label checks, and is remotely VERIFIED. It is retained as superseded evidence; the new compact preflight must be run under the new source/policy revision.
 
-Preflight complete: all45 exact bootstrap cells passed across seeds17/29/43 and five variants. The fixed greedy development trajectory to10%/25% and checkpoint restore passed; no test relevance was opened by preflight.
+Historical preflight complete: all45 exact bootstrap cells passed across seeds17/29/43 and five variants, with fixed 25% restore and no test relevance opened. It is preserved as superseded evidence; compact_v1 requires a new 9-cell mapping preflight under the new source/policy revision.
 
 Scale input preparation has started independently: Arctic model snapshots are downloaded and revision-pinned; the streaming MS MARCO/ORCAS adapter now has fixture coverage and is isolated in the input worktree. MS MARCO documents v1 + ORCAS raw downloads and gzip/checksum checks are complete; full ingest/join/split validation and scale readiness remain pending.
 
@@ -183,7 +176,7 @@ Additional data: NQ raw ZIP integrity/SHA256 verification passed (`state/beir-do
 <!-- t0-download-check:end -->
 
 <!-- current-execution:begin -->
-Current execution (2026-10-20 18:06 UTC+7): the first official FiQA E2 cell is terminal and remotely VERIFIED, and the serial E2 queue has reopened. Run `E2-fiqa-residual_mlp-primary-greedy-m17-t101-0b0e24d75fc0`; full57,638-document FiQA, MiniLM→MPNet, residual MLP, primary/greedy, exact search, cached-access quality mode, map_seed17/traffic_seed101. T0.core and development preflight are compute-done and remotely VERIFIED. The cell has exact completion agreement1.0 and a valid pilot artifact; its quality outcome is inconclusive with no performance claim because positive-gain greedy selections were exhausted. One of the remaining101 official FiQA cells is now running under the single-job queue, with100 pending; scale/case stages remain incomplete.
+Current execution (2026-10-20 11:30 UTC): the old E2 queue has been stopped before further old-matrix work. Its 103 E2 records are marked `CANCELLED` with reason `SUPERSEDED_BY_COMPACT_V1`; existing completed bundles are preserved but excluded from compact aggregates. The new immutable `compact_v1` plan is queued as 1 preflight + 24 required cells (FiQA9 mapping, FiQA12 scheduler, TREC3 mapping); no E2 worker is active while the plan is being audited. T0.core remains compute/sync verified; scale/case stages remain incomplete.
 
 Measured shared-host preflight timing: to10% accessed375.42s; continuation10%→25%844.38s. Full100% cell remains unmeasured. Immutable profile stays `a38d8e8b5b27686edceb4d80ab4822d3164545b1327bc29a35db0f687b87a0e3`.
 
@@ -201,13 +194,13 @@ Input extension commit `1e00855` on `codex/input-adapters`:74 tests, Ruff and co
 Input extension is reviewable in [draft PR #2](https://github.com/hieukendu/paper-P2/pull/2), stacked on #1; head `1e00855` adds the validated MS MARCO/ORCAS scale publisher with source rechecks, bounded Parquet/traffic layouts, completion markers and remote checksum verification, plus the explicit empty-query source policy. The input branch passes 74 tests, Ruff and compile; reviewed large-BEIR publication, BGE-M3 conversion and Nomic adapters remain included. Active FiQA code remains on the immutable setup revision. The publisher is prepared but will not mark a scale release uploaded until the live MS MARCO and ORCAS manifests are `VALIDATED` and remote checksums verify.
 
 <!-- live-official-check:begin -->
-Live check (2026-10-20 18:06 UTC+7): official FiQA run `E2-fiqa-residual_mlp-primary-greedy-m17-t101-0b0e24d75fc0` reached 57,638/57,638 documents, exact completion agreement1.0, and remote `sync=VERIFIED` at the HF revision recorded above. Its six checkpoints and metric/journal integrity checks pass; the valid pilot is classified **KHỚP** with `outcome=inconclusive` and `performance_claim=false`, so no positive scheduler-quality claim is made. The next official E2 cell is running under the single-job queue and the remaining cells stay pending behind it; Cgroup memory events remain `oom=0` and `oom_kill=0`. ORCAS preparation and scale publication are still in progress.
+Live check (2026-10-20 11:30 UTC): the prior FiQA pilot bundle remains complete and remotely VERIFIED with exact completion agreement1.0, but it belongs to the superseded source/matrix revision and is retained only as historical diagnostic evidence. No compact E2 worker is active; the new preflight and 24-cell plan are pending audit/start. Cgroup memory events remain `oom=0` and `oom_kill=0`. Scale preparation/publication has a separate validation issue recorded below.
 
 HotpotQA full validation PASSED:5,233,329 documents,97,844 unique query groups from97,852 source IDs,7,405 test queries and14,810 test qrels; all joins and train/dev/test query roles validated. Its source-order Parquet semantic round-trip and public upload are remotely verified at `deadgod3005/mixindex-data-hotpotqa`. FEVER full validation PASSED with5,416,568 documents,6,666 test queries and7,937 test qrels; its public semantic upload is remotely VERIFIED at `deadgod3005/mixindex-data-fever` revision `f1f326e3ca213dc7ca93357492473d137769b1eb`. NQ public release is verified with complete semantic round-trip and anonymous access; BGE base/M3 CPU adapter and Nomic v1/v1.5 CPU adapter checks pass; MS MARCO/ORCAS scale ingest remains in progress.
 <!-- live-official-check:end -->
 
 <!-- live-scale-check:begin -->
-Live scale check (2026-10-20 17:49 UTC+7): MS MARCO document-v1 validation **PASS/KHỚP** at release `200a19df9868ff31a18cf860cf4e05ff71e8ff76db8b671b229cba117374ce68` with 3,213,835 documents, 5,193 judged-dev queries and 5,193 qrels. The validated release is now being converted/checksummed for HF publication; ORCAS preparation is `RUNNING` against this exact document release. No scale release is marked uploaded until its remote checksum and completion marker verify.
+Live scale check (2026-10-20 11:30 UTC): MS MARCO document-v1 validation remains **PASS/KHỚP** at release `200a19df9868ff31a18cf860cf4e05ff71e8ff76db8b671b229cba117374ce68` with 3,213,835 documents, 5,193 judged-dev queries and 5,193 qrels. The scale publisher currently reports `FAILED` with `Source count mismatch for test_qrels`; no HF scale release is marked uploaded. ORCAS preparation has no live worker after the previous watcher exited and must be reconciled before claiming `VALIDATED` or publishing it.
 <!-- live-scale-check:end -->
 
 <!-- e1-verification:begin -->

@@ -32,6 +32,20 @@ VARIANTS = {
     "diagonal": ("diagonal", True),
 }
 
+# The default execution policy is deliberately smaller than the factorial
+# paper matrix.  Keep this declaration next to the task builder so a config or
+# queue change cannot silently expand the official study again.
+RUN_BUDGET_POLICY = "compact_v1"
+COMPACT_E2_MAPPING = ("op", "la", "residual_mlp")
+COMPACT_E2_SCHEDULERS = ("random", "degree", "read", "greedy")
+COMPACT_E2_MAP_SEEDS = (17, 29, 43)
+COMPACT_E2_TRAFFIC_SEED = 101
+
+
+def compact_e2_cell_count():
+    return (len(COMPACT_E2_MAPPING) * len(COMPACT_E2_MAP_SEEDS)
+            + len(COMPACT_E2_SCHEDULERS) * len(COMPACT_E2_MAP_SEEDS) + len(COMPACT_E2_MAPPING))
+
 
 def _profile_context(cfg, root):
     profiles = load_tuning_profiles(root / cfg["tuning"]["lock_path"])
@@ -152,7 +166,8 @@ def run_static_preflight(cfg, root):
         raise ValueError("This preflight certifies exact E2 only; ANN variants require a separate preflight")
     locked = {"config": redacted_config(cfg), "source_hash": source_hash(root),
               "profile_hash": cfg["experiment"]["profile_hash"], "input_refs": profile["inputs"],
-              "comparison_variants": {k: list(v) for k, v in VARIANTS.items()}}
+              "run_budget_policy": RUN_BUDGET_POLICY,
+              "comparison_variants": {"primary": list(VARIANTS["primary"])}}
     run_dir = Path(cfg["paths"]["runs"]) / f"E2_PREFLIGHT-fiqa-{digest(locked)[:12]}"
     run_dir.mkdir(parents=True, exist_ok=True)
     if (run_dir / "summary.json").exists():
@@ -177,34 +192,34 @@ def run_static_preflight(cfg, root):
                 raise PermissionError("Preflight bootstrap requested an unpaid target")
             return np.stack([paid[int(row)] for row in ids])
         selected = profile["selections"]["map"]
-        for seed in cfg["evaluation"]["map_seeds"]:
-            for kind in ("op", "la", "residual_mlp"):
-                for variant in VARIANTS:
-                    candidate = _variant_config(cfg, kind, variant, selected)
-                    with cost_scope("bootstrap_and_map_restore", timings) as record:
-                        state = bootstrap_migration(doc_ids, pools, old, _accessor(paid_only, pools, n),
-                            candidate, map_seed=seed, calibration_queries=calibration,
-                            fixed_calibration_pools=fixed)
-                        path = run_dir / "checkpoints" / f"{kind}-{variant}-{seed}"
-                        path.mkdir(parents=True)
-                        save_map_state(state.M0, path / "M0.safetensors")
-                        restored_map = load_map_state(path / "M0.safetensors")
-                        if not np.array_equal(transform_global(state.M0, old[:16]),
-                                              transform_global(restored_map, old[:16])):
-                            raise ValueError("Map round-trip differs during seed preflight")
-                        if set(state.accessor.paid) != set(paid):
-                            raise ValueError("Variant changed the common bootstrap document budget")
-                        for ids in (pools["validation"], fixed["cal_fit"]["rows"], fixed["cal_check"]["rows"]):
-                            if set(map(int, ids)) & state.statistics.seen:
-                                raise PermissionError("Held-out document entered preflight regional fitting")
-                        write_json(path / "checkpoint.json", {"complete": True, "map_only": True,
-                            "files": {"M0.safetensors": file_digest(path / "M0.safetensors")}})
-                        record.update(map_kind=kind, variant=variant, map_seed=seed)
-                        rows.append({"kind": kind, "variant": variant, "map_seed": seed,
-                                     "status": "PASS", "paid_documents": len(state.accessor.paid),
-                                     "calibration_reason": state.index.calibration.reason})
-                    print(f"E2 preflight: {kind}/{variant}/seed{seed} PASS", flush=True)
-                    del state, restored_map
+        for seed in COMPACT_E2_MAP_SEEDS:
+            for kind in COMPACT_E2_MAPPING:
+                variant = "primary"
+                candidate = _variant_config(cfg, kind, variant, selected)
+                with cost_scope("bootstrap_and_map_restore", timings) as record:
+                    state = bootstrap_migration(doc_ids, pools, old, _accessor(paid_only, pools, n),
+                        candidate, map_seed=seed, calibration_queries=calibration,
+                        fixed_calibration_pools=fixed)
+                    path = run_dir / "checkpoints" / f"{kind}-{variant}-{seed}"
+                    path.mkdir(parents=True)
+                    save_map_state(state.M0, path / "M0.safetensors")
+                    restored_map = load_map_state(path / "M0.safetensors")
+                    if not np.array_equal(transform_global(state.M0, old[:16]),
+                                          transform_global(restored_map, old[:16])):
+                        raise ValueError("Map round-trip differs during seed preflight")
+                    if set(state.accessor.paid) != set(paid):
+                        raise ValueError("Variant changed the common bootstrap document budget")
+                    for ids in (pools["validation"], fixed["cal_fit"]["rows"], fixed["cal_check"]["rows"]):
+                        if set(map(int, ids)) & state.statistics.seen:
+                            raise PermissionError("Held-out document entered preflight regional fitting")
+                    write_json(path / "checkpoint.json", {"complete": True, "map_only": True,
+                        "files": {"M0.safetensors": file_digest(path / "M0.safetensors")}})
+                    record.update(map_kind=kind, variant=variant, map_seed=seed)
+                    rows.append({"kind": kind, "variant": variant, "map_seed": seed,
+                                 "status": "PASS", "paid_documents": len(state.accessor.paid),
+                                 "calibration_reason": state.index.calibration.reason})
+                print(f"E2 preflight: {kind}/{variant}/seed{seed} PASS", flush=True)
+                del state, restored_map
         # Predetermined greedy-only development timing; no test query or relevance is read.
         traffic, traffic_meta = _development_traffic(prepared, specs["new"], cfg)
         store = DocumentStore(prepared)
@@ -243,13 +258,15 @@ def run_static_preflight(cfg, root):
             "forecast_full_cell": {"kind": "unmeasured", "reason": "100% continuation not timed yet"},
             "forecast_primary_migration": {"kind": "estimated", "seconds": primary_seconds,
                 "source": "timing.json:greedy_development_to_10pct", "note": "same-case prefix, shared host"},
-            "matrix_cells": 102, "concurrency": 1, "performance_claim": False})
+            "matrix_cells": compact_e2_cell_count(), "run_budget_policy": RUN_BUDGET_POLICY,
+            "concurrency": 1, "performance_claim": False})
         if source_hash(root) != locked["source_hash"]:
             raise ValueError("SOURCE_CHANGED_DURING_RUN")
         summary.update(compute_status="COMPUTE_DONE", checked_cells=len(rows),
             profile_hash=cfg["experiment"]["profile_hash"], bootstrap_paid=initial,
             development_paid=len(state.accessor.paid), local_restore="PASS",
-            variants=list(VARIANTS), map_seeds=cfg["evaluation"]["map_seeds"],
+            variants=["primary"], map_seeds=list(COMPACT_E2_MAP_SEEDS),
+            run_budget_policy=RUN_BUDGET_POLICY,
             greedy_count=sum(e["greedy_count"] for e in result["events"]),
             fallback_count=sum(e["fallback_count"] for e in result["events"]))
     except Exception as exc:
@@ -272,9 +289,10 @@ def _preflight_for_cell(cfg, root, profile):
             summary.get("profile_hash") != cfg["experiment"]["profile_hash"] or
             locked.get("input_refs") != profile["inputs"] or
             locked.get("source_hash") != source_hash(root) or
-            summary.get("checked_cells") != 3 * len(VARIANTS) * len(cfg["evaluation"]["map_seeds"]) or
-            summary.get("map_seeds") != cfg["evaluation"]["map_seeds"] or
-            summary.get("variants") != list(VARIANTS)):
+            summary.get("checked_cells") != len(COMPACT_E2_MAPPING) * len(COMPACT_E2_MAP_SEEDS) or
+            summary.get("map_seeds") != list(COMPACT_E2_MAP_SEEDS) or
+            summary.get("variants") != ["primary"] or
+            summary.get("run_budget_policy") != RUN_BUDGET_POLICY):
         raise ValueError("E2_PREFLIGHT_REQUIRED: exact comparison source/inputs/variants/seeds differ")
     return path
 
@@ -330,10 +348,12 @@ def run_static_cell(cfg, root):
     profile, source, prepared, manifest, specs = _profile_context(cfg, root)
     preflight = _preflight_for_cell(cfg, root, profile)
     seeds = cfg["experiment"]
+    cell_role = seeds.get("cell_role", "legacy")
     locked = {"config": redacted_config(cfg), "source_hash": source_hash(root),
               "profile_hash": seeds["profile_hash"], "input_refs": profile["inputs"],
+              "run_budget_policy": RUN_BUDGET_POLICY, "cell_role": cell_role,
               "preflight_hash": file_digest(preflight / "summary.json")}
-    run_id = (f"E2-fiqa-{cfg['mapping']['kind']}-{seeds['variant']}-{cfg['scheduler']['kind']}"
+    run_id = (f"E2-fiqa-{cell_role}-{cfg['mapping']['kind']}-{seeds['variant']}-{cfg['scheduler']['kind']}"
               f"-m{seeds['map_seed']}-t{seeds['traffic_seed']}-{digest(locked)[:12]}")
     run_dir = Path(cfg["paths"]["runs"]) / run_id
     run_dir.mkdir(parents=True, exist_ok=True)
@@ -354,7 +374,8 @@ def run_static_cell(cfg, root):
     timing, events = [], []
     summary = {"compute_status": "FAILED", "phase": "official", "outcome": "inconclusive",
                "performance_claim": False, "execution_mode": "cached_access",
-               "profile_hash": seeds["profile_hash"], "preflight_run": preflight.name}
+               "profile_hash": seeds["profile_hash"], "preflight_run": preflight.name,
+               "run_budget_policy": RUN_BUDGET_POLICY, "cell_role": cell_role}
     try:
         old = _old_vectors(manifest, specs["old"], cfg)
         doc_ids = (prepared / "doc_ids.txt").read_text().splitlines()
@@ -439,8 +460,10 @@ def run_static_cell(cfg, root):
 
 
 def build_static_tasks(cfg, root):
-    """Declare the complete FiQA E2 comparison before test evaluation."""
+    """Declare the compact_v1 E2 comparison before test evaluation."""
     root = Path(root)
+    if cfg["experiment"].get("run_budget_policy") != RUN_BUDGET_POLICY:
+        raise ValueError(f"E2 runner requires run_budget_policy={RUN_BUDGET_POLICY}")
     profile, source, _, _, _ = _profile_context(cfg, root)
     revision = digest({"source": source_hash(root), "config": redacted_config(cfg)})[:12]
     preflight_id = f"E2.exact.preflight.{revision}"
@@ -464,35 +487,56 @@ def build_static_tasks(cfg, root):
     # Preflight ID is deterministic from its resolved config/source, independent of outputs.
     identity = {"config": redacted_config(preflight_cfg), "source_hash": source_hash(root),
                 "profile_hash": cfg["experiment"]["profile_hash"], "input_refs": profile["inputs"],
-                "comparison_variants": {k: list(v) for k, v in VARIANTS.items()}}
+                "run_budget_policy": RUN_BUDGET_POLICY,
+                "comparison_variants": {"primary": list(VARIANTS["primary"])}}
     preflight_run = f"E2_PREFLIGHT-fiqa-{digest(identity)[:12]}"
-    combinations = set()
-    for seed in cfg["evaluation"]["map_seeds"]:
-        for kind in ("op", "la", "residual_mlp"):
-            for variant in VARIANTS:
-                combinations.add((kind, variant, "random", seed, 101))
-        for traffic_seed in cfg["evaluation"]["traffic_seeds"]:
-            for scheduler in ("greedy", "random", "degree", "read"):
-                combinations.add(("residual_mlp", "primary", scheduler, seed, traffic_seed))
-    first = ("residual_mlp", "primary", "greedy", 17, 101)
-    ordered = [first] + sorted(combinations - {first})
-    tasks, first_id = [preflight], None
-    for kind, variant, scheduler, seed, traffic_seed in ordered:
+    mapping_specs = [(kind, "primary", "random", seed, COMPACT_E2_TRAFFIC_SEED, "mapping")
+                     for kind in COMPACT_E2_MAPPING for seed in COMPACT_E2_MAP_SEEDS]
+    scheduler_specs = [("residual_mlp", "primary", scheduler, seed, COMPACT_E2_TRAFFIC_SEED, "scheduler")
+                       for scheduler in COMPACT_E2_SCHEDULERS for seed in COMPACT_E2_MAP_SEEDS]
+    # TREC is a required compact cell family, but its scoped T0.case profile is
+    # intentionally a separate dependency.  The tasks remain pending until
+    # that profile exists; no FiQA profile is silently transferred to TREC.
+    trec_specs = [(kind, "primary", "random", 17, COMPACT_E2_TRAFFIC_SEED, "mapping")
+                  for kind in COMPACT_E2_MAPPING]
+    tasks = [preflight]
+    mapping_ids, scheduler_ids = [], []
+    for kind, variant, scheduler, seed, traffic_seed, cell_role, is_trec in (
+            [(kind, variant, scheduler, seed, traffic_seed, role, False)
+             for kind, variant, scheduler, seed, traffic_seed, role in mapping_specs + scheduler_specs]
+            + [(kind, variant, scheduler, seed, traffic_seed, role, True)
+               for kind, variant, scheduler, seed, traffic_seed, role in trec_specs]):
         resolved = _variant_config(cfg, kind, variant, profile["selections"]["map"])
         resolved["scheduler"]["kind"] = scheduler
         resolved["experiment"].update(variant=variant, map_seed=seed, traffic_seed=traffic_seed,
+                                       cell_role=cell_role,
                                        preflight_run=preflight_run)
-        task_id = f"E2.fiqa.{kind}.{variant}.{scheduler}.m{seed}.t{traffic_seed}.{revision}"
+        if is_trec:
+            resolved["dataset"]["name"] = "trec-covid"
+            resolved["experiment"]["profile_hash"] = None
+        dataset_tag = "trec" if is_trec else "fiqa"
+        task_id = f"E2.{dataset_tag}.{cell_role}.{kind}.{variant}.{scheduler}.m{seed}.t{traffic_seed}.{revision}"
         overrides = {} if variant == "primary" else {
             "mapping.regional": resolved["mapping"]["regional"],
             "calibration.enabled": resolved["calibration"]["enabled"]}
+        depends = [preflight_id]
+        if is_trec:
+            depends.extend(scheduler_ids)
+            depends.append("T0.case.trec-covid.minilm_mpnet")
+        elif cell_role == "scheduler":
+            depends.extend(mapping_ids)
         tasks.append({**common, "task_id": task_id, "experiment": "E2", "phase": "official",
-            "config_overrides": resolved, "profile_hash": cfg["experiment"]["profile_hash"],
-            "tuning_scope": profile["scope"], "input_refs": profile["inputs"],
+            "config_overrides": resolved, "profile_hash": None if is_trec else cfg["experiment"]["profile_hash"],
+            "tuning_scope": profile["scope"], "input_refs": profile["inputs"] if not is_trec else {"dataset": "trec-covid"},
             "variant_id": variant, "overrides": overrides,
-            "depends_on": [preflight_id] + ([first_id] if first_id else []),
-            "priority": 90 if first_id is None else 10})
-        if first_id is None:
-            first_id = task_id
+            "run_budget_policy": RUN_BUDGET_POLICY, "cell_role": cell_role,
+            "dataset_case": "trec-covid" if is_trec else "fiqa",
+            "depends_on": depends, "priority": 80 if not is_trec else 5})
+        if is_trec:
+            continue
+        if cell_role == "mapping":
+            mapping_ids.append(task_id)
+        else:
+            scheduler_ids.append(task_id)
     from .queue import validate_jobs
     return validate_jobs(tasks)

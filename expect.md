@@ -32,7 +32,7 @@ Không chạy cả bảy E bằng một cấu hình y hệt nhau. Quy tắc là:
 | E4 | Cùng data access, budget và cost instrumentation | MS MARCO subset, streaming/shard, ORCAS sample; không cần full matrix | Full MS MARCO quality |
 | E5 | Full primary pipeline | Full MS MARCO/Arctic/ORCAS static; đổi scheduler nhưng giữ mixed-index state và budget | Temporal traffic |
 | E6 | Cùng map/scheduler/evaluator semantics | AOL-IA chronological replay, rolling cutoff và future evaluation; không đọc tương lai | Static ORCAS kết luận ngược lại |
-| E7 | Cùng primary pipeline và comparison rules | Đổi collection/model pair, chạy matrix và seed grid đầy đủ | Chỉ báo một mean gộp nếu các collection trái dấu |
+| E7 | Cùng primary pipeline và comparison rules | Đổi collection/model pair theo compact representative matrix; seed set rút gọn và khai báo trước | Chỉ báo một mean gộp nếu các collection trái dấu |
 
 Các tối ưu kỹ thuật như streaming, memory-map, shard, cache query embedding, batch sizing và reader/writer lock được phép dùng để chạy được trên H100 80GB. Chúng phải giữ nguyên kết quả logic và được đo riêng về cost/latency; chưa cleanup local trong phase này. Không được tối ưu riêng cho greedy bằng cách cấp thêm encoder budget, query refresh miễn phí hoặc evaluator access mà baseline không có.
 
@@ -52,7 +52,7 @@ Các tối ưu kỹ thuật như streaming, memory-map, shard, cache query embed
 | **Dual-index** | Tách lợi ích của scheduler khỏi lợi ích giữ old/new index riêng | Systems comparison riêng, không trộn vào mixed-index claim |
 | **Hindsight oracle** | Trần tham khảo khi biết tương lai | Diagnostic; không phải hệ thống online và không được gọi là nghiệm tối ưu |
 
-Tất cả scheduler primary phải dùng cùng initial vectors, graph, map/refit policy, calibration, candidate settings, paid budget, query IDs và seed grid. Nếu một baseline dùng thêm anchor/unpaired vectors thì phải cộng chi phí đó vào ngân sách của baseline.
+Tất cả scheduler primary phải dùng cùng initial vectors, graph, map/refit policy, calibration, candidate settings, paid budget, query IDs và seed set của cell compact tương ứng. Nếu một baseline dùng thêm anchor/unpaired vectors thì phải cộng chi phí đó vào ngân sách của baseline.
 
 ## 3. E0–E7 làm gì và kết quả nào được mong đợi?
 
@@ -89,9 +89,11 @@ E1 thất bại nếu có leakage, loop vô hạn, ID update sai hoặc full-new
 
 ### E2 — Pilot quality trên corpus nhỏ
 
-**Mục tiêu:** kiểm tra map và scheduler trên FiQA khoảng 57k document, TREC-COVID khoảng 171k document, rồi chạy đủ mapping seeds sau khi flow đúng.
+**Mục tiêu:** kiểm tra map và scheduler trên FiQA khoảng 57k document, TREC-COVID khoảng 171k document bằng compact matrix 24 cell theo [codex/15_run_budget.md](codex/15_run_budget.md). E2 là pilot; không mở toàn bộ traffic grid hoặc factorial map×scheduler.
 
 **So sánh mapping:** OP, LA, residual MLP; global, regional, calibration; exact search trước ANN.
+
+FiQA mapping chạy OP/LA/MLP trên ba map seeds với random; scheduler comparison chỉ dùng MLP trên random/degree/re-embed-on-read/greedy và traffic seed101. TREC chỉ chạy OP/LA/MLP tại map seed17, scheduler là N/A. Regional/calibration/diagonal controls là T0 hoặc diagnostic riêng, không nhân vào required cells.
 
 **Kỳ vọng nghiên cứu:** residual MLP/global-regional có thể giảm vector error và tăng absolute nDCG hoặc retained quality so với OP/LA; đây là giả thuyết. Calibration có thể cải thiện residual/cutoff behavior, cần đo trên population đã khai báo; nó có thể đổi ranking trong mixed-fidelity. Invariant giữ ranking của positive affine calibration chỉ áp cho exact diagnostic toàn mapped.
 
@@ -135,7 +137,7 @@ TREC-COVID chỉ có 50 test queries trong protocol hiện tại: primary dùng 
 
 Nếu E4 không đạt, phải shard/stream/giảm concurrency hoặc điều chỉnh storage trước E5; không lấy kết quả subset để thay cho full-scale claim.
 
-Sau T0.scale/subset feasible, E4 còn kiểm **actual full-corpus bootstrap stored graph**: footprint và Q_tune recall trước E5. Đây là readiness gate, không phải quality evidence của full60-cell study. Timing/recall của100k docs không được tự xem là kết quả cho3.21M.
+Sau T0.scale/subset feasible, E4 còn kiểm **actual full-corpus bootstrap stored graph**: footprint và Q_tune recall trước E5. Đây là readiness gate, không phải quality evidence của compact E5 study. Timing/recall của100k docs không được tự xem là kết quả cho3.21M.
 
 ### E5 — Scale chính, static ORCAS
 
@@ -149,6 +151,8 @@ Sau T0.scale/subset feasible, E4 còn kiểm **actual full-corpus bootstrap stor
 
 Uncertainty, margin-only, extra-clicked và hindsight oracle là ablation/diagnostic.
 
+Compact E5 bắt buộc 12 cells: bốn scheduler × ba map seeds `{17,29,43}` × traffic seed `101`. Mỗi cell tiếp tục đến 100% true trong cùng run. Tối đa bốn traffic-sensitivity cells của random/greedy tại map seed17 và traffic `{103,109}` được chạy riêng nếu còn tài nguyên; chúng không chặn E5.
+
 **Primary endpoint:**
 
 - ORCAS: `ARR@10` ở tổng `10% accessed`;
@@ -159,7 +163,7 @@ Uncertainty, margin-only, extra-clicked và hindsight oracle là ablation/diagno
 
 **Quy tắc kết luận:**
 
-- **Có bằng chứng tích cực:** paired effect của greedy > 0, CI95% không cắt 0 và contrast vẫn hợp lệ sau Holm correction; quality gate và budget gate đều đạt.
+- **Có bằng chứng tích cực:** paired effect của greedy > 0, CI95% không cắt 0 và contrast hợp lệ sau correction đã khai báo; quality gate và budget gate đều đạt. Vì compact matrix chỉ có một traffic seed primary, traffic robustness phải ghi là giới hạn.
 - **Không kết luận:** CI95% cắt 0, seed variation lớn, hoặc quality tăng nhưng chi phí không đo/không ngang budget.
 - **Kết quả âm:** greedy thấp hơn hoặc đắt hơn mà không bù được quality; giữ nguyên kết quả, không đổi scheduler sau khi xem test.
 
@@ -171,7 +175,7 @@ Không có ngưỡng được phép dùng các số placeholder như 98.6%, 89% 
 
 **Primary endpoint:** weighted ARR ở tuần 8 tại cùng 7% scheduled nếu đủ 8 tuần và coverage hợp lệ.
 
-**Kỳ vọng:** scheduler có sử dụng tần suất lịch sử có thể tốt hơn uniform/random trên future traffic, nhưng chỉ được kết luận nếu:
+E6 compact chạy bốn scheduler trên cùng một chronology AOL-IA với map seed17; mỗi cell bao phủ đủ bảy quyết định tuần. Không tạo traffic seeds bằng cách shuffle timestamp. Kỳ vọng scheduler có sử dụng tần suất lịch sử có thể tốt hơn uniform/random trên future traffic, nhưng chỉ được kết luận nếu:
 
 - không đọc future events/weights/labels;
 - event frequency đến từ AOL-IA thật;
@@ -182,11 +186,11 @@ Nếu AOL-IA không khôi phục đủ, E6 là **chưa thực hiện**, không t
 
 ### E7 — Mở rộng BEIR và kiểm tra độ bền
 
-**Mục tiêu:** chạy đủ 4 model pairs × 5 BEIR collections, các baseline và theory diagnostics.
+**Mục tiêu:** chạy compact representative matrix tám dataset/model cases theo [codex/15_run_budget.md](codex/15_run_budget.md), thay cho full 4 model pairs × 5 collections. Đây là pilot tổng quát hóa, không đủ để tuyên bố phủ toàn bộ 20 cases.
 
 **So sánh:** cùng mapping/scheduler protocol trên nhiều domain và model pair; báo từng dataset/model, không chỉ một mean gộp.
 
-**Kỳ vọng:** nếu phương pháp tổng quát, hướng hiệu ứng của greedy và map chính sẽ tương đối ổn định qua nhiều collection/model. Nếu một số domain âm hoặc không có gain, đó là bằng chứng giới hạn của phương pháp, không phải lý do loại dataset.
+Mỗi case chạy MLP với random và greedy tại map seed17/traffic101; OP+greedy chạy trên bốn case cross-check. Nếu phương pháp tổng quát, hướng hiệu ứng trong các case đại diện có thể ổn định; kết quả này không được ngoại suy thành full 20-case claim. Nếu một số domain âm hoặc không có gain, đó là bằng chứng giới hạn của compact pilot.
 
 E7 chỉ đạt khi mọi số trong bảng truy được về per-query/per-seed runfile, split/checksum/revision và có thể rerun. E7 không cần viết lại paper trong phạm vi thí nghiệm này.
 

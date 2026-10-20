@@ -109,7 +109,7 @@ def test_static_preflight_and_official_cell_keep_test_labels_out_until_preflight
     monkeypatch.setattr(static.pq, "read_table", guarded)
     preflight = static.run_static_preflight(cfg, tmp_path)
     assert preflight["compute_status"] == "COMPUTE_DONE", preflight
-    assert preflight["checked_cells"] == 45
+    assert preflight["checked_cells"] == 9
     assert preflight["local_restore"] == "PASS"
     assert not test_reads
     cfg["experiment"]["preflight_run"] = preflight["run_id"]
@@ -138,11 +138,24 @@ def test_static_matrix_has_all_declared_cells_and_concrete_dependencies(tmp_path
     write_json(tmp_path / "state/tasks.json", {"tasks": {"T0.core.concrete": {
         "spec": {"task_id": "T0.core.concrete"}, "run_dir": str(source), "status": "COMPUTE_DONE"}}})
     tasks = static.build_static_tasks(cfg, tmp_path)
-    assert len(tasks) == 103
+    assert len(tasks) == 25
     assert tasks[0]["experiment"] == "E2_PREFLIGHT"
     assert tasks[0]["depends_on"] == ["T0.core.concrete"]
-    assert tasks[1]["config_overrides"]["scheduler"]["kind"] == "greedy"
-    assert len([t for t in tasks[1:] if t["config_overrides"]["experiment"]["variant"] == "primary" and
-                t["config_overrides"]["mapping"]["kind"] == "residual_mlp"]) == 60
-    assert len({t["task_id"] for t in tasks}) == 103
-    assert all(tasks[1]["task_id"] in t["depends_on"] for t in tasks[2:])
+    assert tasks[1]["config_overrides"]["scheduler"]["kind"] == "random"
+    assert len([t for t in tasks[1:] if t["dataset_case"] == "fiqa" and
+                t["cell_role"] == "scheduler" and
+                t["config_overrides"]["mapping"]["kind"] == "residual_mlp" and
+                t["config_overrides"]["scheduler"]["kind"] in {"random", "degree", "read", "greedy"}]) == 12
+    assert len([t for t in tasks[1:] if t["dataset_case"] == "trec-covid"]) == 3
+    assert len({t["task_id"] for t in tasks}) == 25
+    mapping = [t for t in tasks[1:] if t["dataset_case"] == "fiqa" and
+               t["cell_role"] == "mapping" and
+               t["config_overrides"]["mapping"]["kind"] in {"op", "la", "residual_mlp"} and
+               t["config_overrides"]["scheduler"]["kind"] == "random"]
+    scheduler = [t for t in tasks[1:] if t["dataset_case"] == "fiqa" and
+                 t["cell_role"] == "scheduler" and
+                 t["config_overrides"]["mapping"]["kind"] == "residual_mlp" and
+                 t["config_overrides"]["scheduler"]["kind"] in {"random", "degree", "read", "greedy"}]
+    assert len(mapping) == 9 and len(scheduler) == 12
+    assert all(set(t["depends_on"]) >= {tasks[0]["task_id"]} for t in tasks[1:])
+    assert all(set(t["depends_on"]) >= {m["task_id"] for m in mapping} for t in scheduler)

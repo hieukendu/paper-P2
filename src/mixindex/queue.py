@@ -18,7 +18,10 @@ from .runtime import effective_limits, target_hardware_matches
 
 
 RESOURCE_KEYS = {"gpu_device", "gpu_memory_gib", "host_ram_gib", "cpu_cores", "disk_scratch_gib", "io_heavy"}
-TERMINAL = {"COMPUTE_DONE", "FAILED", "BLOCKED_DATA"}
+# A cancelled task is a deliberate plan revision, not a scientific result.  It
+# is terminal for queue admission, while progress/checklist code still refuses
+# to report it as a completed run.
+TERMINAL = {"COMPUTE_DONE", "FAILED", "BLOCKED_DATA", "CANCELLED"}
 
 
 def validate_jobs(jobs):

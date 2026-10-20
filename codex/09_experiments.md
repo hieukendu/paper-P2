@@ -1,6 +1,6 @@
 # M09 — Runner E0–E7 và output mỗi thí nghiệm
 
-Code `experiments.py`, `configs/experiments/e0.yaml`…`e7.yaml` và `t0.yaml`. Bắt buộc đọc đầy đủ `report.md`, `expect.md` và [M14](14_presetup_tuning.md) trước khi implement; bảng này là wiring, không thay tài liệu khoa học.
+Code `experiments.py`, `configs/experiments/e0.yaml`…`e7.yaml` và `t0.yaml`. Bắt buộc đọc đầy đủ `report.md`, `expect.md`, [M14](14_presetup_tuning.md) và [M15](15_run_budget.md) trước khi implement; bảng này là wiring, không thay tài liệu khoa học. Runner mặc định phải expand `compact_v1`, không tự nhân full factorial.
 
 ## API runner
 
@@ -26,24 +26,24 @@ Runner xuất status có exit code: failed technical != negative scientific. `fi
 | T0.core | FiQA/MiniLM–MPNet, development pools | lr selection, cal roles, HNSW/core runtime profile | E1 + implementation M05–M08/M10–M14; không phụ thuộc E2/E3 |
 | T0.scale | Arctic/MS MARCO + ORCAS validated, runtime subset100k | full-corpus paid-pool lr, subset timing4 schedulers, forecast; diagnostic | E3 correctness + validated scale inputs; không phụ thuộc E4 |
 | T0.case | Dataset/model bổ sung của E2/E6/E7 | Đúng-case map/index/runtime profile hoặc explicit transfer/N/A | Core code + validated case inputs; không phụ thuộc chính E đang chuẩn bị |
-| E2 | Full FiQA và TREC-COVID, MiniLM→MPNet | OP/LA/residual MLP; global/regional/cal/diagonal variants; FiQA eligible schedulers; TREC cal/greedy N/A | E1 + T0.core; TREC thêm T0.case tương ứng; ANN path cần ANN_PASS |
-| E3 | Pilot snapshots | exact/HNSW, same-ID/fresh graph, lock, cadence1/5/10%; cost/latency/write amplification | E2 + T0.core/case ANN profile + M06 |
-| E4 | MS MARCO subset + sampled ORCAS, Arctic; full bootstrap gate | subset refresh100k-query probes/forecast rồi actual full stored-graph readiness trước E5 | E3 + T0.scale; subset PASS không tự là full gate |
-| E5 | Full3,213,835 MS MARCO docs, Arctic, sampled static ORCAS | greedy/random/degree/read primary; ARR at10% accessed, judged-dev nDCG **secondary**, cost/contrasts | E4 full-bootstrap gate + full-corpus profile; không yêu cầu E2 thắng |
+| E2 | Full FiQA và TREC-COVID, MiniLM→MPNet | Compact 24 cells theo M15: mapping FiQA 9, scheduler FiQA 12, TREC mapping 3; exact trước ANN | E1 + T0.core; TREC thêm T0.case tương ứng; ANN path cần ANN_PASS |
+| E3 | Pilot snapshots | 6 systems tasks theo M15: exact/HNSW, cadence, synchronized serving và save/load recovery | E2 + T0.core/case ANN profile + M06 |
+| E4 | MS MARCO subset + sampled ORCAS, Arctic; full bootstrap gate | 3 tasks theo M15: subset probe, actual full stored-graph readiness và restore/footprint | E3 + T0.scale; subset PASS không tự là full gate |
+| E5 | Full3,213,835 MS MARCO docs, Arctic, sampled static ORCAS | Compact 12-cell primary scheduler comparison; ARR at10% accessed, judged-dev nDCG **secondary**, cost/contrasts | E4 full-bootstrap gate + full-corpus profile; không yêu cầu E2 thắng |
 | E6 | Actual recovered AOL-IA, Arctic default |8×7-day chronological replay, week8 weighted ARR at7% scheduled, coverage/time split | E3/E4 + T0.case AOL dùng tuần1 + actual recovery; không đợi E5 xong |
-| E7 |5 BEIR×4 model pairs |20 mapping/generalization cases, eligible schedulers, baselines/diagnostics; per-case/seed tables | E2/E3 + T0.case tương thích; large cases cần đúng-case scale readiness; không cần E5 thắng |
+| E7 |8 representative BEIR/model cases theo M15 |20 compact cells: MLP random/greedy trên 8 cases + OP greedy cross-check trên 4 cases; per-case tables | E2/E3 + T0.case tương thích; large cases cần đúng-case scale readiness; không cần E5 thắng |
 
 E0–E7 là8 milestone, E1–E7 là7 experimental stages. T0 là nhóm prep tasks theo scope, không thêm một E quality. E0/E1/T0 có phase development; E2–E7 có phase official và dùng profile đã freeze. Required dependency là task ID cụ thể (ví dụ T0.core), không phải một T0 tổng chờ mọi dataset. Exact diagnostics không cần HNSW; ANN claims cần đúng ANN profile và E3 gate. E6 unavailable không được thay synthetic hoặc tick complete.
 
 ## Config matrix cụ thể
 
 - E1: map seed17/traffic101, fixed subset IDs (default2,000 documents, đủ11 neighbors), debug queries/splits lấy từ FiQA train/dev đúng vai trò. Qrels restricted vào subset chỉ cho diagnostic; không gọi quality như full FiQA. Chạy100% true completion.
-- E2: core flow đã kiểm ở E1/T0, chạy đủ map seeds17/29/43 với selected lr chung của case. Mapping comparisons OP/LA/MLP với random scheduler; ablations global-only/global+regional/global+cal/both và diagonal regional control giữ bootstrap pools chung. FiQA eligible schedulers random/degree/read/greedy, grid3×5; TREC mapping/random, scheduler primary N/A.
+- E2: dùng M15 compact matrix. FiQA mapping OP/LA/MLP × map seeds17/29/43 với random và traffic101 (9); FiQA scheduler chỉ dùng MLP × random/degree/read/greedy × map seeds17/29/43 với traffic101 (12); TREC mapping OP/LA/MLP tại map seed17, scheduler N/A (3). Global/regional/cal/diagonal ablations là T0 hoặc diagnostic riêng, không nhân vào required matrix.
 - E3: fixed snapshot comparisons để chỉ đổi search/graph. Cadence ablation dùng cùng start state và one locked scheduler; scale seeds chỉ mở sau diagnostic1 cell pass. Threads/seed của HNSW nằm config, không default theo CPU vật lý.
 - E4: fixed **100k-document subset** uniform seed20261020 trước khi nhìn click/quality; giữ subset IDs. ORCAS edges restrict subset và report missing due to subset; scale query-count probe lên tối đa100k nhóm hợp lệ khi có. Không lấy only-clicked subset để gọi đại diện corpus; length/I/O probe có thể dùng full-corpus samples không encode toàn bộ.
-- E5: all4 primary schedulers×3 map seeds×5 traffic seeds =60 run cells, primary contrast tại10% accessed. Required quality checkpoints vẫn là bootstrap,5/10/25/50% accessed và100% true như report. Chạy primary10% trước, rồi continuation tasks từ cùng run ID/prefix để đủ checkpoints; không reset RNG/map. `E5.primary_done` không đồng nghĩa `E5.compute` hoàn tất cả protocol. Không bắt chạy60×100% **live encode** khi research-quality mode dùng cached-access. Uncertainty/margin/extra-clicked/hindsight là nhánh bổ sung riêng; mỗi method có state/index/RNG độc lập.
-- E6: all4 primary schedulers trên cùng recovered corpus/timeline; cùng map seeds và traffic/random seeds khi có đủ compute. Không shuffle chronological events để tạo5 logs giả. Primary7 decisions, budget báo cả scheduled/accessed/true.
-- E7: pair `{minilm_mpnet, arctic, nomic, bge}`×collection `{fiqa,trec-covid,nq,hotpotqa,fever}`. Mapping ít nhất3 map seeds; eligible scheduler matrix đủ3×5. Không train/dev hợp lệ → mapping/random và greedy N/A, không giả đủ20 greedy cases. Complete extra published baselines theo M08 recipe task; thiếu source recipe ghi incomplete-baselines.
+- E5: compact primary là all4 schedulers×3 map seeds×traffic101 =12 run cells. Mỗi cell tiếp tục tới bootstrap,5/10/25/50% accessed và100% true trong cùng run ID/prefix. Tối đa4 traffic-sensitivity cells random/greedy×map17×traffic{103,109} là optional; không bắt chạy full3×5 grid hoặc nhân live encode. `E5.primary_done` không đồng nghĩa `E5.compute` hoàn tất continuation nếu checkpoint còn thiếu. Uncertainty/margin/extra-clicked/hindsight không thuộc compact required matrix.
+- E6: compact matrix chạy all4 primary schedulers trên cùng recovered corpus/timeline với map seed17; không tạo traffic/random seeds bằng cách shuffle chronological events. Mỗi cell có 7 decisions, budget báo cả scheduled/accessed/true.
+- E7: compact representative matrix gồm 8 case theo M15. Mỗi case MLP×{random,greedy}, map17/traffic101 (16 cells); OP+greedy trên4 case cross-check (4 cells). Reuse E2 FiQA/TREC chỉ khi resolved hashes khớp. Không gọi đây là đủ20 cases hoặc đủ3×5 seeds; không train/dev hợp lệ → scheduler N/A/transfer có nhãn. Complete extra published baselines theo M08 recipe task; thiếu source recipe ghi incomplete-baselines.
 
 Các defaults subset/seed diagnostic là engineering choices mới, phải lưu trước run. Không tune subset theo kết quả. E2/E7 trùng case chỉ reuse outputs khi toàn bộ resolved scientific inputs/config/mode/seed/profile giống, có thể khác stage label. So content hash loại stage/run path labels; lưu source run reference, không giả đã chạy một run khác. T0 development outputs không reuse làm official quality cells.
 
