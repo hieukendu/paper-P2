@@ -141,6 +141,17 @@ def test_static_matrix_has_all_declared_cells_and_concrete_dependencies(tmp_path
     assert len(tasks) == 25
     assert tasks[0]["experiment"] == "E2_PREFLIGHT"
     assert tasks[0]["depends_on"] == ["T0.core.concrete"]
+    preflight_identity = {
+        "config": static.redacted_config(tasks[0]["config_overrides"]),
+        "source_hash": static.source_hash(tmp_path),
+        "profile_hash": cfg["experiment"]["profile_hash"],
+        "input_refs": profile["inputs"],
+        "run_budget_policy": static.RUN_BUDGET_POLICY,
+        "comparison_variants": {"primary": list(static.VARIANTS["primary"])},
+    }
+    expected_preflight = f"E2_PREFLIGHT-fiqa-{static.digest(preflight_identity)[:12]}"
+    assert all(t["config_overrides"]["experiment"]["preflight_run"] == expected_preflight
+               for t in tasks[1:] if t["dataset_case"] == "fiqa")
     assert tasks[1]["config_overrides"]["scheduler"]["kind"] == "random"
     assert len([t for t in tasks[1:] if t["dataset_case"] == "fiqa" and
                 t["cell_role"] == "scheduler" and

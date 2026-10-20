@@ -69,7 +69,10 @@ def test_exclusive_jobs_dependencies_target_and_joint_probe_are_independent():
     request["measurement_mode"] = "quality"
     request["depends_on"] = ["T0.core"]
     assert can_admit(request, [], capacity(), {}, 2)[1].startswith("DEPENDENCY_PENDING")
-    assert can_admit(request, [], capacity(), {"T0.core": {"status": "COMPUTE_DONE", "sync_status": "PENDING"}}, 2)[0]
+    assert can_admit(request, [], capacity(), {"T0.core": {
+        "status": "COMPUTE_DONE", "sync_status": "PENDING", "handle_alive": False}}, 2)[1].startswith("DEPENDENCY_SYNC_PENDING")
+    assert can_admit(request, [], capacity(), {"T0.core": {
+        "status": "COMPUTE_DONE", "sync_status": "VERIFIED", "handle_alive": False}}, 2)[0]
     request["depends_on"] = []
     request["development_hardware"] = False
     assert "BLOCKED_HARDWARE" in can_admit(request, [], capacity(), {}, 2)[1]

@@ -144,8 +144,17 @@ def can_admit(task, running, capacity, tasks, max_compute_jobs=2, cfg=None):
     if not 1 <= max_compute_jobs <= 2:
         raise ValueError("Compute concurrency is capped at two")
     for dependency in task.get("depends_on", []):
-        if tasks.get(dependency, {}).get("status") != "COMPUTE_DONE":
+        record = tasks.get(dependency, {})
+        if record.get("status") != "COMPUTE_DONE":
             return False, f"DEPENDENCY_PENDING:{dependency}"
+        # A compute signal is emitted before the worker uploads and verifies
+        # its immutable artifact.  Scientific cells must not start in that
+        # window: the predecessor is admissible only after remote verification
+        # and after its worker handle has exited.
+        if record.get("sync_status") != "VERIFIED":
+            return False, f"DEPENDENCY_SYNC_PENDING:{dependency}"
+        if record.get("handle_alive") is not False:
+            return False, f"DEPENDENCY_WORKER_ACTIVE:{dependency}"
     if len(running) >= max_compute_jobs:
         return False, "COMPUTE_SLOTS_FULL"
     if running and (task["measurement_mode"] == "exclusive" or any(
@@ -239,8 +248,12 @@ def run_single(task, root):
         raise ValueError("Search thread count exceeds the task CPU reservation")
     tasks_path = Path(cfg["paths"]["state"]) / "tasks.json"
     tasks = read_json(tasks_path)["tasks"]
-    if any(tasks.get(dep, {}).get("status") != "COMPUTE_DONE" for dep in task["depends_on"]):
-        raise ValueError("Worker dependency gate has not completed compute")
+    for dependency in task["depends_on"]:
+        record = tasks.get(dependency, {})
+        if (record.get("status") != "COMPUTE_DONE" or
+                record.get("sync_status") != "VERIFIED" or
+                record.get("handle_alive") is not False):
+            raise ValueError("Worker dependency gate has not completed verified sync")
     if task["phase"] == "official":
         validate_tuning_profile(task, cfg, load_tuning_profiles(Path(root) / cfg["tuning"]["lock_path"]))
     if task["experiment"] == "DATA_PREP":

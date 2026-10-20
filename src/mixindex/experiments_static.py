@@ -285,7 +285,11 @@ def _preflight_for_cell(cfg, root, profile):
         raise ValueError("E2_PREFLIGHT_REQUIRED: specify the completed exact comparison preflight")
     path = Path(cfg["paths"]["runs"]) / identifier
     summary, locked = read_json(path / "summary.json"), read_json(path / "config.lock.json")
+    sync_path = path / "sync.json"
+    sync_verified = (not cfg["sync"]["enabled"] or
+                     (sync_path.exists() and read_json(sync_path).get("status") == "VERIFIED"))
     if (summary.get("compute_status") != "COMPUTE_DONE" or
+            not sync_verified or
             summary.get("profile_hash") != cfg["experiment"]["profile_hash"] or
             locked.get("input_refs") != profile["inputs"] or
             locked.get("source_hash") != source_hash(root) or
@@ -293,7 +297,7 @@ def _preflight_for_cell(cfg, root, profile):
             summary.get("map_seeds") != list(COMPACT_E2_MAP_SEEDS) or
             summary.get("variants") != ["primary"] or
             summary.get("run_budget_policy") != RUN_BUDGET_POLICY):
-        raise ValueError("E2_PREFLIGHT_REQUIRED: exact comparison source/inputs/variants/seeds differ")
+        raise ValueError("E2_PREFLIGHT_REQUIRED: exact comparison source/inputs/variants/seeds/sync differ")
     return path
 
 
