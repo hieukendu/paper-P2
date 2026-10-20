@@ -210,7 +210,7 @@ def build_presetup_tasks(scope, cfg, root):
         overrides["execution"]["mode"] = "live_encode"
         overrides["tuning"]["scope"] = scope
         task = {
-            "task_id": scope,
+            "task_id": f"T0.{scope}",
             "config": "configs/base.yaml",
             "phase": "development",
             "experiment": "T0",
