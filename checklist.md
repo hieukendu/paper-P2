@@ -167,7 +167,7 @@ Additional BGE/Nomic snapshots and NQ/HotpotQA/FEVER archives are downloaded and
 BGE download inspection: bge-base snapshot is pinned. Original BGE-M3 revision `5617a9f61b028005a4858fdac845db406aefb181` publishes `pytorch_model.bin` only; the current safetensors-only resolver rejected it as designed. Pinned binary weights are downloaded and recorded by SHA256; restricted-format conversion/adapter review is still pending. BGE real CPU document/query and manual dense CLS smoke passed after conversion; H100 tuning remains incomplete. FiQA uses the validated MiniLM/MPNet adapters.
 
 <!-- health:begin -->
-Latest resource check (2026-10-20 19:26 UTC+7): compact E2 preflight `E2.exact.preflight.c68c145789e2` is active; no official cell is active yet. Disk remains above5TiB; host RAM is ample; H100 free VRAM is≈8.7GiB on the shared device. Worker RSS is≈1.9GiB; cgroup `oom=0`, `oom_kill=0`. Additional input workers use no GPU and reduced CPU/IO priority. Evidence: live `state/tasks.json` and cgroup/NVIDIA checks.
+Latest resource check (2026-10-20 19:44 UTC+7): compact E2 preflight `E2.exact.preflight.c68c145789e2` is active; no official cell is active yet. Disk remains above5TiB; container-effective RAM available is≈43.7GiB after counting reclaimable inactive file cache; H100 free VRAM is≈8.7GiB on the shared device. Worker RSS is≈1.9GiB; cgroup `oom=0`, `oom_kill=0`. Additional input workers use no GPU and reduced CPU/IO priority. Evidence: live `state/tasks.json`, `mixindex.runtime.effective_limits()`, cgroup and NVIDIA checks.
 <!-- health:end -->
 
 <!-- t0-download-check:begin -->
