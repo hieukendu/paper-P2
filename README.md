@@ -90,7 +90,20 @@ input validation. New publications serialize documents into bounded Parquet file
 explicit source row IDs. A complete read-back must reconstruct the canonical local
 document JSONL SHA256 before upload. Query/qrel joins, query roles, source attribution,
 upstream license revision and official archive MD5 remain attached to the release.
-MS MARCO and ORCAS do not use this BEIR redistribution recipe.
+MS MARCO and ORCAS use a separate scale publication recipe: the publisher requires a
+`VALIDATED` manifest, rechecks the raw source checksums, preserves the MS MARCO
+source-order corpus in bounded Parquet files, keeps ORCAS traffic/query tables separate,
+and verifies every uploaded file plus `COMPLETED.json` before recording a receipt. The
+scale commands are:
+
+```bash
+mixindex data publish --dataset msmarco-docs-v1
+mixindex data publish --dataset orcas
+```
+
+Publish MS MARCO before ORCAS because the ORCAS card records the exact MS MARCO
+document release it references. These releases retain source terms and attribution;
+the generated card does not make an independent redistribution-license claim.
 
 The original BGE-M3 snapshot publishes PyTorch binary weights. The resolver verifies
 the pinned upstream LFS SHA256, rejects unreviewed pickle globals, loads only tensors
