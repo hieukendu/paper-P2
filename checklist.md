@@ -104,7 +104,6 @@ Agent/runner cập nhật block sau mỗi run hoặc sync transition. Checkbox c
 - [x] RUNTIME_PROBE-fiqa-minilm_mpnet-80c49dd823f1 — compute=COMPUTE_DONE; sync=VERIFIED; outcome=diagnostic; HF=https://huggingface.co/datasets/deadgod3005/mixindex-runs-001/tree/1d0d33e09676772e0bcf00e9921f7cf0615b2336/runs/RUNTIME_PROBE-fiqa-minilm_mpnet-80c49dd823f1/7209256bb4a77465a93821272a57a6180aeb0973b83927f5ac5a55af6ab6bf21
 - [x] T0-core-fiqa-b9698dc39c17 — compute=COMPUTE_DONE; sync=VERIFIED; outcome=diagnostic; HF=https://huggingface.co/datasets/deadgod3005/mixindex-runs-001/tree/713b740869cbd2d695a2386abfbbffd2cb270764/runs/T0-core-fiqa-b9698dc39c17/b70b9f54756ecb6e157b800273ed3940d9ad03ff93c224de098593f804c9a61c
 - [x] E2_PREFLIGHT-fiqa-889d06a882c6 — compute=COMPUTE_DONE; sync=VERIFIED; outcome=diagnostic; HF=https://huggingface.co/datasets/deadgod3005/mixindex-runs-001/tree/553a9f80fdf1d95949ede7f7a7961c0aaab5df12/runs/E2_PREFLIGHT-fiqa-889d06a882c6/c756ac540b91168ab560d8ac6a65159171d59c93954876143c81fc8d57dcd104
-- [ ] E2-fiqa-residual_mlp-primary-greedy-m17-t101-0b0e24d75fc0 — compute=RUNNING; sync=NOT_READY; outcome=inconclusive; HF=pending
 <!-- progress:end -->
 
 <!-- expect-audit-policy:begin -->
@@ -121,7 +120,6 @@ Completed-run expectation audit against `expect.md`:
 - `RUNTIME_PROBE-fiqa-minilm_mpnet-fb16c618c9df` and `RUNTIME_PROBE-fiqa-minilm_mpnet-80c49dd823f1`: finite/norm/agreement/headroom checks and target-hardware checks pass; exclusivity is explicitly unverified. Classification: **KHỚP** with the development timing-probe expectation, not an exclusive performance claim.
 - `T0-core-fiqa-b9698dc39c17`: bounded core tuning, restore and ANN fidelity pass; selected profile is frozen and remotely verified. Classification: **KHỚP** within T0.core scope; full T0 and scale/case gates remain open.
 - `E2_PREFLIGHT-fiqa-889d06a882c6`: all 45 exact bootstrap cells, fixed 25% restore and no-test-label constraint pass (`test_results_opened=false`); classification **KHỚP** with the preflight contract, not an E2 quality result.
-- `E2-fiqa-residual_mlp-primary-greedy-m17-t101-0b0e24d75fc0`: `RUNNING`; classification **ĐANG CHẠY**, so no quality expectation claim is made until the run reaches a valid terminal state.
 - `msmarco-docs-v1` validated release `200a19df9868ff31a18cf860cf4e05ff71e8ff76db8b671b229cba117374ce68`: `status=VALIDATED`; counts are 3,213,835 documents, 5,193 grouped judged-dev queries and 5,193 qrels, with zero duplicate documents/qrels and every qrel joined to the document store. The source archive SHA256 values and split hash are recorded in `data/processed/msmarco-docs-v1/manifest.json`. Classification: **KHỚP** for the MS MARCO input-validation subgate in `expect.md`; E4 timing/throughput and ORCAS gates remain separate.
 <!-- expect-audit:end -->
 
