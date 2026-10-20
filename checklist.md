@@ -92,6 +92,7 @@ Tick compute khi mọi required cells/gates đã hoàn tất hợp lệ. Tick sy
 Agent/runner cập nhật block sau mỗi run hoặc sync transition. Checkbox của từng run nghĩa là **compute hoàn tất hợp lệ**; cột sync/text riêng cho biết pending hay verified. Không tick E tổng từ một run đơn lẻ. Dòng `N/A` không được biến thành successful measurement.
 
 <!-- progress:begin -->
+
 - [x] E1-debug-fiqa-e690dfc90eb5 — compute=COMPUTE_DONE; sync=VERIFIED; outcome=diagnostic; HF=https://huggingface.co/datasets/deadgod3005/mixindex-runs-001/tree/fd22a0a96e1a3c652a40186072f61aa6ead3585b/runs/E1-debug-fiqa-e690dfc90eb5/4c7aba85abcbf74d3f6c2037b0709ea6742c0b48816243875ea24f35bc3898ab
 - [x] E1-debug-fiqa-182b57d9b856 — compute=COMPUTE_DONE; sync=VERIFIED; outcome=diagnostic; HF=https://huggingface.co/datasets/deadgod3005/mixindex-runs-001/tree/948532f0f5a98bd5fcd9f24814969cc1650025aa/runs/E1-debug-fiqa-182b57d9b856/85ab2017880d55da613d1a6dfa415953e073a4fc9d28b68a7158285cfeefd5c0
 - [x] CORE_SMOKE-debug-fiqa-f661ce715552 — compute=COMPUTE_DONE; sync=VERIFIED; outcome=diagnostic; HF=https://huggingface.co/datasets/deadgod3005/mixindex-runs-001/tree/95570d2f2f91d5e22b86ffff8b06dd91c3e2439d/runs/CORE_SMOKE-debug-fiqa-f661ce715552/a03c1418cfb58ac955b4f6e937da2ca8220b358dabd95637ad4ec6031cdd2c99
@@ -130,7 +131,6 @@ Agent/runner cập nhật block sau mỗi run hoặc sync transition. Checkbox c
 - [x] E2-fiqa-mapping-la-primary-random-m43-t101-a9d9217d5cad — compute=COMPUTE_DONE; sync=VERIFIED; exact agreement=1.0, documents=57638, evaluation queries=648, unique paid=57638; expect=KHỚP (technical/provenance/scope gates PASS); outcome=inconclusive; HF=https://huggingface.co/datasets/deadgod3005/mixindex-runs-001/tree/d6ed55b16cf723893edb2d6905ce9f70a0cc4349/runs/E2-fiqa-mapping-la-primary-random-m43-t101-a9d9217d5cad/b66ef151a908e01ab8f92ba8f1a6233ca623ab893743a9a90238394cb3f11408
 - [x] E2-fiqa-mapping-residual_mlp-primary-random-m17-t101-3c505c2b6c27 — compute=COMPUTE_DONE; sync=VERIFIED; exact agreement=1.0, documents=57638, evaluation queries=648, unique paid=57638; expect=KHỚP (technical/provenance/scope gates PASS); outcome=inconclusive; HF=https://huggingface.co/datasets/deadgod3005/mixindex-runs-002/tree/18e0e7c8bededcc043050339488a8eb7c8996932/runs/E2-fiqa-mapping-residual_mlp-primary-random-m17-t101-3c505c2b6c27/3286b080205e3d95f45c3b1f9ecff4bd71bde47a1ab4d7f02a66f4abb53d4ee8
 - [x] E2-fiqa-mapping-residual_mlp-primary-random-m29-t101-e0b7543299a8 — compute=COMPUTE_DONE; sync=VERIFIED; exact agreement=1.0, documents=57638, evaluation queries=648, unique paid=57638; expect=KHỚP (technical/provenance/scope gates PASS); outcome=inconclusive; HF=https://huggingface.co/datasets/deadgod3005/mixindex-runs-002/tree/274b84ba966b9a6682ce8bfea418a1b1ac6e1e1f/runs/E2-fiqa-mapping-residual_mlp-primary-random-m29-t101-e0b7543299a8/b09fd8b5705c7f1375a35ca1eeb4b28cf8139b69fcd4b0e64374befc263e6b7f
-- [ ] E2-fiqa-mapping-residual_mlp-primary-random-m43-t101-b46c61929bb6 — compute=RUNNING; sync=NOT_READY; outcome=inconclusive; HF=pending
 <!-- progress:end -->
 
 <!-- expect-audit-policy:begin -->
