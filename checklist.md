@@ -1,6 +1,6 @@
 # Tiến độ setup và chạy thí nghiệm MixIndex
 
-Checklist ở gốc project, bên ngoài `codex/`; dùng `PROJECT_ROOT/checklist.md` trên server. Target corrected by the user: **H100 80GB in this workspace**; A100 was a typo. Cgroup limit: 250GiB RAM / 16 CPU cores. FiQA and TREC-COVID validated releases and run bundles are public. E0, E1 và T0.core correctness/profile gates đã qua trên H100; shared-device timing vẫn không phải exclusive performance claim. Ma trận chính đã khóa thành `compact_v1`; queue E2 factorial cũ đã dừng và được đánh dấu superseded, queue compact mới đã lập nhưng chưa mở worker mới.
+Checklist ở gốc project, bên ngoài `codex/`; dùng `PROJECT_ROOT/checklist.md` trên server. Target corrected by the user: **H100 80GB in this workspace**; A100 was a typo. Cgroup limit: 250GiB RAM / 16 CPU cores. FiQA and TREC-COVID validated releases and run bundles are public. E0, E1 và T0.core correctness/profile gates đã qua trên H100; shared-device timing vẫn không phải exclusive performance claim. Ma trận chính đã khóa thành `compact_v1`; queue E2 factorial cũ đã dừng và được đánh dấu superseded, queue compact mới đã lập và đang chạy nối tiếp sau khi người dùng dừng CVPR2.
 
 ## Chuẩn bị tài liệu và đọc protocol
 
@@ -261,6 +261,10 @@ Live check (2026-10-20 01:26 UTC+7): replacement preflight and all 9/9 mapping c
 
 HotpotQA full validation PASSED:5,233,329 documents,97,844 unique query groups from97,852 source IDs,7,405 test queries and14,810 test qrels; all joins and train/dev/test query roles validated. Its source-order Parquet semantic round-trip and public upload are remotely verified at `deadgod3005/mixindex-data-hotpotqa`. FEVER full validation PASSED with5,416,568 documents,6,666 test queries and7,937 test qrels; its public semantic upload is remotely VERIFIED at `deadgod3005/mixindex-data-fever` revision `f1f326e3ca213dc7ca93357492473d137769b1eb`. NQ public release is verified with complete semantic round-trip and anonymous access; BGE base/M3 CPU adapter and Nomic v1/v1.5 CPU adapter checks pass; MS MARCO/ORCAS scale ingest remains in progress.
 <!-- live-official-check:end -->
+
+<!-- execution-control:begin -->
+Execution control (2026-10-20 15:25 UTC): user clarified that the requested stop applies to **CVPR2**, while E2 must continue. The live CVPR2 wrapper was stopped; no live `/root/cvpr2` worker remains (the old V02 partial outputs are preserved). E2 replacement revision `909615a1c4dd` is resumed with `max_compute_jobs=1`: the verified preflight, 9 mapping cells and 3 random-scheduler cells remain accepted; scheduler degree seed17 is resumed from its complete local checkpoint at `5,763/57,638` accessed documents, and the 8 downstream FiQA scheduler cells are reset to `PENDING` behind their normal gates. The interrupted partial bundle is preserved and is not counted as a result. TREC cells remain dependency-gated; no old revision is mixed into this aggregate.
+<!-- execution-control:end -->
 
 <!-- live-scale-check:begin -->
 Live scale check (2026-10-20 11:30 UTC): MS MARCO document-v1 validation remains **PASS/KHỚP** at release `200a19df9868ff31a18cf860cf4e05ff71e8ff76db8b671b229cba117374ce68` with 3,213,835 documents, 5,193 judged-dev queries and 5,193 qrels. The scale publisher currently reports `FAILED` with `Source count mismatch for test_qrels`; no HF scale release is marked uploaded. ORCAS preparation has no live worker after the previous watcher exited and must be reconciled before claiming `VALIDATED` or publishing it.
