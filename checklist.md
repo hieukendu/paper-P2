@@ -185,3 +185,7 @@ HotpotQA full validation PASSED:5,233,329 documents,97,844 unique query groups f
 <!-- t0-threshold:begin -->
 T099% threshold clarification: **mean candidate recall@11 ≥0.99 AND serving recall@10 ≥0.99** are HNSW fidelity gates against exact retrieval over the same stored-vector snapshot on the case's Q_tune. FiQA selectedL50/ef200 achieves worst mean candidate recall@11=0.99654545 (99.65%) and worst serving recall@10=0.997 (99.70%) across OP/LA/MLP primary bootstrap snapshots. This is an ANN correctness/fidelity gate, not99% NDCG/ARR/model accuracy or proof of beating baselines. T0.core also requires finite map/validation selection, held-out/calibration/budget checks, runtime/hardware admission, checkpoint restore and immutable-profile checks; those core gates pass. Scale/other cases require their own gates; full T0 remains unticked.
 <!-- t0-threshold:end -->
+
+<!-- visibility-audit:begin -->
+Visibility audit (2026-10-20 16:49 UTC+7): all six Hugging Face datasets for this project report `private=false`, including the verified FEVER revision `f1f326e3ca213dc7ca93357492473d137769b1eb`. GitHub owner audit found 11 public repositories including `hieukendu/paper-P2`; `hieukendu/safety-rag-chatbot` remains private because the current token receives HTTP403 on the visibility update. A GitHub connector with write permission has been suggested; no connector connection is confirmed yet.
+<!-- visibility-audit:end -->
