@@ -42,7 +42,10 @@ msmarco-docs-v1:
   files: [msmarco-docs.tsv.gz, msmarco-docdev-queries.tsv.gz, msmarco-docdev-qrels.tsv.gz]
   documents: 3213835
   test_queries: 5193
-  test_qrels: 5478
+  # The current Azure qrels artifact (SHA256 recorded in state/scale-download.json)
+  # contains 5,193 unique qid/doc rows. The upstream catalog still lists the
+  # historical 5,478-row count, so validation follows the downloaded bytes.
+  test_qrels: 5193
   source: https://microsoft.github.io/msmarco/Datasets.html
   license: https://microsoft.github.io/msmarco/Datasets.html
 orcas:
