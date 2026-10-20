@@ -529,6 +529,18 @@ def build_static_tasks(cfg, root):
             depends.append("T0.case.trec-covid.minilm_mpnet")
         elif cell_role == "scheduler":
             depends.extend(mapping_ids)
+            # A cell is opened only after the immediately preceding cell in
+            # this experiment has passed its compute and verified-sync gate.
+            # The full mapping list above keeps scheduler comparisons behind
+            # every mapping cell; chaining schedulers prevents a failed
+            # scheduler from allowing the next one to start.
+            if scheduler_ids:
+                depends.append(scheduler_ids[-1])
+        elif mapping_ids:
+            # Mapping cells are deliberately serial: a technical failure
+            # blocks the rest of E2 until the pipeline is revised and a new
+            # immutable queue revision is enqueued.
+            depends.append(mapping_ids[-1])
         tasks.append({**common, "task_id": task_id, "experiment": "E2", "phase": "official",
             "config_overrides": resolved, "profile_hash": None if is_trec else cfg["experiment"]["profile_hash"],
             "tuning_scope": profile["scope"], "input_refs": profile["inputs"] if not is_trec else {"dataset": "trec-covid"},

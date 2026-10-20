@@ -170,3 +170,7 @@ def test_static_matrix_has_all_declared_cells_and_concrete_dependencies(tmp_path
     assert len(mapping) == 9 and len(scheduler) == 12
     assert all(set(t["depends_on"]) >= {tasks[0]["task_id"]} for t in tasks[1:])
     assert all(set(t["depends_on"]) >= {m["task_id"] for m in mapping} for t in scheduler)
+    assert all(mapping[i - 1]["task_id"] in mapping[i]["depends_on"]
+               for i in range(1, len(mapping)))
+    assert all(scheduler[i - 1]["task_id"] in scheduler[i]["depends_on"]
+               for i in range(1, len(scheduler)))
