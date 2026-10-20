@@ -92,9 +92,6 @@ Agent/runner cập nhật block sau mỗi run hoặc sync transition. Checkbox c
 
 <!-- progress:begin -->
 
-
-
-
 - [x] E1-debug-fiqa-e690dfc90eb5 — compute=COMPUTE_DONE; sync=VERIFIED; outcome=diagnostic; HF=https://huggingface.co/datasets/deadgod3005/mixindex-runs-001/tree/fd22a0a96e1a3c652a40186072f61aa6ead3585b/runs/E1-debug-fiqa-e690dfc90eb5/4c7aba85abcbf74d3f6c2037b0709ea6742c0b48816243875ea24f35bc3898ab
 - [x] E1-debug-fiqa-182b57d9b856 — compute=COMPUTE_DONE; sync=VERIFIED; outcome=diagnostic; HF=https://huggingface.co/datasets/deadgod3005/mixindex-runs-001/tree/948532f0f5a98bd5fcd9f24814969cc1650025aa/runs/E1-debug-fiqa-182b57d9b856/85ab2017880d55da613d1a6dfa415953e073a4fc9d28b68a7158285cfeefd5c0
 - [x] CORE_SMOKE-debug-fiqa-f661ce715552 — compute=COMPUTE_DONE; sync=VERIFIED; outcome=diagnostic; HF=https://huggingface.co/datasets/deadgod3005/mixindex-runs-001/tree/95570d2f2f91d5e22b86ffff8b06dd91c3e2439d/runs/CORE_SMOKE-debug-fiqa-f661ce715552/a03c1418cfb58ac955b4f6e937da2ca8220b358dabd95637ad4ec6031cdd2c99
@@ -114,7 +111,7 @@ Agent/runner cập nhật block sau mỗi run hoặc sync transition. Checkbox c
 - [x] E2-fiqa-la-diagonal-random-m43-t101-2fd748dab54c — compute=COMPUTE_DONE; sync=VERIFIED; outcome=inconclusive; HF=https://huggingface.co/datasets/deadgod3005/mixindex-runs-001/tree/a676cbcbb091ce42d158909e63b1da31a1d23ccc/runs/E2-fiqa-la-diagonal-random-m43-t101-2fd748dab54c/7658eab326134e8a6546215742672b6aec8e2ab4d5964e7477d7eb6271120b6f
 - [x] E2-fiqa-la-global-random-m17-t101-a263e90edbc4 — compute=COMPUTE_DONE; sync=VERIFIED; outcome=inconclusive; HF=https://huggingface.co/datasets/deadgod3005/mixindex-runs-001/tree/8a57ffcb0deaf243ba1a465377e64c5a066fb4ef/runs/E2-fiqa-la-global-random-m17-t101-a263e90edbc4/8981461218aadd678eff1a0425fe40fe3f2120584cc887c08a9814d058bbdda7
 - [x] E2-fiqa-la-global-random-m29-t101-39c15fbe39a2 — compute=COMPUTE_DONE; sync=PENDING; outcome=inconclusive; HF=pending
-- [ ] E2-fiqa-la-global-random-m43-t101-62d6bca7e38c — compute=RUNNING; sync=NOT_READY; outcome=inconclusive; HF=pending
+- [x] E2-fiqa-la-global-random-m43-t101-62d6bca7e38c — compute=COMPUTE_DONE; sync=PENDING; outcome=inconclusive; HF=pending
 <!-- progress:end -->
 
 <!-- expect-audit-policy:begin -->
