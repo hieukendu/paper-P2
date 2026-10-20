@@ -186,6 +186,10 @@ HotpotQA full validation PASSED:5,233,329 documents,97,844 unique query groups f
 Live scale check (2026-10-20 17:05 UTC+7): MS MARCO document-v1 ingest is `RUNNING`; the source-order temp store has 2,532,456 document IDs out of the registry target 3,213,835, with query/qrel join and manifest validation still pending. The ORCAS watcher is alive but gated on a `VALIDATED` MS MARCO manifest; no unvalidated scale release is published.
 <!-- live-scale-check:end -->
 
+<!-- e1-verification:begin -->
+E1 verification: H100-target development runs `E1-fiqa-b68e354ee3f3` and `E1-fiqa-65e9ba9de35d` are `COMPUTE_DONE` with `official_gate=true`, `completion_exact_agreement=1.0`, budget isolation `PASS`, resume prefix `PASS`, six complete checkpoints, 2,000 documents and 32 queries; both run bundles are remotely `VERIFIED`. The E1 outputs are diagnostic/development evidence, not a full-corpus quality claim. Debug run `E1-debug-fiqa-0658190b91b1` remains excluded for `SOURCE_SNAPSHOT_MISMATCH` by the source guard; it is not counted as a failed official result.
+<!-- e1-verification:end -->
+
 <!-- t0-threshold:begin -->
 T099% threshold clarification: **mean candidate recall@11 ≥0.99 AND serving recall@10 ≥0.99** are HNSW fidelity gates against exact retrieval over the same stored-vector snapshot on the case's Q_tune. FiQA selectedL50/ef200 achieves worst mean candidate recall@11=0.99654545 (99.65%) and worst serving recall@10=0.997 (99.70%) across OP/LA/MLP primary bootstrap snapshots. This is an ANN correctness/fidelity gate, not99% NDCG/ARR/model accuracy or proof of beating baselines. T0.core also requires finite map/validation selection, held-out/calibration/budget checks, runtime/hardware admission, checkpoint restore and immutable-profile checks; those core gates pass. Scale/other cases require their own gates; full T0 remains unticked.
 <!-- t0-threshold:end -->
