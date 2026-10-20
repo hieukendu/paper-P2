@@ -30,6 +30,33 @@ class VectorStore:
                 raise ValueError("Vector shape mismatch")
             self.shards.append((shard["start"], shard["end"], array))
 
+    def __len__(self):
+        return int(self.manifest["rows"])
+
+    @property
+    def shape(self):
+        return (len(self), int(self.manifest["dim"]))
+
+    def __getitem__(self, key):
+        """Expose the validated store as a bounded, array-like read view.
+
+        Full-corpus bootstrap uses the same streaming shards as encoding.  A
+        read view keeps migration/map code from materializing a second full
+        vector matrix while preserving the existing row-alignment contract.
+        """
+        if isinstance(key, (int, np.integer)):
+            row = int(key)
+            if row < 0:
+                row += len(self)
+            return self.get_rows([row])[0]
+        if isinstance(key, slice):
+            rows = np.arange(*key.indices(len(self)), dtype=np.int64)
+        else:
+            rows = np.asarray(key, dtype=np.int64)
+            if rows.ndim == 0:
+                rows = rows.reshape(1)
+        return self.get_rows(rows)
+
     def get_rows(self, rows):
         rows = np.asarray(rows, dtype=np.int64)
         if np.any(rows < 0) or np.any(rows >= self.manifest["rows"]):
