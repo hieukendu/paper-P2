@@ -267,8 +267,8 @@ def run_static_preflight(cfg, root):
             development_paid=len(state.accessor.paid), local_restore="PASS",
             variants=["primary"], map_seeds=list(COMPACT_E2_MAP_SEEDS),
             run_budget_policy=RUN_BUDGET_POLICY,
-            greedy_count=sum(e["greedy_count"] for e in result["events"]),
-            fallback_count=sum(e["fallback_count"] for e in result["events"]))
+            greedy_count=sum(e.get("greedy_count", 0) for e in result["events"]),
+            fallback_count=sum(e.get("fallback_count", 0) for e in result["events"]))
     except Exception as exc:
         summary.update(error_type=type(exc).__name__,
                        reason=str(exc) if isinstance(exc, (ValueError, PermissionError)) else "See local worker log")
@@ -455,7 +455,8 @@ def run_static_cell(cfg, root):
         summary.update(compute_status="COMPUTE_DONE", documents=n, evaluation_queries=len(evaluator.query_ids),
             completion_exact_agreement=1., unique_paid_documents=n, checkpoints=len(cfg["budget"]["checkpoints"]) + 1,
             calibration=asdict(state.index.calibration),
-            greedy_count=sum(e["greedy_count"] for e in events), fallback_count=sum(e["fallback_count"] for e in events))
+            greedy_count=sum(e.get("greedy_count", 0) for e in events),
+            fallback_count=sum(e.get("fallback_count", 0) for e in events))
     except Exception as exc:
         summary.update(error_type=type(exc).__name__,
                        reason=str(exc) if isinstance(exc, (ValueError, PermissionError)) else "See local worker log")

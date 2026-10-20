@@ -21,7 +21,7 @@ def test_on_read_preserves_pending_order_across_capped_batches():
     mapped[first] = False
     second, meta = select_on_read(["q0", "q1"], search, 2, state, mapped, np.random.default_rng(1))
     assert second == [2, 3] and calls == ["q0"]
-    assert meta["read_count"] == 2
+    assert meta["read_count"] == 2 and meta["greedy_count"] == 0
 
 
 @pytest.mark.parametrize("kind", ["greedy", "read", "degree", "random"])

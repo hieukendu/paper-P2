@@ -673,8 +673,8 @@ def _run_static_smoke(cfg, root, development_hardware=False, core=False):
         if core:
             summary.update(calibration=asdict(state.index.calibration),
                            calibration_pairs={role: len(pool["pairs"]) for role, pool in state.calibration_pools.items()},
-                           greedy_count=sum(event["greedy_count"] for event in result["events"]),
-                           fallback_count=sum(event["fallback_count"] for event in result["events"]))
+                           greedy_count=sum(event.get("greedy_count", 0) for event in result["events"]),
+                           fallback_count=sum(event.get("fallback_count", 0) for event in result["events"]))
         if source_hash(root) != inputs["source_hash"]:
             summary.update(compute_status="FAILED", reason="SOURCE_CHANGED_DURING_RUN")
     except Exception as exc:

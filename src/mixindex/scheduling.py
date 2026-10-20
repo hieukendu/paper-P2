@@ -159,5 +159,9 @@ def select_on_read(ordered_queries, search_fn, cap, queue_state, mapped_mask, rn
     available = np.array(mapped_mask, copy=True)
     available[selected] = False
     selected += select_random(available, cap - len(selected), rng)
-    return selected, {"read_count": on_read_count, "fallback_count": cap - on_read_count,
+    # Keep scheduler event metadata structurally compatible with the other
+    # selectors.  Read scheduling has no greedy selections, but downstream
+    # summary/report code still aggregates the common counter fields.
+    return selected, {"greedy_count": 0, "read_count": on_read_count,
+                      "fallback_count": cap - on_read_count,
                       "reason": "read_exhausted" if on_read_count < cap else "on_read"}
