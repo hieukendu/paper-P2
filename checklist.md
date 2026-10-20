@@ -1,11 +1,11 @@
 # Tiến độ setup và chạy thí nghiệm MixIndex
 
-Đây là checklist tại gốc `D:/paper-P2`, bên ngoài `codex/`. Khi chạy server, dùng `PROJECT_ROOT/checklist.md` của checkout đó. Hiện chỉ hoàn thành bộ tài liệu; chưa code/download/train/benchmark/upload. Target server: **A100 80GB**.
+Checklist ở gốc project, bên ngoài `codex/`; dùng `PROJECT_ROOT/checklist.md` trên server. Target official vẫn là **A100 80GB**. Đã triển khai nền setup/core và publish FiQA đã validate; chưa hoàn tất toàn pipeline hoặc các E official. Host development hiện tại là H100 80GB, cgroup RAM250GiB/CPU16 cores; không dùng host này chứng nhận A100/T0 hoặc performance official.
 
 ## Chuẩn bị tài liệu và đọc protocol
 
 - [x] DOC — Bộ hướng dẫn module trong `codex/`, structure, constraints, plan và expected outputs đã được viết.
-- [ ] READ — Bắt đầu `codex/README.md`; đọc đầy đủ report/expect, constraints, structure, contracts, plan và M14 trước khi code.
+- [x] READ — Bắt đầu `codex/README.md`; đọc đầy đủ report/expect, constraints, structure, contracts, plan và M14 trước khi code.
 
 ## Modules cần agent triển khai
 
@@ -19,7 +19,7 @@
 - [ ] M08 — Evaluation, baseline adapters, metrics/statistics/cost.
 - [ ] M09 — E0–E7 runner/config matrix và finalize hooks.
 - [ ] M10 — Dynamic queue, tối đa2 compute jobs khi đủ resource, isolated measurement.
-- [ ] M11 — HF auto-sync/private repo rollover/verify/restore, live tiny round-trip.
+- [x] M11 — HF auto-sync/private repo rollover/verify/restore, live tiny round-trip.
 - [ ] M12 — Meaningful tests và acceptance gates.
 - [ ] M13 — CLI wiring/runbook end-to-end; progress.py cập nhật đúng file này.
 - [ ] M14 — Scoped pre-setup, bounded tuning/forecast, immutable profiles và gate trước official.
@@ -28,7 +28,7 @@
 
 Chi tiết chuẩn ở [codex/14_presetup_tuning.md](codex/14_presetup_tuning.md), thứ tự ở [codex/plan.md](codex/plan.md). Tuning không lặp đến khi thắng baseline: chọn trong grid đã khai báo trên development splits rồi freeze; không dùng test/future để chọn.
 
-- [ ] PREP.core — MiniLM/MPNet pinned và FiQA download → full validation/preprocess/splits → document/query model smoke đã đạt.
+- [x] PREP.core — MiniLM/MPNet pinned và FiQA download → full validation/preprocess/splits → document/query model smoke đã đạt.
 - [ ] T0.core.compute — Sau E0/E1 và code core M05–M08/HNSW/tests: lr chọn bằng P_val, cal đúng roles, runtime/profile local-verified; ANN tasks còn cần ANN_PASS.
 - [ ] T0.core.sync — Selected profile và development outputs core đã remote-verified.
 - [ ] PREP.scale — Arctic pinned, MS MARCO document v1/ORCAS full ingest/count/join/split validation và model smoke đã đạt.
@@ -86,11 +86,17 @@ Tick compute khi mọi required cells/gates đã hoàn tất hợp lệ. Tick sy
 Agent/runner cập nhật block sau mỗi run hoặc sync transition. Checkbox của từng run nghĩa là **compute hoàn tất hợp lệ**; cột sync/text riêng cho biết pending hay verified. Không tick E tổng từ một run đơn lẻ. Dòng `N/A` không được biến thành successful measurement.
 
 <!-- progress:begin -->
-Chưa có run. Khi runner có thật, thêm dòng dạng:
-
-`- [ ] RUN_ID — compute=PENDING; sync=NOT_READY; outcome=diagnostic; HF=chưa có`
+- [ ] E1-debug-fiqa-0658190b91b1 — compute=FAILED; sync=VERIFIED; outcome=diagnostic; HF=https://huggingface.co/datasets/deadgod3005/mixindex-runs-001/tree/a43e8476600f4b5acda60b4d6a54d91760205d20/runs/E1-debug-fiqa-0658190b91b1/1b99114d578ed006271c5ccab63a06b9d098a9375cc18b993c43680786a491b8
+- [x] E1-debug-fiqa-e690dfc90eb5 — compute=COMPUTE_DONE; sync=VERIFIED; outcome=diagnostic; HF=https://huggingface.co/datasets/deadgod3005/mixindex-runs-001/tree/fd22a0a96e1a3c652a40186072f61aa6ead3585b/runs/E1-debug-fiqa-e690dfc90eb5/4c7aba85abcbf74d3f6c2037b0709ea6742c0b48816243875ea24f35bc3898ab
+- [x] E1-debug-fiqa-182b57d9b856 — compute=COMPUTE_DONE; sync=VERIFIED; outcome=diagnostic; HF=https://huggingface.co/datasets/deadgod3005/mixindex-runs-001/tree/948532f0f5a98bd5fcd9f24814969cc1650025aa/runs/E1-debug-fiqa-182b57d9b856/85ab2017880d55da613d1a6dfa415953e073a4fc9d28b68a7158285cfeefd5c0
 <!-- progress:end -->
 
 ## Ghi chú ngắn
 
 Không cleanup local ở giai đoạn này. Không log HF_TOKEN hoặc raw AOL query/user text tại đây. Thiếu token/quota giữ sync pending, không chạy lại thí nghiệm để sửa upload.
+
+Setup hiện tại: `.venv` Python3.11/PyTorch2.6.0+cu124, hnswlib0.9.0 commit `d9b3608c83d83b46c96e25088cb1d729b29dcfe9`; CUDA/cgroup/storage smoke thật đã ghi `state/environment.json`. FiQA có57,638 docs/648 test queries/1,706 test qrels, source MD5 match, full joins và query roles disjoint. MiniLM/MPNet revisions và document/query smoke đã lưu; không dùng random vectors để chứng nhận model.
+
+FiQA processed release `584640e32aecdf4ce3517078a50ac7e771025e768c8c21fd3ae824d0699c5058` đã publish private và kiểm từng artifact tại [HF dataset](https://huggingface.co/datasets/deadgod3005/mixindex-data-fiqa), payload revision `238e68330fb99d2d1046f94f92c60dcc898d26c1`. Run bundles và tiny safetensors/npz restore nằm trong [HF runs](https://huggingface.co/datasets/deadgod3005/mixindex-runs-001).
+
+35 tests local đã pass: ID/split/accessor, OP khác chiều, learned-map load, float64 regional statistics, calibration/radius, exact/HNSW update/save-load, eager/lazy, complete/resume/corruption, standard metrics, scoped profile gates, immutable/sharded bundles, quota/partial/retry và source snapshot. Các modules còn partial giữ ô trống. Chưa có queue/matrix/T0 runtime/profile chính thức; primary calibration proposals và các scale/temporal adapters còn phải nối theo plan. Diagnostic H100 E1 không tick E0/E1/T0 official. Run prototype có source-snapshot mismatch được giữ với FAILED; chỉ run có snapshot/hash khớp mới được tính validated.

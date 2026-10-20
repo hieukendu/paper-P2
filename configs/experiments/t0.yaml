@@ -1,0 +1,4 @@
+execution:
+  phase: development
+tuning:
+  scope: core

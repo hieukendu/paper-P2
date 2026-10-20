@@ -218,3 +218,15 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Local inputs, immutable caches, run artifacts and credentials
+/data/
+/cache/
+/runs/
+/state/
+/staging/
+/restored/
+/results/
+.env*
+!.env.example
+/checklist.lock

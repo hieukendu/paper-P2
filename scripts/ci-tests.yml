@@ -1,0 +1,31 @@
+# Inactive template: activating .github/workflows/tests.yml needs a token with workflow scope.
+name: Development correctness
+on:
+  push:
+  pull_request:
+
+jobs:
+  cpu-tests:
+    runs-on: ubuntu-22.04
+    env:
+      OMP_NUM_THREADS: '2'
+      OPENBLAS_NUM_THREADS: '2'
+      MKL_NUM_THREADS: '2'
+      HNSWLIB_NO_NATIVE: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - name: Install the same PyTorch release for CPU correctness
+        run: python -m pip install torch==2.6.0 --index-url https://download.pytorch.org/whl/cpu
+      - name: Install pinned pipeline and test dependencies
+        shell: bash
+        run: |
+          python -m pip install -r <(sed -E '/^nvidia-|^triton==|^torch==|^--extra-index-url/d' requirements.lock.txt)
+          python -m pip install -e . --no-deps
+      - name: Test scientific invariants without downloads or credentials
+        run: pytest -q
+      - name: Check source
+        run: ruff check src tests

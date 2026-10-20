@@ -1,0 +1,145 @@
+"""Revision-pinned, frozen encoder adapters with explicit prompt semantics."""
+
+import gc
+from pathlib import Path
+import time
+
+from huggingface_hub import HfApi, snapshot_download
+import numpy as np
+import yaml
+
+from .config import load_runtime_env, project_root
+from .io import digest, file_lock, read_json, write_json
+
+
+def model_specs(pair, root=None):
+    registry = yaml.safe_load((project_root(root) / "configs/models.yaml").read_text())
+    if pair not in registry:
+        raise ValueError(f"Unknown model pair {pair}")
+    return registry[pair]
+
+
+def resolve_model(spec, paths, root):
+    load_runtime_env(root)
+    model_root = Path(paths["cache"]) / "models"
+    lock_path = model_root / "models.lock.json"
+    with file_lock(model_root / ".models.lock"):
+        registry = read_json(lock_path) if lock_path.exists() else {}
+        key = digest(spec)
+        if key in registry:
+            record = registry[key]
+            snapshot_download(record["repo_id"], revision=record["resolved_revision"],
+                              cache_dir=str(model_root / "hub"), local_files_only=True,
+                              allow_patterns=record["download_patterns"])
+            return record
+        api = HfApi()
+        info = api.model_info(spec["repo_id"], files_metadata=True)
+        patterns = ["*.json", "*.safetensors", "*.txt", "*.model", "*.md"]
+        path = snapshot_download(spec["repo_id"], revision=info.sha,
+                                 cache_dir=str(model_root / "hub"),
+                                 allow_patterns=patterns,
+                                 ignore_patterns=["onnx/*", "openvino/*", "*.bin", "*.h5", "*.msgpack"],
+                                 max_workers=2)
+        if not list(Path(path).rglob("*.safetensors")):
+            raise RuntimeError("Checkpoint has no safetensors; inspect format before enabling pickle")
+        record = {**spec, "resolved_revision": info.sha, "snapshot": path,
+                  "dtype": "float32", "download_patterns": patterns, "trust_remote_code": False}
+        registry[key] = record
+        write_json(lock_path, registry)
+        return record
+
+
+class EncoderAdapter:
+    def __init__(self, spec, device="cuda", batch_size=8):
+        if spec["adapter"] != "sentence_transformer":
+            raise NotImplementedError("Custom model code must be inspected and pinned before use")
+        from sentence_transformers import SentenceTransformer
+        import torch
+        self.spec = spec
+        self.batch_size = batch_size
+        self.model = SentenceTransformer(spec["snapshot"], device=device, local_files_only=True,
+                                         trust_remote_code=False)
+        self.model.float().eval()
+        self.model.requires_grad_(False)
+        pooling = Path(spec["snapshot"]) / "1_Pooling/config.json"
+        if pooling.exists():
+            modes = read_json(pooling)
+            expected = "pooling_mode_mean_tokens" if spec["pooling"] == "mean" else "pooling_mode_cls_token"
+            if not modes.get(expected):
+                raise ValueError("Snapshot pooling differs from the pinned adapter recipe")
+        self.model.max_seq_length = spec["max_tokens"]
+        self.model.default_prompt_name = None
+        self.model.prompts = {}  # Prefixes below are applied exactly once for each role.
+        if self.model.get_sentence_embedding_dimension() != spec["dim"]:
+            raise ValueError("Checkpoint dimension differs from model registry")
+        self.device = device
+        self.torch = torch
+        self.cost = {"calls": 0, "documents": 0, "nonpad_tokens": 0,
+                     "padded_tokens": 0, "truncated_documents": 0, "wall_seconds": 0.0}
+
+    def _encode(self, texts, prefix):
+        if not texts:
+            return np.empty((0, self.spec["dim"]), dtype=np.float32)
+        prepared = [prefix + t for t in texts]
+        tokenized = self.model.tokenizer(prepared, truncation=False, add_special_tokens=True,
+                                          verbose=False)["input_ids"]
+        lengths = np.array([min(len(ids), self.spec["max_tokens"]) for ids in tokenized])
+        if self.device.startswith("cuda"):
+            self.torch.cuda.synchronize()
+        start = time.monotonic()
+        with self.torch.inference_mode():
+            output = self.model.encode(prepared, batch_size=self.batch_size,
+                                       convert_to_numpy=True, normalize_embeddings=True,
+                                       show_progress_bar=False)
+        if self.device.startswith("cuda"):
+            self.torch.cuda.synchronize()
+        output = np.asarray(output, dtype=np.float32)
+        validate_vectors(output, self.spec["dim"])
+        self.cost["calls"] += 1
+        self.cost["documents"] += len(texts)
+        self.cost["nonpad_tokens"] += int(lengths.sum())
+        self.cost["truncated_documents"] += sum(len(ids) > self.spec["max_tokens"] for ids in tokenized)
+        # ST sorts by length within this call before batching.
+        sorted_lengths = sorted(lengths, reverse=True)
+        self.cost["padded_tokens"] += sum(
+            int(max(sorted_lengths[i:i + self.batch_size])) * len(sorted_lengths[i:i + self.batch_size])
+            for i in range(0, len(texts), self.batch_size))
+        self.cost["wall_seconds"] += time.monotonic() - start
+        return output
+
+    def encode_documents(self, texts):
+        return self._encode(texts, self.spec["document_prefix"])
+
+    def encode_queries(self, texts):
+        return self._encode(texts, self.spec["query_prefix"])
+
+    def close(self):
+        self.model.to("cpu")
+        del self.model
+        gc.collect()
+        if self.device.startswith("cuda"):
+            self.torch.cuda.empty_cache()
+
+
+def build_encoder(spec, device="cuda", batch_size=8):
+    return EncoderAdapter(spec, device, batch_size)
+
+
+def validate_vectors(output, dimension=None):
+    if output.ndim != 2 or (dimension is not None and output.shape[1] != dimension):
+        raise ValueError("Invalid embedding shape")
+    if not np.isfinite(output).all():
+        raise ValueError("Nonfinite embedding")
+    if len(output) and not np.allclose(np.linalg.norm(output, axis=1), 1, atol=1e-4, rtol=0):
+        raise ValueError("Embedding is zero or not unit normalized")
+
+
+def smoke_encoder(encoder, examples):
+    documents = encoder.encode_documents(examples)
+    queries = encoder.encode_queries(examples)
+    repeat = encoder.encode_documents(examples)
+    if not np.allclose(documents, repeat, atol=1e-5, rtol=1e-5):
+        raise ValueError("Encoder repeat consistency failed")
+    return {"status": "PASS", "dimension": documents.shape[1], "examples": len(examples),
+            "query_shape": list(queries.shape), "cost": dict(encoder.cost),
+            "device": encoder.device, "revision": encoder.spec["resolved_revision"]}
