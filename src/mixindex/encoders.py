@@ -28,9 +28,16 @@ def resolve_model(spec, paths, root):
         key = digest(spec)
         if key in registry:
             record = registry[key]
-            snapshot_download(record["repo_id"], revision=record["resolved_revision"],
+            snapshot = snapshot_download(record["repo_id"], revision=record["resolved_revision"],
                               cache_dir=str(model_root / "hub"), local_files_only=True,
                               allow_patterns=record["download_patterns"])
+            if record.get("format_conversion"):
+                from .model_formats import convert_reviewed_checkpoint
+                converted, conversion = convert_reviewed_checkpoint(snapshot, model_root,
+                    record["repo_id"], record["resolved_revision"],
+                    record["format_conversion"]["recipe"]["source_sha256"])
+                if str(converted) != record["snapshot"] or conversion != record["format_conversion"]:
+                    raise ValueError("Converted model lock differs from verified conversion")
             return record
         api = HfApi()
         info = api.model_info(spec["repo_id"], files_metadata=True)
@@ -40,10 +47,27 @@ def resolve_model(spec, paths, root):
                                  allow_patterns=patterns,
                                  ignore_patterns=["onnx/*", "openvino/*", "*.bin", "*.h5", "*.msgpack"],
                                  max_workers=2)
+        conversion = None
         if not list(Path(path).rglob("*.safetensors")):
-            raise RuntimeError("Checkpoint has no safetensors; inspect format before enabling pickle")
+            # Reviewed upstream BGE-M3 uses a standard XLM-R tensor-only state dict.
+            if spec["repo_id"] != "BAAI/bge-m3":
+                raise RuntimeError("Checkpoint has no safetensors; inspect format before enabling pickle")
+            from huggingface_hub import hf_hub_download
+            from .model_formats import convert_reviewed_checkpoint
+            entry = next((f for f in info.siblings if f.rfilename == "pytorch_model.bin"), None)
+            lfs = getattr(entry, "lfs", None)
+            checksum = getattr(lfs, "sha256", None) or (lfs.get("sha256") if isinstance(lfs, dict) else None)
+            if not checksum:
+                raise ValueError("Upstream checkpoint requires a pinned LFS SHA256")
+            hf_hub_download(spec["repo_id"], "pytorch_model.bin", revision=info.sha,
+                            cache_dir=str(model_root / "hub"))
+            path, conversion = convert_reviewed_checkpoint(path, model_root, spec["repo_id"], info.sha, checksum)
+            patterns = [*patterns, "pytorch_model.bin"]
         record = {**spec, "resolved_revision": info.sha, "snapshot": path,
                   "dtype": "float32", "download_patterns": patterns, "trust_remote_code": False}
+        record["snapshot"] = str(record["snapshot"])
+        if conversion is not None:
+            record["format_conversion"] = conversion
         registry[key] = record
         write_json(lock_path, registry)
         return record

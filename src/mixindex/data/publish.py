@@ -1,23 +1,97 @@
 """Explicit publishing of validated processed datasets, separately from run bundles."""
 
 from pathlib import Path
+import hashlib
+import json
 import shutil
 
 from huggingface_hub import hf_hub_download
+import pyarrow as pa
+import pyarrow.parquet as pq
 
 from ..hf_sync import (ArtifactBundle, ensure_repo, get_hf_client, prepare_bundle,
                       verify_remote_bundle)
 from ..io import file_digest, file_lock, read_json, write_json
 from .prepare import validate_prepared
+from .download import dataset_spec, verify_source_file
+
+
+BEIR_PUBLICATION_RECIPES = {
+    "fiqa": ("FiQA", "https://sites.google.com/view/fiqa/"),
+    "trec-covid": ("TREC-COVID", "https://ir.nist.gov/covidSubmit/data.html"),
+    "nq": ("Natural Questions", "https://ai.google.com/research/NaturalQuestions/"),
+    "hotpotqa": ("HotpotQA", "https://hotpotqa.github.io/"),
+    "fever": ("FEVER", "https://fever.ai/"),
+}
+
+
+def verify_document_parquet(files, expected_rows, expected_source_sha256):
+    """Reconstruct the canonical document JSONL digest without materializing a corpus."""
+    checksum, count = hashlib.sha256(), 0
+    for file in files:
+        for batch in pq.ParquetFile(file).iter_batches(batch_size=10000):
+            for row in batch.to_pylist():
+                if row["doc_row"] != count:
+                    raise ValueError("Published document row order differs")
+                record = {"doc_id": row["doc_id"], "text": row["text"]}
+                checksum.update((json.dumps(record, ensure_ascii=False) + "\n").encode())
+                count += 1
+    if count != expected_rows or checksum.hexdigest() != expected_source_sha256:
+        raise ValueError("Published documents differ from canonical source checksum")
+    return {"rows": count, "canonical_documents_sha256": checksum.hexdigest(), "status": "PASS"}
+
+
+def stage_document_parquet(source, output, expected_rows, rows_per_file=100000, batch_rows=10000):
+    """Preserve source rows in bounded Parquet files usable directly by HF datasets."""
+    output = Path(output)
+    output.mkdir(parents=True, exist_ok=True)
+    schema = pa.schema([("doc_row", pa.int64()), ("doc_id", pa.string()), ("text", pa.string())])
+    writer, records, files, count = None, [], [], 0
+    temporary = None
+    try:
+        with Path(source).open() as stream:
+            for line in stream:
+                if count % rows_per_file == 0:
+                    if writer is not None:
+                        if records:
+                            writer.write_table(pa.Table.from_pylist(records, schema=schema))
+                            records.clear()
+                        writer.close()
+                        temporary.replace(files[-1])
+                    files.append(output / f"part-{len(files):05d}.parquet")
+                    temporary = files[-1].with_suffix(".parquet.part")
+                    writer = pq.ParquetWriter(temporary, schema, compression="zstd")
+                record = json.loads(line)
+                records.append({"doc_row": count, "doc_id": record["doc_id"], "text": record["text"]})
+                count += 1
+                if len(records) >= batch_rows:
+                    writer.write_table(pa.Table.from_pylist(records, schema=schema))
+                    records.clear()
+        if writer is not None:
+            if records:
+                writer.write_table(pa.Table.from_pylist(records, schema=schema))
+            writer.close()
+            writer = None
+            temporary.replace(files[-1])
+        if count != expected_rows:
+            raise ValueError("Published document row count differs from validated source")
+        verify_document_parquet(files, expected_rows, file_digest(source))
+        return files
+    finally:
+        if writer is not None:
+            writer.close()
+        if temporary is not None:
+            temporary.unlink(missing_ok=True)
 
 
 def publish_dataset(name, cfg, root):
     # Raw upstream copies and pretrained weights never enter automatic run bundles.
     # This command is a separate, explicitly requested dataset publication.
     source = Path(cfg["paths"]["data"]) / "processed" / name
-    manifest = validate_prepared(source)
-    if name not in {"fiqa", "trec-covid"}:
+    if name not in BEIR_PUBLICATION_RECIPES:
         raise ValueError("Dataset redistribution recipe must be verified for this release before publishing")
+    spec = dataset_spec(name, root)
+    manifest = validate_prepared(source, spec)
     release = manifest["release_hash"]
     api, namespace = get_hf_client(root)
     repo_id = f"{namespace}/mixindex-data-{name}"
@@ -26,23 +100,39 @@ def publish_dataset(name, cfg, root):
         ensure_repo(api, repo_id, cfg["sync"])
         if receipt_path.exists() and read_json(receipt_path).get("status") == "VERIFIED":
             return read_json(receipt_path)
+        # Existing prepared releases may predate adding the published source MD5.
+        # Verify it separately; do not rewrite their immutable release manifests.
+        raw = Path(cfg["paths"]["data"]) / "raw" / name / manifest["source"]["file"]
+        source_verified = verify_source_file(raw, ("md5", spec["md5"]) if "md5" in spec else None)
+        if source_verified["sha256"] != manifest["source"]["sha256"]:
+            raise ValueError("Raw archive differs from the validated prepared release")
         upstream = api.dataset_info(f"BeIR/{name}")
         metadata = upstream.card_data.to_dict() if upstream.card_data else {}
         declared = metadata.get("license")
         if declared not in (["cc-by-sa-4.0"], "cc-by-sa-4.0"):
             raise ValueError("Upstream license metadata differs from the reviewed publication recipe")
-        title = "FiQA" if name == "fiqa" else "TREC-COVID"
-        origin = ("[FiQA-2018](https://sites.google.com/view/fiqa/)" if name == "fiqa" else
-                   "[NIST TREC-COVID](https://ir.nist.gov/covidSubmit/data.html)")
+        title, origin_url = BEIR_PUBLICATION_RECIPES[name]
+        origin = f"[{title} source]({origin_url})"
         card_reference = f"https://huggingface.co/datasets/BeIR/{name}/blob/{upstream.sha}/README.md"
         payload = Path(cfg["paths"]["staging"]) / f"dataset-{name}-{release}"
         payload.mkdir(parents=True, exist_ok=True)
-        selected = ["documents.jsonl", "doc_ids.txt", "queries.parquet", "qrels.parquet",
+        selected = ["doc_ids.txt", "queries.parquet", "qrels.parquet",
                     "splits/query_roles.json", "manifest.json"]
         for name_file in selected:
             dest = payload / name_file
             dest.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(source / name_file, dest)
+        document_files = stage_document_parquet(source / "documents.jsonl", payload / "documents",
+                                                manifest["counts"]["documents"])
+        selected += [str(p.relative_to(payload)) for p in document_files]
+        write_json(payload / "publication.json", {"layout": "source-order-parquet-v1",
+            "source_release_hash": release, "source_archive_verified": source_verified,
+            "source_documents_sha256": manifest["files"]["documents.jsonl"]["sha256"],
+            "document_rows": manifest["counts"]["documents"],
+            "document_files": [str(p.relative_to(payload)) for p in document_files],
+            "text_policy": manifest["text_policy"], "row_policy": manifest["row_policy"],
+            "upstream_card_revision": upstream.sha, "upstream_license": declared})
+        selected.append("publication.json")
         card = f"""---
 license: cc-by-sa-4.0
 language: [en]
@@ -51,7 +141,7 @@ configs:
   - config_name: corpus
     data_files:
       - split: corpus
-        path: releases/{release}/documents.jsonl
+        path: releases/{release}/documents/*.parquet
   - config_name: queries
     data_files:
       - split: queries
@@ -77,9 +167,11 @@ Full validation found {manifest['counts']['documents']:,} documents and
 {manifest['counts']['test_queries']:,} official test queries. All qrels join documents and queries.
 Query roles: `{manifest['counts']['role_groups']}`. Missing independent train/dev queries
 remain unavailable; test queries are never repurposed for scheduling or tuning.
-Archive source checksum: `{manifest['source']['source_checksum']}`.
+Archive source checksum: `{source_verified['source_checksum']}`.
 Release: `{release}`. Per-file SHA256 and original source/license links are in `manifest.json`.
-These are prepared research inputs; no experiment quality or A100 performance is claimed.
+`publication.json` describes the additional Parquet serialization, row IDs and independently
+verified source archive. Text and document order match the validated local document store.
+These are prepared research inputs; experiment quality and hardware performance are unmeasured.
 """
         # README is metadata for the repository and also included in the immutable release.
         from ..io import atomic_bytes
@@ -95,7 +187,7 @@ These are prepared research inputs; no experiment quality or A100 performance is
         prefix = f"releases/{release}"
         revision = api.upload_folder(repo_id=repo_id, repo_type="dataset", folder_path=str(bundle.path),
                                       path_in_repo=prefix, commit_message=f"Publish validated {name} {release[:12]}").oid
-        parts = [{"repo_id": repo_id, "prefix": prefix, "revision": revision, "files": list(records)}]
+        parts = [{"repo_id": repo_id, "prefix": prefix, "revision": revision, "files": list(bundle.manifest["files"])}]
         verify_remote_bundle(api, parts, bundle.manifest)
         marker = {"release_hash": release, "revision": revision,
                   "manifest_sha256": file_digest(bundle.path / "artifact_manifest.json")}

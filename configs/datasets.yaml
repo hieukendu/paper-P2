@@ -16,6 +16,7 @@ trec-covid:
   license: https://huggingface.co/datasets/BeIR/trec-covid
 nq:
   parser: beir
+  md5: d4d3d2e48787a744b6f6e691ff534307
   url: https://public.ukp.informatik.tu-darmstadt.de/thakur/BEIR/datasets/nq.zip
   documents: 2681468
   test_queries: 3452
@@ -23,6 +24,7 @@ nq:
   license: https://huggingface.co/datasets/BeIR/nq
 hotpotqa:
   parser: beir
+  md5: f412724f78b0d91183a0e86805e16114
   url: https://public.ukp.informatik.tu-darmstadt.de/thakur/BEIR/datasets/hotpotqa.zip
   documents: 5233329
   test_queries: 7405
@@ -30,6 +32,7 @@ hotpotqa:
   license: https://huggingface.co/datasets/BeIR/hotpotqa
 fever:
   parser: beir
+  md5: 5a818580227bfb4b35bb6fa46d9b6c03
   url: https://public.ukp.informatik.tu-darmstadt.de/thakur/BEIR/datasets/fever.zip
   documents: 5416568
   test_queries: 6666
