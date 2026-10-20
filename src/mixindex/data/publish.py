@@ -249,7 +249,14 @@ def publish_scale_dataset(name, cfg, root):
     if name not in SCALE_PUBLICATION_RECIPES:
         raise ValueError(f"Dataset is not a scale publication: {name}")
     source = Path(cfg["paths"]["data"]) / "processed" / name
-    spec = dataset_spec(name, root)
+    # The scale preparation and publisher run from the isolated input worktree,
+    # while ``root`` points at the official experiment worktree.  Resolve the
+    # registry from this package first so the publisher validates against the
+    # exact source counts/checksums used to create the release (not a stale copy
+    # in the official worktree).
+    package_root = Path(__file__).resolve().parents[3]
+    registry_root = package_root if (package_root / "configs" / "datasets.yaml").exists() else root
+    spec = dataset_spec(name, registry_root)
     manifest = validate_prepared(source, spec)
     release = manifest["release_hash"]
     api, namespace = get_hf_client(root)
