@@ -63,9 +63,11 @@ def test_orcas_groups_deduplicate_edges_and_respect_document_join(tmp_path, monk
         stream.write("s2\tnew query\tD1\tu\n")
         stream.write("s2\tnew query\tD1\tu\n")
         stream.write("s3\tnew query\tD2\tu\n")
+        stream.write("s4\t\tD1\tu\n")
     spec = {"name": "orcas", "parser": "orcas", "url": "fixture", "md5": "fixture",
-            "records": 4, "source_queries": 3, "source": "fixture", "license": "fixture"}
+            "records": 5, "source_queries": 4, "source": "fixture", "license": "fixture"}
     manifest = _prepare_orcas("orcas", {"paths": paths, "splits": {"master_seed": 20261020}},
                               tmp_path, spec)
     assert manifest["counts"]["duplicate_edges"] == 1
     assert manifest["counts"]["missing_documents"] == 0
+    assert manifest["counts"]["empty_query_records"] == 1
