@@ -187,6 +187,7 @@ BGE download inspection: bge-base snapshot is pinned. Original BGE-M3 revision `
 
 <!-- health:begin -->
 Latest resource check (2026-10-20 20:28 UTC+7): all nine FiQA mapping cells are terminal and verified; the next scheduler cell is waiting for the configured RAM headroom gate (`RAM_HEADROOM`), not failing. Container-effective RAM is≈35.2GiB while the policy reserves 25GiB plus the worker request; H100 free VRAM is≈11.5GiB. No OOM or OOM-kill event is recorded (`oom=0`, `oom_kill=0`). Evidence: live `state/tasks.json`, `mixindex.runtime.effective_limits()`, cgroup and NVIDIA checks.
+External resource contention snapshot (2026-10-20 20:31 UTC+7): unrelated `/root/sandboxdp/artifact` work is active (HF sync PID24776; CPU queue PID24793→25132; GPU queue PID32522→workers; vLLM OmniSQL-7B PID31999/32087; Berka/PrivPetal workers under PIDs32931,34164,34845,49246). An unrelated Ollama/llama-server is active under `/home/jovyan/vericache` (PIDs89249/89615). These processes are outside paper-P2 and were not stopped. GPU accounting reports their individual FB use as0MiB while aggregate H100 use remains≈69.5GiB, so per-process GPU attribution is unavailable; the paper-P2 queue keeps its RAM/VRAM admission guards.
 <!-- health:end -->
 
 <!-- t0-download-check:begin -->
