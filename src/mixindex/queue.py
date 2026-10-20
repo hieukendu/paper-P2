@@ -227,7 +227,7 @@ def run_single(task, root):
         raise ValueError("Task config/source changed after enqueue; enqueue a new task revision")
     if task["phase"] != cfg["execution"]["phase"]:
         raise ValueError("Task phase differs from resolved config")
-    if task["experiment"] in {"E0", "E1", "CORE_SMOKE", "RUNTIME_PROBE", "T0"} and task["phase"] != "development":
+    if task["experiment"] in {"E0", "E1", "CORE_SMOKE", "RUNTIME_PROBE", "T0", "E2_PREFLIGHT"} and task["phase"] != "development":
         raise ValueError("Development runs cannot be labeled official")
     gpu_stage = task["experiment"] not in {"DATA_PREP", "MODEL_DOWNLOAD"}
     if gpu_stage and cfg["execution"]["device"].startswith("cuda") and task["resources"]["gpu_device"] is None:
@@ -277,6 +277,9 @@ def run_single(task, root):
                                   cfg["execution"]["device"], task.get("development_hardware", False))
     if task["experiment"] == "T0":
         return run_presetup(task, {}, cfg)
+    if task["experiment"] in {"E2_PREFLIGHT", "E2"}:
+        from .experiments_static import run_static_cell, run_static_preflight
+        return (run_static_preflight if task["experiment"] == "E2_PREFLIGHT" else run_static_cell)(cfg, root)
     raise NotImplementedError("This experiment branch has not yet been integrated")
 
 
@@ -310,7 +313,7 @@ def run_queue(cfg, root, max_compute_jobs=1, once=False, only_task_ids=None):
                     if config_hash(task_cfg) != task["config_hash"]:
                         allowed, reason = False, "CONFIG_CHANGED_AFTER_ENQUEUE"
                     if task["experiment"] not in {"DATA_PREP", "MODEL_DOWNLOAD", "MODEL_SMOKE", "E0",
-                                                  "E1", "CORE_SMOKE", "RUNTIME_PROBE", "T0"}:
+                                                  "E1", "CORE_SMOKE", "RUNTIME_PROBE", "T0", "E2_PREFLIGHT", "E2"}:
                         allowed, reason = False, "STAGE_NOT_IMPLEMENTED"
                     if task["measurement_mode"] == "exclusive" and alive:
                         allowed, reason = False, "WAITING_FOR_WORKER_AND_UPLOAD_DRAIN"

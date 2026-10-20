@@ -37,7 +37,7 @@ def main(argv=None):
     restore.add_argument("--output", type=Path, required=True)
     commands.add_parser("status", help="Show local environment, inputs and synchronization status")
     run = commands.add_parser("run", help="Run a stage with hardware and input gates")
-    run.add_argument("--experiment", choices=["E0", "E1", "CORE_SMOKE", "T0"], required=True)
+    run.add_argument("--experiment", choices=["E0", "E1", "CORE_SMOKE", "T0", "E2_PREFLIGHT", "E2"], required=True)
     run.add_argument("--config", required=True)
     run.add_argument("--development-hardware", action="store_true",
                      help="Label development diagnostics on other hardware; never certify target gates")
@@ -47,6 +47,10 @@ def main(argv=None):
     presetup.add_argument("--enqueue-only", action="store_true")
     presetup.add_argument("--once", action="store_true")
     presetup.add_argument("--development-hardware", action="store_true")
+    plan = commands.add_parser("plan", help="Write the declared exact FiQA experiment matrix without starting it")
+    plan.add_argument("--experiment", choices=["E2"], required=True)
+    plan.add_argument("--config", default="configs/experiments/e2.yaml")
+    plan.add_argument("--output", type=Path, default=Path("configs/jobs.yaml"))
     enqueue = commands.add_parser("enqueue", help="Add explicit immutable jobs without executing dependencies")
     enqueue.add_argument("--jobs", type=Path, required=True)
     queue = commands.add_parser("queue", help="Run ready subprocess workers within measured resource limits")
@@ -68,7 +72,14 @@ def main(argv=None):
                 result = {"compute_status": "FAILED", "error_type": type(exc).__name__}
             write_json(args.task_file.parent / "result.json", result)
             return 0 if result["compute_status"] == "COMPUTE_DONE" else 1
-        if args.command == "presetup":
+        if args.command == "plan":
+            from .experiments_static import build_static_tasks
+            import yaml
+            from .io import atomic_bytes
+            tasks = build_static_tasks(cfg, root)
+            atomic_bytes(args.output, yaml.safe_dump({"jobs": tasks}, sort_keys=False).encode())
+            result = {"output": str(args.output), "tasks": len(tasks), "status": "PLANNED"}
+        elif args.command == "presetup":
             from .experiments import build_presetup_tasks
             from .queue import enqueue_tasks, prepare_task, run_queue
             cfg["execution"]["require_target"] = not args.development_hardware
@@ -90,6 +101,12 @@ def main(argv=None):
                              ("status", "sync_status", "reason", "pid", "run_dir")}
                        for key, row in state["tasks"].items()}
         elif args.command == "run":
+            if args.experiment in {"E2_PREFLIGHT", "E2"}:
+                from .experiments_static import run_static_cell, run_static_preflight
+                runner = run_static_preflight if args.experiment == "E2_PREFLIGHT" else run_static_cell
+                result = runner(cfg, root)
+                print(json.dumps(result, indent=2))
+                return 0 if result["compute_status"] == "COMPUTE_DONE" else 1
             if args.experiment in {"E0", "E1", "CORE_SMOKE"}:
                 from .experiments import run_core_smoke, run_e0, run_e1
                 runner = {"E0": run_e0, "E1": run_e1, "CORE_SMOKE": run_core_smoke}[args.experiment]

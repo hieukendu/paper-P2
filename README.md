@@ -14,7 +14,8 @@ query embedding caches, paid-access isolation, OP/LA/residual MLP maps, regional
 ridge fitting, calibration, exact/HNSW search, adaptive greedy/random/degree/read
 schedulers, exact checkpoint restore, a persistent subprocess queue, and the bounded
 FiQA T0.core setup path. The root [checklist](checklist.md) records actual run status.
-Scale/temporal adapters and official E2–E7 runners remain incomplete; these stages
+The exact FiQA E2 comparison runner is implemented and gated on its development preflight.
+Scale/temporal adapters and E3–E7 runners remain incomplete; these stages
 are never marked complete from a smoke test or a small subset.
 
 ## Install and run presetup
@@ -43,6 +44,8 @@ pools. It freezes common calibration pairs, checks the declared HNSW grid on ind
 Q_tune, and saves learned states, local restore checks, timing, an explicit forecast,
 and a scoped profile under `configs/locked/tuning.lock.yaml`. Test labels are excluded
 from tuning. Missing cost measurements remain `unmeasured`; no full-scale time is invented.
+The first FiQA profile is frozen and verified: batch64 for both encoders, LR0.001 for
+LA/MLP, HNSW L50/ef200; all three tested maps exceed the0.99 candidate/serving gates.
 ANN gate failure leaves the exact branch separate and never becomes a false recall PASS.
 
 ```bash
@@ -82,3 +85,24 @@ mixindex status
 `scripts/ci-tests.yml` is an inactive GitHub Actions template: the available GitHub token
 lacks the workflow scope needed to publish `.github/workflows/`. Local validation does
 not claim a GitHub Actions run.
+
+## Official FiQA exact comparison
+
+```bash
+mixindex plan --experiment E2 --output configs/jobs.yaml
+mixindex enqueue --jobs configs/jobs.yaml
+mixindex queue
+```
+
+The plan declares45 map/variant/seed cells and60 primary scheduler cells, sharing3
+duplicate random cells (102 unique official cells). It first preflights every map,
+regional/calibration variant and seed without reading test relevance, then measures
+the fixed development greedy prefix through10% and25% accessed. Official workers
+require the exact profile, inputs, source revision and completed preflight. The first
+primary cell must complete before the remainder can start. Each cell retains the
+bootstrap,5/10/25/50% accessed and100% true checkpoints. Reference computation is
+separate research cost; cached lookups are never reported as measured GPU encoding.
+
+The first profile's T0.core bundle is
+[verified on Hugging Face](https://huggingface.co/datasets/deadgod3005/mixindex-runs-001).
+This certifies FiQA/MiniLM-MPNet only; TREC/scale/other pairs need their own profiles.

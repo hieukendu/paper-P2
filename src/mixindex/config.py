@@ -72,6 +72,8 @@ def validate_config(cfg) -> None:
     require(cfg["execution"]["max_compute_jobs"] in {1, 2}, "max_compute_jobs must be 1 or 2")
     require(cfg["execution"]["phase"] in {"development", "official"}, "Unknown phase")
     require(cfg["execution"]["mode"] in {"cached_access", "live_encode"}, "Unknown encoder mode")
+    require(cfg["experiment"]["map_seed"] in cfg["evaluation"]["map_seeds"], "Undeclared map seed")
+    require(cfg["experiment"]["traffic_seed"] in cfg["evaluation"]["traffic_seeds"], "Undeclared traffic seed")
     require(isinstance(cfg["sync"]["private"], bool), "sync.private must be a boolean")
     require(0 < cfg["calibration"]["quantile"] <= 1, "Invalid residual quantile")
     for name in ("batch_fraction", "refit_fraction"):
@@ -158,7 +160,19 @@ def validate_tuning_profile(task, cfg, profiles):
     if task.get("profile_hash") not in profiles["profiles"]:
         raise ValueError("TUNING_REQUIRED: official execution needs the exact scoped profile")
     entry = profiles["profiles"][task["profile_hash"]]
-    if entry["policy_hash"] != digest(tuning_policy(cfg)):
+    policy_cfg = deepcopy(cfg)
+    if task.get("overrides"):
+        allowed = {"mapping.regional", "mapping.ridge", "scheduler.refit_fraction", "calibration.enabled",
+                   "calibration.quantile", "scheduler.kind"}
+        if not task.get("variant_id") or not set(task["overrides"]).issubset(allowed):
+            raise ValueError("Ablation overrides need a declared variant and allowed keys")
+        for key, value in task["overrides"].items():
+            section, name = key.split(".")
+            if cfg[section][name] != value:
+                raise ValueError("Declared ablation override differs from resolved config")
+            if section == "calibration":
+                policy_cfg[section][name] = profiles["policy"][section][name]
+    if entry["policy_hash"] != digest(tuning_policy(policy_cfg)):
         raise ValueError("Official tuning policy mismatch")
     if entry["scope"] != task["tuning_scope"] or entry["inputs"] != task["input_refs"]:
         raise ValueError("Official dataset/model/split/runtime scope mismatch")
@@ -175,8 +189,3 @@ def validate_tuning_profile(task, cfg, profiles):
             cfg["search"][key] != selected_search[key]
             for key in ("candidates", "ef_search") if selected_search.get(key) is not None):
         raise ValueError("Official search settings differ from the selected profile")
-    if task.get("overrides"):
-        allowed = {"mapping.regional", "mapping.ridge", "scheduler.refit_fraction", "calibration.enabled",
-                   "calibration.quantile", "scheduler.kind"}
-        if not task.get("variant_id") or not set(task["overrides"]).issubset(allowed):
-            raise ValueError("Ablation overrides need a declared variant and allowed keys")

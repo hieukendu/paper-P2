@@ -1,0 +1,17 @@
+execution:
+  phase: official
+  mode: cached_access
+search:
+  backend: exact
+  candidates: 50
+  ef_search: 200
+  threads: 8
+models:
+  batch_size: 64
+scheduler:
+  kind: greedy
+experiment:
+  map_seed: 17
+  traffic_seed: 101
+  variant: primary
+  profile_hash: a38d8e8b5b27686edceb4d80ab4822d3164545b1327bc29a35db0f687b87a0e3

@@ -65,6 +65,12 @@ evaluation:
   map_seeds: [17, 29, 43]
   traffic_seeds: [101, 103, 107, 109, 113]
   bootstrap_draws: 10000
+experiment:
+  map_seed: 17
+  traffic_seed: 101
+  variant: primary
+  profile_hash: null
+  preflight_run: null
 execution:
   phase: development
   mode: cached_access

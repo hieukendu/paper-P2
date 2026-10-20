@@ -4,6 +4,53 @@ import numpy as np
 import pytrec_eval
 
 
+class StaticEvaluator:
+    """Own full target vectors/test labels; migration gets only a paid-row callback."""
+
+    def __init__(self, target, old, ids, query_ids, new_queries, old_queries, qrels):
+        from .index import ExactIndex
+        self._target = target
+        self.ids, self.query_ids = list(ids), list(query_ids)
+        self.new_queries, self.qrels = new_queries, qrels
+        self._reference = ExactIndex(target, ids, np.ones(len(ids), dtype=bool)).search(new_queries)
+        self._old = ExactIndex(old, ids).search(old_queries)
+        self._full_ids = self._rankings(self._reference)
+        self.records = []
+
+    def _rankings(self, result):
+        return {qid: [self.ids[int(row)] for row in rows[:10]]
+                for qid, rows in zip(self.query_ids, result.rows)}
+
+    def paid_rows(self, rows):
+        return self._target[rows]
+
+    def evaluate(self, result, label, paid, backfilled, retrieval):
+        rankings = self._rankings(result)
+        metrics = ndcg_hit_nfr(rankings, self.qrels, self._full_ids)
+        agreement = agreement_at_10(result.rows, self._reference.rows)
+        for metric, arr in zip(metrics, agreement):
+            metric.update(arr_at_10=float(arr), checkpoint=label, accessed=paid,
+                          f_accessed=paid / len(self.ids), f_scheduled=backfilled / len(self.ids))
+            self.records.append(metric)
+        for qid, ranking in rankings.items():
+            for rank, did in enumerate(ranking, 1):
+                retrieval.write(f"{qid} Q0 {did} {rank} {-rank} {label}\n")
+        return {"checkpoint_complete": True}
+
+    def evaluate_references(self, retrieval):
+        self.evaluate(self._old, "old_reference", 0, 0, retrieval)
+        self.evaluate(self._reference, "full_new_reference", len(self.ids), 0, retrieval)
+
+    def evaluate_snapshot(self, index, paid, backfilled, retrieval):
+        label = f"accessed-{paid:09d}"
+        return self.evaluate(index.search(self.new_queries), label, paid, backfilled, retrieval)
+
+    def verify_completion(self, index):
+        if (not index.fidelity.all() or not np.array_equal(index.vectors, self._target) or
+                not np.array_equal(index.search(self.new_queries).rows, self._reference.rows)):
+            raise ValueError("100% true stored vectors/rankings differ from the full-new exact reference")
+
+
 def agreement_at_10(rankings, full_new_exact, weights=None):
     if len(rankings) != len(full_new_exact):
         raise ValueError("Evaluation query populations differ")
