@@ -187,7 +187,7 @@ Live scale check (2026-10-20 17:05 UTC+7): MS MARCO document-v1 ingest is `RUNNI
 <!-- live-scale-check:end -->
 
 <!-- e1-verification:begin -->
-E1 verification: H100-target development runs `E1-fiqa-b68e354ee3f3` and `E1-fiqa-65e9ba9de35d` are `COMPUTE_DONE` with `official_gate=true`, `completion_exact_agreement=1.0`, budget isolation `PASS`, resume prefix `PASS`, six complete checkpoints, 2,000 documents and 32 queries; both run bundles are remotely `VERIFIED`. The E1 outputs are diagnostic/development evidence, not a full-corpus quality claim. Debug run `E1-debug-fiqa-0658190b91b1` remains excluded for `SOURCE_SNAPSHOT_MISMATCH` by the source guard; it is not counted as a failed official result.
+E1 verification: H100-target development runs `E1-fiqa-b68e354ee3f3` and `E1-fiqa-65e9ba9de35d` are `COMPUTE_DONE` with `official_gate=true`, `completion_exact_agreement=1.0`, budget isolation `PASS`, resume prefix `PASS`, six complete checkpoints, 2,000 documents and 32 queries; both run bundles are remotely `VERIFIED`. The E1 outputs are diagnostic/development evidence, not a full-corpus quality claim. The restricted-subset evaluator has `zero_idcg` on 162/192 metric rows, so low NDCG/hit values are expected and are not E1 acceptance gates; exact completion/resume and leakage/budget checks are the expected result. Debug run `E1-debug-fiqa-0658190b91b1` remains excluded for `SOURCE_SNAPSHOT_MISMATCH` by the source guard; it is not counted as a failed official result.
 <!-- e1-verification:end -->
 
 <!-- t0-threshold:begin -->
