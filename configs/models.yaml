@@ -36,7 +36,9 @@ nomic:
   old:
     repo_id: nomic-ai/nomic-embed-text-v1
     dim: 768
-    adapter: nomic_review_required
+    adapter: nomic_pinned
+    code_repo_id: nomic-ai/nomic-bert-2048
+    code_revision: 7710840340a098cfb869c4f65e87cf2b1b70caca
     pooling: masked_mean
     max_tokens: 8192
     query_prefix: 'search_query: '
@@ -44,7 +46,9 @@ nomic:
   new:
     repo_id: nomic-ai/nomic-embed-text-v1.5
     dim: 768
-    adapter: nomic_review_required
+    adapter: nomic_pinned
+    code_repo_id: nomic-ai/nomic-bert-2048
+    code_revision: 7710840340a098cfb869c4f65e87cf2b1b70caca
     pooling: masked_mean_layernorm
     max_tokens: 8192
     query_prefix: 'search_query: '

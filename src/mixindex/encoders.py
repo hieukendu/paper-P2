@@ -38,6 +38,34 @@ def resolve_model(spec, paths, root):
                     record["format_conversion"]["recipe"]["source_sha256"])
                 if str(converted) != record["snapshot"] or conversion != record["format_conversion"]:
                     raise ValueError("Converted model lock differs from verified conversion")
+            if record.get("adapter") == "nomic_pinned":
+                from .nomic_adapter import verify_code_snapshot
+                verify_code_snapshot(record["code_snapshot"], record["code_revision"],
+                                     record.get("code_files"))
+            return record
+        if spec.get("adapter") == "nomic_pinned":
+            from .nomic_adapter import CODE_FILES, CODE_REPO_ID, CODE_REVISION, verify_code_snapshot
+            if spec.get("code_repo_id") != CODE_REPO_ID or spec.get("code_revision") != CODE_REVISION:
+                raise ValueError("Nomic model requires the reviewed external code pin")
+            api = HfApi()
+            info = api.model_info(spec["repo_id"], files_metadata=True)
+            patterns = ["*.json", "*.safetensors", "*.txt", "*.model", "*.md"]
+            snapshot = snapshot_download(spec["repo_id"], revision=info.sha,
+                                         cache_dir=str(model_root / "hub"),
+                                         allow_patterns=patterns, ignore_patterns=["*.bin", "*.h5"])
+            code_info = api.model_info(CODE_REPO_ID, revision=CODE_REVISION, files_metadata=True)
+            if code_info.sha != CODE_REVISION:
+                raise ValueError("Pinned Nomic external code revision is unavailable")
+            code_snapshot = snapshot_download(
+                CODE_REPO_ID, revision=CODE_REVISION, cache_dir=str(model_root / "hub"),
+                allow_patterns=[*CODE_FILES, "config.json", "README.md"],
+                ignore_patterns=["*.bin", "*.safetensors"], max_workers=2)
+            code_files = verify_code_snapshot(code_snapshot, CODE_REVISION, CODE_FILES)
+            record = {**spec, "resolved_revision": info.sha, "snapshot": str(snapshot),
+                      "download_patterns": patterns, "dtype": "float32", "trust_remote_code": False,
+                      "code_snapshot": str(code_snapshot), "code_files": code_files}
+            registry[key] = record
+            write_json(lock_path, registry)
             return record
         api = HfApi()
         info = api.model_info(spec["repo_id"], files_metadata=True)
@@ -155,6 +183,9 @@ class EncoderAdapter:
 
 
 def build_encoder(spec, device="cuda", batch_size=8):
+    if spec.get("adapter") == "nomic_pinned":
+        from .nomic_adapter import NomicEncoderAdapter
+        return NomicEncoderAdapter(spec, device, batch_size)
     return EncoderAdapter(spec, device, batch_size)
 
 

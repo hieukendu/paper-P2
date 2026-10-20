@@ -43,6 +43,9 @@ def validate_prepared(path, expected=None):
 
 def prepare_dataset(name, cfg, root):
     spec = dataset_spec(name, root)
+    if spec["parser"] in {"msmarco_documents", "orcas"}:
+        from .scale import prepare_scale_dataset
+        return prepare_scale_dataset(name, cfg, root)
     output = Path(cfg["paths"]["data"]) / "processed" / name
     with file_lock(output.parent / f".{name}.prepare.lock"):
         if (output / "manifest.json").exists():

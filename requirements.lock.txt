@@ -4,6 +4,7 @@
 certifi==2026.10.19
 charset-normalizer==3.5.2
 cloudpickle==3.1.2
+einops==0.8.1
 filelock==3.32.3
 fsspec==2026.7.0
 hf-xet==1.7.0
