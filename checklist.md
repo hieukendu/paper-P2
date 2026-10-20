@@ -281,6 +281,8 @@ Execution control (2026-10-20 15:25 UTC): user clarified that the requested stop
 <!-- execution-control:end -->
 Latest E2 control (2026-10-20 16:20 UTC): all degree/read seeds17/29/43 and greedy seed17 are now verified results; 19 FiQA official cells (9 mapping + 3 random + 3 degree + 3 read + greedy seed17) plus the replacement preflight are accepted. Greedy seed29 is running serially under the same immutable source/profile/pipeline; greedy seed43 remains gated behind it. CVPR2 remains stopped.
 
+Resource rebalance (2026-10-20 16:33 UTC): OVLLM/vLLM/llama-server was preserved; no live OVLLM process held resources (matching entries were zombies only). To release capacity for E2, unrelated SandboxDP TPCH worker PID `147282` (RSS≈2.47GiB) was terminated; E2/CVPR2 workers were not touched and its partial artifacts remain preserved. E2 greedy seed29 remains live; cgroup memory is≈225.8GiB/250GiB with `oom=0` and `oom_kill=0`.
+
 
 Technical interruption report (2026-10-20 15:27 UTC): the first E2 resume attempt stopped at the existing complete `5,763/57,638` checkpoint and emitted no `result.json`, compute signal or verified sync; it is excluded from scientific results. The cgroup reached `266.14/250 GiB` accounting with `memory.events=max=564648` but `oom=0` and `oom_kill=0`, while unrelated SandboxDP TPCH workers held the largest RSS. To protect correctness, their two dispatchers and four high-RSS TPCH workers were stopped; their partial artifacts remain on disk. Four low-RSS existing SandboxDP workers remain. All nine E2 FiQA scheduler records were reset to `PENDING`; the next run will reuse the complete checkpoint under the same immutable source/profile and serial queue.
 
