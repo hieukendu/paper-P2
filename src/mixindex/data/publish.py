@@ -16,15 +16,25 @@ def publish_dataset(name, cfg, root):
     # This command is a separate, explicitly requested dataset publication.
     source = Path(cfg["paths"]["data"]) / "processed" / name
     manifest = validate_prepared(source)
-    if name != "fiqa":
+    if name not in {"fiqa", "trec-covid"}:
         raise ValueError("Dataset redistribution recipe must be verified for this release before publishing")
     release = manifest["release_hash"]
     api, namespace = get_hf_client(root)
     repo_id = f"{namespace}/mixindex-data-{name}"
     receipt_path = Path(cfg["paths"]["state"]) / f"hf-dataset-{name}-{release}.json"
     with file_lock(receipt_path.with_suffix(".lock")):
+        ensure_repo(api, repo_id, cfg["sync"])
         if receipt_path.exists() and read_json(receipt_path).get("status") == "VERIFIED":
             return read_json(receipt_path)
+        upstream = api.dataset_info(f"BeIR/{name}")
+        metadata = upstream.card_data.to_dict() if upstream.card_data else {}
+        declared = metadata.get("license")
+        if declared not in (["cc-by-sa-4.0"], "cc-by-sa-4.0"):
+            raise ValueError("Upstream license metadata differs from the reviewed publication recipe")
+        title = "FiQA" if name == "fiqa" else "TREC-COVID"
+        origin = ("[FiQA-2018](https://sites.google.com/view/fiqa/)" if name == "fiqa" else
+                   "[NIST TREC-COVID](https://ir.nist.gov/covidSubmit/data.html)")
+        card_reference = f"https://huggingface.co/datasets/BeIR/{name}/blob/{upstream.sha}/README.md"
         payload = Path(cfg["paths"]["staging"]) / f"dataset-{name}-{release}"
         payload.mkdir(parents=True, exist_ok=True)
         selected = ["documents.jsonl", "doc_ids.txt", "queries.parquet", "qrels.parquet",
@@ -51,12 +61,13 @@ configs:
       - split: all
         path: releases/{release}/qrels.parquet
 ---
-# Validated MixIndex FiQA preparation
+# Validated MixIndex {title} preparation
 
-Derived from [BEIR FiQA](https://huggingface.co/datasets/BeIR/fiqa),
-[FiQA-2018](https://sites.google.com/view/fiqa/) and the
+Derived from [BEIR {title}](https://huggingface.co/datasets/BeIR/{name}),
+{origin} and the
 [BEIR project](https://github.com/beir-cellar/beir).
-Upstream dataset terms: CC BY-SA 4.0 as declared in the BEIR FiQA card.
+Upstream dataset card declares CC BY-SA 4.0; see the [pinned card]({card_reference})
+and original source links for dataset terms and attribution.
 This preparation preserves source document IDs and ingestion order, joins title and body
 with a newline when a title is present, groups queries by NFKC/casefold/whitespace,
 and publishes fixed disjoint query roles with test > dev > train precedence.
@@ -64,6 +75,8 @@ The local SQLite lookup is omitted because it is reproducible from the document 
 
 Full validation found {manifest['counts']['documents']:,} documents and
 {manifest['counts']['test_queries']:,} official test queries. All qrels join documents and queries.
+Query roles: `{manifest['counts']['role_groups']}`. Missing independent train/dev queries
+remain unavailable; test queries are never repurposed for scheduling or tuning.
 Archive source checksum: `{manifest['source']['source_checksum']}`.
 Release: `{release}`. Per-file SHA256 and original source/license links are in `manifest.json`.
 These are prepared research inputs; no experiment quality or A100 performance is claimed.
@@ -71,8 +84,9 @@ These are prepared research inputs; no experiment quality or A100 performance is
         # README is metadata for the repository and also included in the immutable release.
         from ..io import atomic_bytes
         atomic_bytes(payload / "README.md", card.encode())
-        records = {str(p.relative_to(payload)): {"bytes": p.stat().st_size, "sha256": file_digest(p)}
-                   for p in payload.rglob("*") if p.is_file()}
+        records = {name_file: {"bytes": (payload / name_file).stat().st_size,
+                               "sha256": file_digest(payload / name_file)}
+                   for name_file in selected + ["README.md"]}
         bundle = prepare_bundle(ArtifactBundle(f"data-{name}-{release[:12]}", payload,
                                   {"run_id": f"data-{name}-{release[:12]}",
                                    "compute_status": "COMPUTE_DONE", "files": records}),
@@ -103,6 +117,7 @@ These are prepared research inputs; no experiment quality or A100 performance is
         receipt = {"status": "VERIFIED", "dataset": name, "repo_id": repo_id,
                    "release_hash": release, "payload_revision": revision,
                    "revision": final_revision, "files": records,
+                   "upstream_card_revision": upstream.sha, "upstream_license": declared,
                    "hf_url": f"https://huggingface.co/datasets/{repo_id}"}
         write_json(receipt_path, receipt)
         return receipt

@@ -1,6 +1,6 @@
 # M13 — CLI runbook và wiring cuối
 
-Các lệnh dưới là **giao diện phải implement**, chưa chạy được trong repo hiện tại. Agent phải nối `cli.py` với các module tương ứng rồi mới dùng. Chạy tại project root trên Linux server A10080, dùng `.venv`; không chạy training trên Windows.
+Các lệnh dưới là **giao diện phải implement**, chưa chạy được trong repo hiện tại. Agent phải nối `cli.py` với các module tương ứng rồi mới dùng. Chạy tại project root trên Linux server H10080, dùng `.venv`; không chạy training trên Windows.
 
 ## Command surface tối thiểu
 

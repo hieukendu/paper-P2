@@ -25,7 +25,7 @@ Code tests tập trung vào lỗi làm sai nghiên cứu hoặc mất run/sync. 
 
 ## Integration gates theo thứ tự
 
-1. **Environment:** server GPU visible đúng A10080 hoặc báo discrepancy; CPU/RAM effective limits; dependency/model pooling smoke.
+1. **Environment:** server GPU visible đúng H10080 hoặc báo discrepancy; CPU/RAM effective limits; dependency/model pooling smoke.
 2. **HF tiny sync:** private test bundle có config + tiny safetensors + npz→upload→verify→restore/load; mock test không thay live result. Giữ tiny repo trong pool, không tự xóa để dọn.
 3. **FiQA exact:** small subset, accessor audit, complete100% exact, learned map saved/loaded và resumed cùng batch IDs.
 4. **T0.core:** core M05–M08 implementation + bounded lr validation/CAL/INDEX/RUNTIME theo M14; profile local-verified trước official. ANN ≥0.99 trên Q_tune/cùng stored snapshot; gate fail chặn ANN branch, exact branch có thể tiếp tục. Calibration thiếu giữ N/A/fallback đúng rule.

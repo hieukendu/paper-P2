@@ -1,4 +1,4 @@
-"""Private, immutable Hub bundles: checksum verification precedes completion markers."""
+"""Immutable Hub bundles: checksum verification precedes completion markers."""
 
 from dataclasses import dataclass
 import inspect
@@ -77,7 +77,8 @@ def collect_run_artifacts(run_dir, checkpoint=None):
         raise SyncError("NOT_READY", "Running outputs must be closed before bundling")
     allowed = {"config.lock.json", "summary.json", "metrics.parquet", "retrieval.trec.gz",
                "events.jsonl", "accessed_ids.npz", "timing.json", "estimate.json",
-               "environment.json", "models.lock.json", "dataset_manifest.json", "selection.parquet"}
+               "environment.json", "models.lock.json", "dataset_manifest.json", "selection.parquet",
+               "development_queries.json", "throughput_probe.json", "tuning_profile.json"}
     names = [name for name in allowed if (run_dir / name).is_file()]
     checkpoints = run_dir / "checkpoints"
     if checkpoint is not None:
@@ -170,14 +171,16 @@ def ensure_repo(api, repo_id, cfg):
         info = api.repo_info(repo_id, repo_type="dataset")
     except RepositoryNotFoundError:
         # SDK compatibility is resolved from the pinned API signature, not guessed on failures.
-        visibility = {"private": True} if "private" in inspect.signature(api.create_repo).parameters else {"visibility": "private"}
+        private = cfg["private"]
+        visibility = ({"private": private} if "private" in inspect.signature(api.create_repo).parameters
+                      else {"visibility": "private" if private else "public"})
         api.create_repo(repo_id, repo_type="dataset", exist_ok=False, **visibility)
         api.upload_file(repo_id=repo_id, repo_type="dataset", path_in_repo=".mixindex.json",
                         path_or_fileobj=b'{"project":"mixindex","format":1}\n',
-                        commit_message="Initialize private MixIndex artifact store")
+                        commit_message="Initialize MixIndex artifact store")
         info = api.repo_info(repo_id, repo_type="dataset")
-    if not info.private:
-        raise SyncError("CONFIG_ERROR", "Existing repository must already be private")
+    if info.private != cfg["private"]:
+        raise SyncError("CONFIG_ERROR", "Existing repository visibility differs from sync.private")
     marker = hf_hub_download(repo_id, ".mixindex.json", repo_type="dataset", token=api.token,
                               revision=info.sha, force_download=True)
     if read_json(marker) != {"project": "mixindex", "format": 1}:
@@ -385,10 +388,12 @@ def restore_run(receipt, output, api=None):
 def source_files(root):
     root = Path(root)
     names = ["pyproject.toml", "requirements.lock.txt", "README.md", "scripts/setup.sh",
-             ".github/workflows/tests.yml"]
+             "scripts/ci-tests.yml"]
     names += [str(p.relative_to(root)) for directory in ("src", "configs", "tests")
               for p in (root / directory).rglob("*")
-              if p.is_file() and "__pycache__" not in p.parts and p.suffix in {".py", ".yaml", ".json"}]
+              if p.is_file() and "__pycache__" not in p.parts and p.suffix in {".py", ".yaml", ".json"}
+              and not str(p.relative_to(root)).startswith("configs/locked/")
+              and str(p.relative_to(root)) != "configs/jobs.yaml"]
     return sorted(name for name in names if (root / name).is_file())
 
 

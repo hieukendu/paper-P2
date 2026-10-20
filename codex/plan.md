@@ -1,6 +1,6 @@
 # Plan triển khai và nối toàn bộ thí nghiệm MixIndex
 
-Trạng thái: **đặc tả đã viết; implementation và thí nghiệm chưa chạy**. Target **server A100 80GB**. Agent làm lần lượt các phần dưới, giữ cập nhật [checklist gốc](../checklist.md); không tạo một plan khác thay cho plan này.
+Trạng thái: **đặc tả đã viết; implementation và thí nghiệm chưa chạy**. Target **server H100 80GB**. Agent làm lần lượt các phần dưới, giữ cập nhật [checklist gốc](../checklist.md); không tạo một plan khác thay cho plan này.
 
 Điểm vào của agent là [codex/README.md](README.md). Luồng thực thi đã rà lại: **tải/validate inputs → E0/E1 correctness → code đầy đủ core → T0.core → freeze → E2/E3 → tải/validate scale inputs → T0.scale → E4 full-size gate → E5**. E6/E7 mở từng case sau T0 tương thích; không chờ tải hết mọi dữ liệu mới bắt đầu smoke.
 
@@ -12,14 +12,14 @@ Trạng thái: **đặc tả đã viết; implementation và thí nghiệm chưa
 4. Trước khi code, agent phải diễn đạt ngắn được: map là regression không phải RL; `true` là h(d) trực tiếp; ORCAS là static graph không có event frequency; evaluator tách khỏi scheduler; primary static ở10% **accessed**, temporal tuần8 ở7% **scheduled**; E0–E7 có8 milestone.
 5. Đọc và hiểu xong mới tick `READ` trong root checklist. Không cần tạo một Markdown “đã đọc”/Material Passport/evidence report riêng.
 
-Nếu có mâu thuẫn: user correction hiện hành ưu tiên (A10080/server-only, tuning trước official). [M14](14_presetup_tuning.md) cụ thể hóa T0 và việc chọn lr từ grid validation đã có ở report15.3; report8.3/15 tiếp tục định nghĩa khoa học, budget/splits/metric. Không đổi primary để khớp illustrative curves hoặc vì ablation thắng trên test.
+Nếu có mâu thuẫn: user correction hiện hành ưu tiên (H10080/server-only, tuning trước official). [M14](14_presetup_tuning.md) cụ thể hóa T0 và việc chọn lr từ grid validation đã có ở report15.3; report8.3/15 tiếp tục định nghĩa khoa học, budget/splits/metric. Không đổi primary để khớp illustrative curves hoặc vì ablation thắng trên test.
 
 ## P1 — Khung project, environment và đường sync trước run dài
 
 Đọc M01, M10, M11, M12. Triển khai:
 
 1. `pyproject.toml`, config registry/base, CLI skeleton, resolve paths/env và ignore caches/secrets.
-2. `probe_hardware/effective_limits/probe_storage`, cost scopes; smoke torch trên chính A10080, pin dependency versions và hnswlib commit.
+2. `probe_hardware/effective_limits/probe_storage`, cost scopes; smoke torch trên chính H10080, pin dependency versions và hnswlib commit.
 3. `progress.py` với root checklist atomic update, status schema và summary/config artifact writers tối thiểu.
 4. Thin `run_single/finalize_run` và HF pipeline `collect_run_artifacts -> choose_upload_repo -> ensure_repo -> upload_bundle -> verify_remote_bundle -> auto_sync_experiment`. Làm một tiny safetensors/npz fixture và restore round-trip trước run thật.
 5. Single-host queue tối thiểu1 slot lúc đầu, persistence/PID checks và `enqueue/status`; mở2 slots sau resource probes. Không cần code mọi E trước khi smoke.

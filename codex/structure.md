@@ -1,6 +1,6 @@
 # Cấu trúc project cần triển khai
 
-Đây là cấu trúc **đích**, chưa phải những file Python đang tồn tại. Repo hiện có PDF, report, expect và bộ Markdown hướng dẫn. Code chạy Linux server A100 80GB; mọi path resolve từ `PROJECT_ROOT`.
+Đây là cấu trúc **đích**, chưa phải những file Python đang tồn tại. Repo hiện có PDF, report, expect và bộ Markdown hướng dẫn. Code chạy Linux server H100 80GB; mọi path resolve từ `PROJECT_ROOT`.
 
 ```text
 paper-P2/

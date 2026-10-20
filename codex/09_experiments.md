@@ -21,7 +21,7 @@ Runner xuất status có exit code: failed technical != negative scientific. `fi
 
 | Stage | Dataset/model | So sánh và expected output | Dependency |
 |---|---|---|---|
-| E0 | Source registries, server A10080; chưa cần tải full matrix | config/env/splits/accessor contracts; khóa recipes/metrics, token check và HF round-trip tiny bundle | M01, minimal M02/M03/M04/M11 |
+| E0 | Source registries, server H10080; chưa cần tải full matrix | config/env/splits/accessor contracts; khóa recipes/metrics, token check và HF round-trip tiny bundle | M01, minimal M02/M03/M04/M11 |
 | E1 | FiQA subset cố định, MiniLM→MPNet | OP/global + random, exact; ID/budget/no-leak, lazy/eager toy,100% true exact agreement | E0 + core M04–M08 |
 | T0.core | FiQA/MiniLM–MPNet, development pools | lr selection, cal roles, HNSW/core runtime profile | E1 + implementation M05–M08/M10–M14; không phụ thuộc E2/E3 |
 | T0.scale | Arctic/MS MARCO + ORCAS validated, runtime subset100k | full-corpus paid-pool lr, subset timing4 schedulers, forecast; diagnostic | E3 correctness + validated scale inputs; không phụ thuộc E4 |

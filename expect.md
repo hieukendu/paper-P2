@@ -34,7 +34,7 @@ Không chạy cả bảy E bằng một cấu hình y hệt nhau. Quy tắc là:
 | E6 | Cùng map/scheduler/evaluator semantics | AOL-IA chronological replay, rolling cutoff và future evaluation; không đọc tương lai | Static ORCAS kết luận ngược lại |
 | E7 | Cùng primary pipeline và comparison rules | Đổi collection/model pair, chạy matrix và seed grid đầy đủ | Chỉ báo một mean gộp nếu các collection trái dấu |
 
-Các tối ưu kỹ thuật như streaming, memory-map, shard, cache query embedding, batch sizing và reader/writer lock được phép dùng để chạy được trên A100 80GB. Chúng phải giữ nguyên kết quả logic và được đo riêng về cost/latency; chưa cleanup local trong phase này. Không được tối ưu riêng cho greedy bằng cách cấp thêm encoder budget, query refresh miễn phí hoặc evaluator access mà baseline không có.
+Các tối ưu kỹ thuật như streaming, memory-map, shard, cache query embedding, batch sizing và reader/writer lock được phép dùng để chạy được trên H100 80GB. Chúng phải giữ nguyên kết quả logic và được đo riêng về cost/latency; chưa cleanup local trong phase này. Không được tối ưu riêng cho greedy bằng cách cấp thêm encoder budget, query refresh miễn phí hoặc evaluator access mà baseline không có.
 
 ## 2. Vai trò của từng baseline
 
@@ -67,7 +67,7 @@ Tất cả scheduler primary phải dùng cùng initial vectors, graph, map/refi
 - corpus/query/qrels/ID/dimension không nhầm;
 - evaluator full-new tách khỏi migration và không bị scheduler đọc;
 - paid documents, token counts và ngân sách được log;
-- server A100 80GB, phiên bản CUDA/PyTorch/hnswlib/model và storage được ghi rõ.
+- server H100 80GB, phiên bản CUDA/PyTorch/hnswlib/model và storage được ghi rõ.
 
 Nếu E0 chưa đạt thì mọi curve sau đó chỉ là smoke output, chưa phải kết quả nghiên cứu.
 
@@ -128,7 +128,7 @@ TREC-COVID chỉ có 50 test queries trong protocol hiện tại: primary dùng 
 **Đạt khi:**
 
 - join coverage, checksum và document counts khớp manifest;
-- A100 80GB không bị out-of-memory;
+- H100 80GB không bị out-of-memory;
 - peak RSS/VRAM, CPU, disk, write throughput và wall time cho phép dự báo full run;
 - scheduler memory và refresh cost không tăng vượt khả năng host;
 - subset được ghi nhãn rõ, không gọi là full 3.2M MS MARCO.

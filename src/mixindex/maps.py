@@ -73,8 +73,18 @@ class LowRankAffine(nn.Module):
 def transform_global(model, X, normalize_output=False, **kwargs):
     # `normalize` is accepted for the module contract without shadowing normalize().
     normalize_output = kwargs.get("normalize", normalize_output)
+    result = None
     with torch.inference_mode():
-        result = model(torch.as_tensor(np.asarray(X), dtype=torch.float32)).cpu().numpy()
+        for start in range(0, len(X), 16384):
+            values = np.asarray(X[start:start + 16384], dtype=np.float32)
+            if not values.flags.writeable:
+                values = values.copy()  # Torch must not alias a read-only memory-map.
+            output = model(torch.from_numpy(values)).cpu().numpy()
+            if result is None:
+                result = np.empty((len(X), output.shape[1]), dtype=np.float32)
+            result[start:start + len(output)] = output
+        if result is None:
+            result = model(torch.empty((0, X.shape[1]), dtype=torch.float32)).cpu().numpy()
     if not np.isfinite(result).all():
         raise ValueError("Nonfinite map output")
     return normalize(result) if normalize_output else result
@@ -88,7 +98,11 @@ def fit_global_map(kind, pairs, validation, cfg, seed=17):
     torch.manual_seed(seed)
     if kind == "op":
         model = fit_op(X, Y)
-        loss = float(np.mean(np.sum((transform_global(model, XV) - YV) ** 2, axis=1)))
+        output = transform_global(model, XV)
+        normalize(output)
+        loss = float(np.mean(np.sum((output - YV) ** 2, axis=1)))
+        if not math.isfinite(loss):
+            raise ValueError("Nonfinite OP validation loss")
         return model, {"validation_loss": loss, "epochs": 0, "kind": kind}
     if kind == "residual_mlp":
         model = ResidualMap(X.shape[1], Y.shape[1], cfg["hidden"], fit_op(X, Y))
@@ -210,10 +224,11 @@ class RegionalStatistics:
             self.dirty.add(int(region))
         self.seen.update(map(int, rows))
 
-    def fit(self, min_pairs=20, mode="full"):
+    def fit(self, min_pairs=20, mode="full", regions=None, current=None):
         d = self.dimension
-        result = np.repeat(np.column_stack([np.eye(d), np.zeros(d)])[None], self.n_regions, axis=0)
-        for region in range(self.n_regions):
+        result = (np.repeat(np.column_stack([np.eye(d), np.zeros(d)])[None], self.n_regions, axis=0)
+                  if current is None else np.array(current, copy=True))
+        for region in (range(self.n_regions) if regions is None else regions):
             if self.counts[region] < min_pairs or mode == "none":
                 continue
             if mode == "full":
@@ -239,3 +254,20 @@ def map_documents(rows, old_vectors, M0, regional, assignments):
         correction = regional[region]
         result[mask] = u[mask] @ correction[:, :-1].T + correction[:, -1]
     return normalize(result)
+
+
+def regional_validation_errors(state, validation_rows):
+    rows = np.asarray(validation_rows, dtype=np.int64)
+    if any(int(row) not in state.accessor.roles["validation"] for row in rows):
+        raise PermissionError("Regional validation requires validation-role rows")
+    vectors = map_documents(rows, state.old_vectors, state.M0, state.regional,
+                            state.regions["assignments"])
+    target = np.stack([state.accessor.cache[int(row)] for row in rows])
+    error = np.sum((vectors - target) ** 2, axis=1)
+    result = []
+    for region in range(len(state.regions["centers"])):
+        mask = state.regions["assignments"][rows] == region
+        result.append({"region": region, "validation_pairs": int(mask.sum()),
+                       "training_pairs": int(state.statistics.counts[region]),
+                       "r_vec_region": float(np.sqrt(error[mask].mean())) if mask.any() else None})
+    return result

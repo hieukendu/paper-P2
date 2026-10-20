@@ -1,5 +1,7 @@
 # Review MixIndex và kế hoạch triển khai thí nghiệm
 
+> Current execution correction (2026-10-20): the user confirmed **H100 80GB on this workspace** as the target; the earlier A100 requirement was a typo. Current configuration and codex run instructions use H100. Earlier inventory descriptions below remain historical. Scientific splits, budgets, tuning and measurement gates are unchanged. Project GitHub/Hugging Face repositories are public at the user’s explicit request.
+
 Ngày đánh giá: **20/10/2026**, múi giờ Asia/Saigon. Tài liệu: `main.pdf`, 22 trang, tên **MixIndex: Mixed-Fidelity Vector Indexes with Traffic-Driven Backfill for Embedding-Model Migration**.
 
 ## Material Passport

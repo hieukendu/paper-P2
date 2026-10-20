@@ -17,7 +17,7 @@ from mixindex.index import ExactIndex, HnswIndex, SearchResult, load_index, vali
 from mixindex.io import digest, file_digest
 from mixindex.maps import (RegionalStatistics, choose_region_count, fit_global_map, fit_op,
                            load_map_state, normalize, save_map_state, transform_global)
-from mixindex.runtime import effective_limits, require_target_hardware
+from mixindex.runtime import effective_limits, require_target_hardware, target_hardware_matches
 from mixindex.scheduling import build_candidate_sets, choose_batch_cap, select_greedy
 from mixindex.vectors import PaidEmbeddingAccessor
 
@@ -33,7 +33,7 @@ def test_config_rejects_unknown_or_inconsistent_settings():
     cfg = load_config()
     assert "HF_TOKEN" not in str(redacted_config(cfg))
     with pytest.raises(RuntimeError, match="BLOCKED_HARDWARE"):
-        require_target_hardware(cfg, {"target_a100_80gb": False})
+        require_target_hardware(cfg, {"hardware": {"devices": []}})
 
 
 def test_query_groups_and_priority_block_text_leakage():
@@ -267,6 +267,27 @@ def test_cgroup_ancestor_limits_override_physical_host(tmp_path):
     assert limits["ram_limit_bytes"] == 1 << 30
     assert limits["ram_available_bytes"] <= 3 * (1 << 28)
     assert limits["cpu_cores"] <= 2
+
+
+def test_cgroup_counts_inactive_file_cache_but_never_active_or_anonymous_memory(tmp_path):
+    cg, proc = tmp_path / "cg", tmp_path / "proc"
+    cg.mkdir()
+    (cg / "cgroup.controllers").touch()
+    (cg / "memory.max").write_text(str(1 << 30))
+    (cg / "memory.current").write_text(str(1 << 30))
+    (cg / "memory.stat").write_text(f"inactive_file {1 << 28}\nactive_file {1 << 28}\nanon {1 << 29}\n")
+    (proc / "self").mkdir(parents=True)
+    (proc / "self/cgroup").write_text("0::/\n")
+    assert effective_limits(cg, proc)["ram_available_bytes"] == 1 << 28
+
+
+def test_h100_target_uses_visible_capacity_and_rejects_a_40gb_slice():
+    cfg = load_config()
+    def env(name, size):
+        return {"hardware": {"devices": [{"name": name, "vram_total_bytes": int(size * (1 << 30))}]}}
+    assert target_hardware_matches(cfg, env("NVIDIA H100 80GB HBM3", 79.1))
+    assert not target_hardware_matches(cfg, env("NVIDIA H100 MIG 3g.40gb", 39.4))
+    assert not target_hardware_matches(cfg, env("NVIDIA A100-SXM4-80GB", 79.1))
 
 
 def test_bundle_is_immutable_sharded_and_rollover_is_idempotent(tmp_path):

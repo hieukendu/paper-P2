@@ -1,6 +1,8 @@
 """Weighted fixed-snapshot coverage and budget-safe scheduler controls."""
 
 import heapq
+from dataclasses import dataclass
+import hashlib
 
 import numpy as np
 
@@ -10,12 +12,12 @@ def build_candidate_sets(search_results, proxies, fidelity, radius, weights=None
     if radius is None or radius <= 0:
         return result
     weights = weights if weights is not None else np.ones(len(search_results.rows))
-    if np.any(np.asarray(weights) < 0):
+    if len(weights) != len(search_results.rows) or not np.isfinite(weights).all() or np.any(np.asarray(weights) < 0):
         raise ValueError("Coverage weights must be nonnegative")
     for q, (rows, scores) in enumerate(zip(search_results.rows, search_results.scores)):
         if len(rows) < 11:
             continue
-        proxy = set(rows[:10]) if proxies is None else set(proxies[q])
+        proxy = set(rows[:10]) if proxies is None or proxies[q] is None else set(proxies[q])
         slack = scores[:10] - scores[10]
         relevant = np.array([r in proxy for r in rows[:10]])
         if np.any(relevant & (slack > 2 * radius)):
@@ -97,3 +99,65 @@ def choose_batch_cap(n, paid, backfilled, target, refit_interval, batch_fraction
     next_refit = (backfilled // refit_interval + 1) * refit_interval
     return max(0, min(int(np.ceil(batch_fraction * n)), n - paid, target - paid,
                       next_refit - backfilled))
+
+
+@dataclass
+class SchedulingTraffic:
+    query_ids: tuple
+    vectors: np.ndarray
+    proxies: list | None = None
+    weights: np.ndarray | None = None
+    role: str = "schedule"
+
+    def __post_init__(self):
+        from .encoders import validate_vectors
+        from .io import digest
+        self.query_ids = tuple(self.query_ids)
+        self.vectors = np.asarray(self.vectors, dtype=np.float32)
+        if self.role != "schedule" or len(set(self.query_ids)) != len(self.query_ids):
+            raise PermissionError("Traffic must contain unique scheduling-role query groups")
+        if len(self.query_ids) != len(self.vectors):
+            raise ValueError("Traffic vectors do not match query IDs")
+        validate_vectors(self.vectors)
+        self.weights = np.ones(len(self.query_ids)) if self.weights is None else np.asarray(self.weights, dtype=np.float64)
+        if (len(self.weights) != len(self.query_ids) or not np.isfinite(self.weights).all()
+                or np.any(self.weights < 0)):
+            raise ValueError("Traffic weights must be finite and nonnegative")
+        if self.proxies is not None and len(self.proxies) != len(self.query_ids):
+            raise ValueError("Proxy query population differs")
+        if self.proxies is not None:
+            self.proxies = tuple(None if p is None else frozenset(map(int, p)) for p in self.proxies)
+        h = hashlib.sha256()
+        for start in range(0, len(self.vectors), 4096):
+            h.update(self.vectors[start:start + 4096].tobytes())
+        proxy_ids = None if self.proxies is None else [None if p is None else sorted(p) for p in self.proxies]
+        self.fingerprint = digest({"query_ids": self.query_ids, "vectors_sha256": h.hexdigest(),
+                                    "weights": self.weights.tolist(), "proxies": proxy_ids})
+        self.vectors.flags.writeable = False
+        self.weights.flags.writeable = False
+
+
+def select_on_read(ordered_queries, search_fn, cap, queue_state, mapped_mask, rng):
+    if cap < 0 or cap > int(mapped_mask.sum()):
+        raise ValueError("Read batch exceeds mapped population")
+    selected, seen = [], set()
+    pending = list(queue_state.get("pending", []))
+    cursor = queue_state.get("cursor", 0)
+    while len(selected) < cap:
+        if not pending:
+            if cursor >= len(ordered_queries):
+                break
+            result = search_fn(ordered_queries[cursor])
+            cursor += 1
+            pending = list(map(int, result.rows[0, :10]))
+        row = pending.pop(0)
+        if mapped_mask[row] and row not in seen:
+            selected.append(row)
+            seen.add(row)
+    queue_state.update(cursor=cursor, pending=pending)
+    on_read_count = len(selected)
+    available = np.array(mapped_mask, copy=True)
+    available[selected] = False
+    selected += select_random(available, cap - len(selected), rng)
+    return selected, {"read_count": on_read_count, "fallback_count": cap - on_read_count,
+                      "reason": "read_exhausted" if on_read_count < cap else "on_read"}

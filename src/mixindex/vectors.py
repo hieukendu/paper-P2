@@ -74,6 +74,39 @@ def encode_corpus(data, encoder, output, cache_key, shard_bytes=1 << 30):
         return VectorStore(output, cache_key)
 
 
+def encode_query_pool(query_ids, texts, spec, cfg, output):
+    from .encoders import build_encoder
+    output = Path(output)
+    key = digest({"ids": list(query_ids), "texts": list(texts),
+                  "model": {k: v for k, v in spec.items() if k != "snapshot"}})
+    with file_lock(output.with_suffix(".lock")):
+        output.mkdir(parents=True, exist_ok=True)
+        marker = output / "manifest.json"
+        if marker.exists():
+            meta = read_json(marker)
+            if meta["cache_key"] != key or file_digest(output / "queries.npy") != meta["sha256"]:
+                raise ValueError("Query embedding cache mismatch")
+            array = np.load(output / "queries.npy", mmap_mode="r", allow_pickle=False)
+            if array.shape != (len(query_ids), spec["dim"]):
+                raise ValueError("Query cache row alignment differs")
+            return array, {**meta, "cache_hit": True}
+        encoder = build_encoder(spec, cfg["execution"]["device"], cfg["models"]["batch_size"])
+        try:
+            result = np.empty((len(query_ids), spec["dim"]), dtype=np.float32)
+            for start in range(0, len(query_ids), 128):
+                result[start:start + 128] = encoder.encode_queries(texts[start:start + 128])
+            part = output / "queries.part.npy"
+            np.save(part, result)
+            part.replace(output / "queries.npy")
+            meta = {"cache_key": key, "query_ids": list(query_ids), "shape": list(result.shape),
+                    "sha256": file_digest(output / "queries.npy"), "encoder_cost": dict(encoder.cost),
+                    "cache_hit": False}
+            write_json(marker, meta)
+            return result, meta
+        finally:
+            encoder.close()
+
+
 class PaidEmbeddingAccessor:
     """Validate the whole request before contacting a live encoder or cached source.
 
@@ -102,6 +135,21 @@ class PaidEmbeddingAccessor:
         if self.journal:
             write_json(self.journal, {"paid": sorted(self.paid), "order": self.order,
                                       "pending": self.pending})
+
+    def register_calibration_pools(self, pools):
+        reserved = self.roles.get("train", set()) | self.roles.get("validation", set())
+        seen = set(reserved)
+        for role in ("cal_fit", "cal_check"):
+            rows = set(map(int, pools[role]["rows"]))
+            if rows & seen or any(r < 0 or r >= self.n_documents for r in rows):
+                raise PermissionError("Calibration roles must be disjoint from fitting/held-out pools")
+            if self.roles.get(role) and self.roles[role] != rows:
+                raise PermissionError("An existing calibration role is immutable")
+            seen |= rows
+        for role in ("cal_fit", "cal_check"):
+            self.roles[role] = set(map(int, pools[role]["rows"]))
+        if "backfill" in self.roles:
+            self.roles["backfill"] -= seen
 
     def request(self, doc_rows, purpose, budget_limit):
         rows = list(map(int, doc_rows))

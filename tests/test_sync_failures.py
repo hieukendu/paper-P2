@@ -1,4 +1,5 @@
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 import requests
@@ -68,3 +69,17 @@ def test_transient_connection_failures_have_bounded_retries(monkeypatch):
         hf_sync._retry(fail, 3)
     assert failure.value.status == "RETRYABLE_ERROR"
     assert len(calls) == 3
+
+
+@pytest.mark.parametrize("private", [True, False])
+def test_existing_project_repository_must_match_configured_visibility(tmp_path, monkeypatch, private):
+    marker = tmp_path / "marker.json"
+    write_json(marker, {"project": "mixindex", "format": 1})
+    monkeypatch.setattr(hf_sync, "hf_hub_download", lambda *args, **kwargs: str(marker))
+    class Api:
+        token = None
+        def repo_info(self, *args, **kwargs):
+            return SimpleNamespace(private=private, sha="fixture")
+    hf_sync.ensure_repo(Api(), "fixture/mixindex-runs-001", {"private": private})
+    with pytest.raises(hf_sync.SyncError, match="visibility"):
+        hf_sync.ensure_repo(Api(), "fixture/mixindex-runs-001", {"private": not private})

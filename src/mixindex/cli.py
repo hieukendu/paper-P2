@@ -20,11 +20,12 @@ def main(argv=None):
     data.add_argument("--dataset", required=True)
     data.add_argument("--config", default="configs/base.yaml")
     models = commands.add_parser("models", help="Pin model revisions and smoke validated data")
-    models.add_argument("action", choices=["prepare"])
+    models.add_argument("action", choices=["prepare", "probe"])
     models.add_argument("--pair", required=True)
     models.add_argument("--dataset", default="fiqa")
     models.add_argument("--device", choices=["cuda", "cpu"], default="cuda")
     models.add_argument("--download-only", action="store_true")
+    models.add_argument("--development-hardware", action="store_true")
     models.add_argument("--config", default="configs/base.yaml")
     sync = commands.add_parser("sync", help="Upload and checksum-verify closed artifacts")
     sync.add_argument("action", nargs="?", choices=["self-test"])
@@ -36,23 +37,70 @@ def main(argv=None):
     restore.add_argument("--output", type=Path, required=True)
     commands.add_parser("status", help="Show local environment, inputs and synchronization status")
     run = commands.add_parser("run", help="Run a stage with hardware and input gates")
-    run.add_argument("--experiment", choices=["E0", "E1", "T0"], required=True)
+    run.add_argument("--experiment", choices=["E0", "E1", "CORE_SMOKE", "T0"], required=True)
     run.add_argument("--config", required=True)
     run.add_argument("--development-hardware", action="store_true",
-                     help="E1 only: label this run diagnostic on other hardware; never certify target gates")
+                     help="Label development diagnostics on other hardware; never certify target gates")
+    presetup = commands.add_parser("presetup", help="Enqueue the bounded core setup DAG and run ready tasks")
+    presetup.add_argument("--scope", choices=["core"], default="core")
+    presetup.add_argument("--config", default="configs/base.yaml")
+    presetup.add_argument("--enqueue-only", action="store_true")
+    presetup.add_argument("--once", action="store_true")
+    presetup.add_argument("--development-hardware", action="store_true")
+    enqueue = commands.add_parser("enqueue", help="Add explicit immutable jobs without executing dependencies")
+    enqueue.add_argument("--jobs", type=Path, required=True)
+    queue = commands.add_parser("queue", help="Run ready subprocess workers within measured resource limits")
+    queue.add_argument("--jobs", type=Path)
+    queue.add_argument("--max-compute-jobs", type=int, choices=[1, 2], default=1)
+    queue.add_argument("--once", action="store_true")
+    worker = commands.add_parser("_worker", help=argparse.SUPPRESS)
+    worker.add_argument("--task-file", type=Path, required=True)
     args = parser.parse_args(argv)
     root = project_root(args.root)
     cfg = load_config(getattr(args, "config", None), root=root)
     try:
-        if args.command == "run":
-            if args.experiment == "E1":
-                from .experiments import run_e1
-                result = run_e1(cfg, root, args.development_hardware)
+        if args.command == "_worker":
+            from .queue import run_single
+            task = read_json(args.task_file)
+            try:
+                result = run_single(task, root)
+            except Exception as exc:
+                result = {"compute_status": "FAILED", "error_type": type(exc).__name__}
+            write_json(args.task_file.parent / "result.json", result)
+            return 0 if result["compute_status"] == "COMPUTE_DONE" else 1
+        if args.command == "presetup":
+            from .experiments import build_presetup_tasks
+            from .queue import enqueue_tasks, prepare_task, run_queue
+            cfg["execution"]["require_target"] = not args.development_hardware
+            tasks = [prepare_task(task, root) for task in build_presetup_tasks(args.scope, cfg, root)]
+            state = enqueue_tasks(tasks, Path(cfg["paths"]["state"]) / "tasks.json")
+            if not args.enqueue_only:
+                state = run_queue(cfg, root, once=args.once, only_task_ids={t["task_id"] for t in tasks})
+            result = {task["task_id"]: {key: state["tasks"][task["task_id"]].get(key)
+                                       for key in ("status", "sync_status", "reason")}
+                      for task in tasks}
+        elif args.command in {"enqueue", "queue"}:
+            from .queue import enqueue_tasks, load_jobs, prepare_task, run_queue
+            if args.jobs:
+                specs = [prepare_task(task, root) for task in load_jobs(args.jobs)]
+                state = enqueue_tasks(specs, Path(cfg["paths"]["state"]) / "tasks.json")
+            if args.command == "queue":
+                state = run_queue(cfg, root, args.max_compute_jobs, args.once)
+            result = {key: {field: row.get(field) for field in
+                             ("status", "sync_status", "reason", "pid", "run_dir")}
+                       for key, row in state["tasks"].items()}
+        elif args.command == "run":
+            if args.experiment in {"E0", "E1", "CORE_SMOKE"}:
+                from .experiments import run_core_smoke, run_e0, run_e1
+                runner = {"E0": run_e0, "E1": run_e1, "CORE_SMOKE": run_core_smoke}[args.experiment]
+                result = runner(cfg, root, args.development_hardware)
                 print(json.dumps(result, indent=2))
                 return 0 if result["compute_status"] == "COMPUTE_DONE" else 1
-            from .runtime import probe_hardware, require_target_hardware
-            require_target_hardware(cfg, probe_hardware())
-            raise NotImplementedError("Stage wiring is not yet complete; no gate was certified")
+            from .experiments import run_presetup
+            cfg["execution"]["require_target"] = not args.development_hardware
+            result = run_presetup({"root": str(root)}, {}, cfg)
+            print(json.dumps(result, indent=2))
+            return 0 if result["compute_status"] == "COMPUTE_DONE" else 1
         elif args.command == "probe":
             from .runtime import probe_hardware, probe_storage
             environment = probe_hardware()
@@ -74,6 +122,12 @@ def main(argv=None):
                                              dataset_spec(args.dataset, root))
             result = {key: manifest[key] for key in ("dataset_id", "status", "counts", "release_hash")}
         elif args.command == "models":
+            if args.action == "probe":
+                from .experiments import run_encoder_probes
+                result = run_encoder_probes(cfg, root, args.pair, args.dataset, args.device,
+                                            args.development_hardware)
+                print(json.dumps(result, indent=2))
+                return 0 if result["compute_status"] == "COMPUTE_DONE" else 1
             from .encoders import build_encoder, model_specs, resolve_model, smoke_encoder
             from .data.prepare import open_validated_data
             specs = {role: resolve_model(spec, cfg["paths"], root)

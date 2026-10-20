@@ -72,7 +72,7 @@ def validate_config(cfg) -> None:
     require(cfg["execution"]["max_compute_jobs"] in {1, 2}, "max_compute_jobs must be 1 or 2")
     require(cfg["execution"]["phase"] in {"development", "official"}, "Unknown phase")
     require(cfg["execution"]["mode"] in {"cached_access", "live_encode"}, "Unknown encoder mode")
-    require(cfg["sync"]["private"] is True, "Artifact repositories must remain private")
+    require(isinstance(cfg["sync"]["private"], bool), "sync.private must be a boolean")
     require(0 < cfg["calibration"]["quantile"] <= 1, "Invalid residual quantile")
     for name in ("batch_fraction", "refit_fraction"):
         require(0 < cfg["scheduler"][name] <= 1, f"Invalid {name}")
@@ -167,6 +167,14 @@ def validate_tuning_profile(task, cfg, profiles):
         raise ValueError("Official execution requires a profile measured on target hardware")
     if cfg["search"]["backend"] == "hnsw" and settings.get("ann_status") != "PASS":
         raise ValueError("ANN_GATE_FAILED: exact tasks remain independently eligible")
+    selected_map = settings.get("map", {}).get(cfg["mapping"]["kind"])
+    if selected_map and selected_map["lr"] is not None and cfg["mapping"]["lr"] != selected_map["lr"]:
+        raise ValueError("Official map learning rate differs from the selected profile")
+    selected_search = settings.get("search", {})
+    if cfg["search"]["backend"] == "hnsw" and any(
+            cfg["search"][key] != selected_search[key]
+            for key in ("candidates", "ef_search") if selected_search.get(key) is not None):
+        raise ValueError("Official search settings differ from the selected profile")
     if task.get("overrides"):
         allowed = {"mapping.regional", "mapping.ridge", "scheduler.refit_fraction", "calibration.enabled",
                    "calibration.quantile", "scheduler.kind"}

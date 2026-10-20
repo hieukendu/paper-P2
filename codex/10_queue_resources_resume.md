@@ -31,7 +31,7 @@ Thứ tự priority mặc định: prerequisite/smoke > ready primary > optional
 
 ## Admission tài nguyên
 
-- A10080 là target; probe torch/NVML phải xác nhận full/MIG của device process dùng. Unknown free memory/permissions → chỉ1 GPU task và probe trước, không giả có80GiB usable.
+- H10080 là target; probe torch/NVML phải xác nhận full/MIG của device process dùng. Unknown free memory/permissions → chỉ1 GPU task và probe trước, không giả có80GiB usable.
 - Default headroom vận hành: GPU max(4GiB,10% visible VRAM), RAM max(8GiB,10% effective limit), CPU1 core. Đây là configurable planning defaults; ghi config, không gọi benchmark requirements của paper.
 - Free memory hiện tại đã chứa allocations của jobs đang chạy. Tránh double-count: `remaining_reservation_i=max(0,requested_peak_i-observed_usage_i)`; admit nếu `new_request + sum(remaining_reservations) + headroom <= free_now`. Nếu không đo được usage theo job, dùng cách conservative serialize, không optimistic trừ nhầm.
 - CPU quota/cpuset lấy effective min; sum requested CPU≤quota−headroom. Set thread limits cả BLAS, torch, sklearn và hnswlib để2 processes không mỗi process tạo128 threads.

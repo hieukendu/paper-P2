@@ -68,7 +68,7 @@ evaluation:
 execution:
   phase: development
   mode: cached_access
-  target_gpu: A100
+  target_gpu: H100
   target_vram_gib: 80
   require_target: true
   device: cuda
@@ -88,7 +88,7 @@ tuning:
   lock_path: configs/locked/tuning.lock.yaml
 sync:
   enabled: true
-  private: true
+  private: false
   repo_prefix: mixindex-runs
   repo_target_gib: 50
   repo_target_files: 5000

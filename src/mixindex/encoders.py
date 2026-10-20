@@ -87,25 +87,33 @@ class EncoderAdapter:
         if self.device.startswith("cuda"):
             self.torch.cuda.synchronize()
         start = time.monotonic()
-        with self.torch.inference_mode():
-            output = self.model.encode(prepared, batch_size=self.batch_size,
-                                       convert_to_numpy=True, normalize_embeddings=True,
-                                       show_progress_bar=False)
-        if self.device.startswith("cuda"):
-            self.torch.cuda.synchronize()
-        output = np.asarray(output, dtype=np.float32)
-        validate_vectors(output, self.spec["dim"])
-        self.cost["calls"] += 1
-        self.cost["documents"] += len(texts)
-        self.cost["nonpad_tokens"] += int(lengths.sum())
-        self.cost["truncated_documents"] += sum(len(ids) > self.spec["max_tokens"] for ids in tokenized)
-        # ST sorts by length within this call before batching.
-        sorted_lengths = sorted(lengths, reverse=True)
-        self.cost["padded_tokens"] += sum(
-            int(max(sorted_lengths[i:i + self.batch_size])) * len(sorted_lengths[i:i + self.batch_size])
-            for i in range(0, len(texts), self.batch_size))
-        self.cost["wall_seconds"] += time.monotonic() - start
-        return output
+        # Bucket by actual token lengths and restore caller order. Each encode call is
+        # one batch, so the padding count below describes batches actually executed.
+        order = np.argsort(-lengths, kind="stable")
+        output = np.empty((len(prepared), self.spec["dim"]), dtype=np.float32)
+        try:
+            with self.torch.inference_mode():
+                for indices in (order[i:i + self.batch_size] for i in range(0, len(order), self.batch_size)):
+                    # Charge attempted forwards too: OOM or validation failure is not free compute.
+                    self.cost["calls"] += 1
+                    self.cost["documents"] += len(indices)
+                    self.cost["nonpad_tokens"] += int(lengths[indices].sum())
+                    self.cost["padded_tokens"] += int(lengths[indices].max()) * len(indices)
+                    self.cost["truncated_documents"] += sum(
+                        len(tokenized[i]) > self.spec["max_tokens"] for i in indices)
+                    values = self.model.encode([prepared[i] for i in indices], batch_size=len(indices),
+                                                convert_to_numpy=True, normalize_embeddings=True,
+                                                show_progress_bar=False)
+                    output[indices] = values
+            output = np.asarray(output, dtype=np.float32)
+            validate_vectors(output, self.spec["dim"])
+            return output
+        finally:
+            try:
+                if self.device.startswith("cuda"):
+                    self.torch.cuda.synchronize()
+            finally:
+                self.cost["wall_seconds"] += time.monotonic() - start
 
     def encode_documents(self, texts):
         return self._encode(texts, self.spec["document_prefix"])

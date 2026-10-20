@@ -176,12 +176,21 @@ class HnswIndex(ExactIndex):
         return SearchResult(np.array(rows), np.array(scores), [c.astype(np.int64) for c in labels], self.epoch)
 
     def _write_vectors(self, rows, vectors):
-        self.graph.add_items(vectors, rows)  # Stock same-ID graph update, under writer lock.
+        if len(rows):
+            self.graph.add_items(vectors, rows)  # Stock same-ID graph update, under writer lock.
         self.vectors[rows] = vectors
 
     def _save_backend(self, path, metadata):
         self.graph.save_index(str(path / "hnsw.bin"))
         metadata.update(backend="hnsw", parameters=self.parameters)
+
+    def configure_search(self, candidates, ef_search):
+        if candidates < 11 or ef_search < candidates:
+            raise ValueError("HNSW needs L >= 11 and ef >= L")
+        with self.lock.write():
+            self._check()
+            self.graph.set_ef(ef_search)
+            self.parameters.update(candidates=candidates, ef_search=ef_search)
 
 
 def load_index(path):
@@ -222,3 +231,41 @@ def validate_ann_snapshot(index, exact_index, Q_tune):
                 len(set(a[:10]) & set(e[:10])) / min(10, len(e)) for a, e in zip(ann.rows, exact.rows)])),
             "raw_recall_at_10": float(np.mean([
                 len(set(a[:10]) & set(e[:10])) / min(10, len(e)) for a, e in zip(raw_ann.rows, raw_exact.rows)]))}
+
+
+def select_search_config(snapshots, Q_tune, grid, gate=0.99, threads=1, seed=17,
+                          transfer=None):
+    """Find the smallest declared pair that passes on every comparison variant."""
+    if not len(Q_tune):
+        inherited = transfer or {"candidates": 100, "ef_search": 200}
+        return {**inherited, "status": "UNTUNED_TRANSFER", "table": [],
+                "reason": "no_independent_tuning_queries"}
+    if not snapshots or not grid:
+        raise ValueError("Search tuning needs bootstrap snapshots and a bounded grid")
+    candidates = sorted({(int(L), int(ef)) for L, ef in grid})
+    if any(L < 11 or ef < L for L, ef in candidates):
+        raise ValueError("Invalid search grid")
+    table = []
+    passing = {pair: True for pair in candidates}
+    # Keep one mutable graph at a time, and evaluate every declared pair before selection.
+    for name, snapshot in snapshots.items():
+        exact = ExactIndex(snapshot.vectors, snapshot.ids, snapshot.fidelity, snapshot.calibration,
+                            snapshot.chunk_rows)
+        ann = HnswIndex(snapshot.vectors, snapshot.ids, snapshot.fidelity, snapshot.calibration,
+                         candidates=candidates[0][0], ef_search=candidates[0][1],
+                         threads=threads, seed=seed)
+        for L, ef in candidates:
+            ann.configure_search(L, ef)
+            fidelity = validate_ann_snapshot(ann, exact, Q_tune)
+            passed = (fidelity["candidate_recall_at_11"] >= gate and
+                      fidelity["serving_recall_at_10"] >= gate)
+            table.append({"variant": name, "candidates": L, "ef_search": ef,
+                           "status": "PASS" if passed else "FAIL", **fidelity})
+            passing[(L, ef)] &= passed
+        del ann, exact
+    eligible = [pair for pair in candidates if passing[pair]]
+    if not eligible:
+        return {"status": "ANN_GATE_FAILED", "candidates": None, "ef_search": None,
+                "diagnostic_largest": list(candidates[-1]), "table": table}
+    L, ef = eligible[0]
+    return {"status": "PASS", "candidates": L, "ef_search": ef, "table": table}

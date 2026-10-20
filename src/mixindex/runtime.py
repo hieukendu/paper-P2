@@ -9,6 +9,7 @@ import shutil
 import subprocess
 import tempfile
 import time
+import gc
 
 import psutil
 
@@ -30,6 +31,14 @@ def _cpus(value):
     return result
 
 
+def _reclaimable_file_bytes(node, version):
+    fields = dict(line.split() for line in (_read(node / "memory.stat") or "").splitlines())
+    # Inactive file cache is reclaimable by the kernel. Do not count anonymous memory,
+    # active file pages, shared memory, or slab as freely available reservations.
+    key = "inactive_file" if version == 2 else "total_inactive_file"
+    return max(0, int(fields.get(key, 0)))
+
+
 def effective_limits(cgroup_root=Path("/sys/fs/cgroup"), proc_root=Path("/proc")) -> dict:
     host = psutil.virtual_memory()
     memory_limits = [host.total]
@@ -49,7 +58,8 @@ def effective_limits(cgroup_root=Path("/sys/fs/cgroup"), proc_root=Path("/proc")
             if maximum and maximum != "max":
                 memory_limits.append(int(maximum))
                 if current:
-                    headrooms.append(max(0, int(maximum) - int(current)))
+                    headrooms.append(max(0, int(maximum) - int(current) +
+                                         _reclaimable_file_bytes(node, version)))
             quota = _read(node / "cpu.max")
             if quota:
                 amount, period = quota.split()
@@ -75,7 +85,8 @@ def effective_limits(cgroup_root=Path("/sys/fs/cgroup"), proc_root=Path("/proc")
                         if maximum and int(maximum) < (1 << 60):
                             memory_limits.append(int(maximum))
                             if current:
-                                headrooms.append(max(0, int(maximum) - int(current)))
+                                headrooms.append(max(0, int(maximum) - int(current) +
+                                                     _reclaimable_file_bytes(node, version)))
                     if controller == "cpu":
                         quota = _read(node / "cpu.cfs_quota_us")
                         period = _read(node / "cpu.cfs_period_us")
@@ -88,7 +99,8 @@ def effective_limits(cgroup_root=Path("/sys/fs/cgroup"), proc_root=Path("/proc")
     return {"cgroup_version": version, "host_ram_bytes": host.total,
             "ram_limit_bytes": min(memory_limits),
             "ram_available_bytes": min(headrooms + [min(memory_limits)]),
-            "host_cpu_count": psutil.cpu_count(), "cpu_cores": min(cpu_limits)}
+            "host_cpu_count": psutil.cpu_count(), "cpu_cores": min(cpu_limits),
+            "ram_availability_policy": "min(host_available,cgroup_limit-current+inactive_file)"}
 
 
 def probe_hardware() -> dict:
@@ -139,15 +151,21 @@ def probe_hardware() -> dict:
             "hardware": {"devices": gpu, "physical_inventory": driver,
                          "cuda_error": cuda_error, "exclusive": "unverified",
                          **effective_limits()},
-            "torch_cuda": torch.version.cuda, "packages": versions, "hnsw_build": hnsw_build,
-            "target_a100_80gb": bool(gpu) and all(
-                "A100" in g["name"] and g["vram_total_bytes"] >= 75 * (1 << 30) for g in gpu)}
+            "torch_cuda": torch.version.cuda, "packages": versions, "hnsw_build": hnsw_build}
+
+
+def target_hardware_matches(cfg, environment):
+    devices = environment.get("hardware", {}).get("devices", [])
+    # Vendors advertise nominal GB; allow the normal visible-device capacity difference.
+    minimum = cfg["execution"]["target_vram_gib"] * 0.93 * (1 << 30)
+    return bool(devices) and all(cfg["execution"]["target_gpu"] in device["name"] and
+                                 device["vram_total_bytes"] >= minimum for device in devices)
 
 
 def require_target_hardware(cfg, environment):
-    if cfg["execution"]["require_target"] and not environment["target_a100_80gb"]:
-        raise RuntimeError("BLOCKED_HARDWARE: official target requires visible A100 80GB; "
-                           "this host is development only")
+    if cfg["execution"]["require_target"] and not target_hardware_matches(cfg, environment):
+        raise RuntimeError(f"BLOCKED_HARDWARE: target requires visible {cfg['execution']['target_gpu']} "
+                           f"{cfg['execution']['target_vram_gib']}GB")
 
 
 def probe_storage(work_dir: Path, bytes_to_write=16 << 20) -> dict:
@@ -177,6 +195,104 @@ def probe_storage(work_dir: Path, bytes_to_write=16 << 20) -> dict:
                 "cache_policy": "read may be served by page cache"}
     finally:
         path.unlink(missing_ok=True)
+
+
+def probe_encoder(encoder, text_sample, batch_grid, repeats=3, gpu_headroom_gib=4, progress=None):
+    """A bounded runtime probe; never returns document vectors to map selection."""
+    import numpy as np
+    import torch
+    if not text_sample or repeats < 1 or not batch_grid:
+        raise ValueError("Encoder probe needs real text samples, a batch grid and repeats")
+    original = encoder.batch_size
+    cuda = encoder.device.startswith("cuda")
+    table = []
+    try:
+        encoder.batch_size = 1
+        reference = encoder.encode_documents(text_sample)
+        order = ([8] + sorted((b for b in batch_grid if b < 8), reverse=True) +
+                 sorted(b for b in batch_grid if b > 8)) if 8 in batch_grid else batch_grid
+        for batch_size in order:
+            if not isinstance(batch_size, int) or batch_size < 1:
+                raise ValueError("Invalid probe batch size")
+            encoder.batch_size = batch_size
+            if progress:
+                progress(batch_size)
+            try:
+                encoder.encode_documents(text_sample[:min(len(text_sample), batch_size)])
+                measured = []
+                peak = 0
+                for _ in range(repeats):
+                    if cuda:
+                        torch.cuda.reset_peak_memory_stats(encoder.device)
+                        torch.cuda.synchronize(encoder.device)
+                    before = dict(encoder.cost)
+                    started = time.monotonic()
+                    values = encoder.encode_documents(text_sample)
+                    if cuda:
+                        torch.cuda.synchronize(encoder.device)
+                        peak = max(peak, torch.cuda.max_memory_allocated(encoder.device))
+                    elapsed = time.monotonic() - started
+                    if not np.allclose(values, reference, atol=1e-5, rtol=1e-5):
+                        raise ValueError("Batch probe changed embedding values or row alignment")
+                    delta = {key: encoder.cost[key] - before[key] for key in
+                             ("nonpad_tokens", "padded_tokens", "truncated_documents", "calls")}
+                    measured.append({"wall_seconds": elapsed, "documents_per_second": len(text_sample) / elapsed,
+                                     "nonpad_tokens_per_second": delta["nonpad_tokens"] / elapsed,
+                                     "padded_tokens_per_second": delta["padded_tokens"] / elapsed, **delta})
+                free = total = None
+                feasible = True
+                if cuda:
+                    free, total = torch.cuda.mem_get_info(encoder.device)
+                    feasible = free >= max(gpu_headroom_gib * (1 << 30), total * 0.1)
+                table.append({"batch_size": batch_size, "status": "PASS" if feasible else "HEADROOM_FAILED",
+                               "median_documents_per_second": float(np.median([r["documents_per_second"] for r in measured])),
+                               "peak_vram_bytes": peak, "rss_bytes": psutil.Process().memory_info().rss,
+                               "device_free_bytes": free, "device_total_bytes": total,
+                               "embedding_agreement": "PASS", "repeats": measured})
+            except torch.cuda.OutOfMemoryError:
+                table.append({"batch_size": batch_size, "status": "OOM"})
+                gc.collect()
+                torch.cuda.empty_cache()
+            except ValueError as exc:
+                table.append({"batch_size": batch_size, "status": "NUMERICAL_FAILED",
+                               "reason": str(exc)})
+        passing = [row for row in table if row["status"] == "PASS"]
+        if not passing:
+            raise RuntimeError("No encoder batch fits measured headroom")
+        chosen = min(passing, key=lambda r: (-r["median_documents_per_second"], r["peak_vram_bytes"], r["batch_size"]))
+        return {"selected_batch_size": chosen["batch_size"], "table": table,
+                "sample_documents": len(text_sample), "role": "runtime_research",
+                "device": encoder.device, "repeats": repeats,
+                "adapter": {key: value for key, value in encoder.spec.items() if key != "snapshot"},
+                "exclusive": "unverified", "encoder_total_cost": dict(encoder.cost)}
+    finally:
+        encoder.batch_size = original
+
+
+def probe_threads(work_fn, grid=(1, 2, 4, 8), repeats=3, headroom=1):
+    import numpy as np
+    import torch
+    from threadpoolctl import threadpool_limits
+    limit = max(1, int(effective_limits()["cpu_cores"] - headroom))
+    choices = sorted(set(int(value) for value in grid if 0 < value <= limit)) or [1]
+    previous = torch.get_num_threads()
+    rows = []
+    try:
+        for threads in choices:
+            torch.set_num_threads(threads)
+            with threadpool_limits(limits=threads):
+                work_fn(threads)  # Warm-up is outside measurement.
+                measurements = []
+                for _ in range(repeats):
+                    start = time.monotonic()
+                    work_fn(threads)
+                    measurements.append(time.monotonic() - start)
+                rows.append({"threads": threads, "median_seconds": float(np.median(measurements)),
+                             "repeats_seconds": measurements})
+        selected = min(rows, key=lambda r: (r["median_seconds"], r["threads"]))
+        return {"selected_threads": selected["threads"], "cpu_limit": limit, "table": rows}
+    finally:
+        torch.set_num_threads(previous)
 
 
 @contextmanager
