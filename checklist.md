@@ -99,7 +99,8 @@ Agent/runner cập nhật block sau mỗi run hoặc sync transition. Checkbox c
 - [x] CORE_SMOKE-fiqa-04985698e65b — compute=COMPUTE_DONE; sync=VERIFIED; outcome=diagnostic; HF=https://huggingface.co/datasets/deadgod3005/mixindex-runs-001/tree/9103f78a6944a6f1b88c2501e14a68a0c830a62b/runs/CORE_SMOKE-fiqa-04985698e65b/01533d0572b302b6596ffa9cf168fa53f44e899fd3e39b7e1bffc5ef377f0cc0
 - [x] RUNTIME_PROBE-fiqa-minilm_mpnet-80c49dd823f1 — compute=COMPUTE_DONE; sync=VERIFIED; outcome=diagnostic; HF=https://huggingface.co/datasets/deadgod3005/mixindex-runs-001/tree/1d0d33e09676772e0bcf00e9921f7cf0615b2336/runs/RUNTIME_PROBE-fiqa-minilm_mpnet-80c49dd823f1/7209256bb4a77465a93821272a57a6180aeb0973b83927f5ac5a55af6ab6bf21
 - [x] T0-core-fiqa-b9698dc39c17 — compute=COMPUTE_DONE; sync=VERIFIED; outcome=diagnostic; HF=https://huggingface.co/datasets/deadgod3005/mixindex-runs-001/tree/713b740869cbd2d695a2386abfbbffd2cb270764/runs/T0-core-fiqa-b9698dc39c17/b70b9f54756ecb6e157b800273ed3940d9ad03ff93c224de098593f804c9a61c
-- [ ] E2_PREFLIGHT-fiqa-889d06a882c6 — compute=RUNNING; sync=NOT_READY; outcome=diagnostic; HF=pending
+- [x] E2_PREFLIGHT-fiqa-889d06a882c6 — compute=COMPUTE_DONE; sync=VERIFIED; outcome=diagnostic; HF=https://huggingface.co/datasets/deadgod3005/mixindex-runs-001/tree/553a9f80fdf1d95949ede7f7a7961c0aaab5df12/runs/E2_PREFLIGHT-fiqa-889d06a882c6/c756ac540b91168ab560d8ac6a65159171d59c93954876143c81fc8d57dcd104
+- [ ] E2-fiqa-residual_mlp-primary-greedy-m17-t101-0b0e24d75fc0 — compute=RUNNING; sync=NOT_READY; outcome=inconclusive; HF=pending
 <!-- progress:end -->
 
 ## Ghi chú ngắn
@@ -124,26 +125,26 @@ First encoder grid `RUNTIME_PROBE-fiqa-minilm_mpnet-fb16c618c9df` completed: all
 
 Corrected encoder probe `RUNTIME_PROBE-fiqa-minilm_mpnet-80c49dd823f1` completed successfully and selected batch64 for both models. The 128-document sample has raw token median108.5 / max795; effective lengths retain the native caps256/384. All output agreement/headroom checks passed. These are shared-device development measurements, not exclusive latency evidence.
 
-User notification requirement: announce explicitly when the relevant T0 optimization/profile gates finish and again when the first official experiment starts, including its run ID/configuration. Official E2–E7 have not started.
+User notification requirement: announce explicitly when the relevant T0 optimization/profile gates finish and again when the first official experiment starts, including its run ID/configuration. The first official FiQA E2 cell has started and was announced; E3–E7 have not started.
 
-FiQA core optimization compute finished: batch64 both encoders, LR0.001 LA/MLP, HNSW L50/ef200. Worst mean candidate recall@11 across OP/LA/MLP is0.996545; worst serving recall@10 is0.997. All local bootstrap restores passed. Official E2 has not started; its development preflight is running against this immutable profile. T0.scale/case remain pending.
+FiQA core optimization compute finished: batch64 both encoders, LR0.001 LA/MLP, HNSW L50/ef200. Worst mean candidate recall@11 across OP/LA/MLP is0.996545; worst serving recall@10 is0.997. All local bootstrap restores passed. The development preflight passed and the first official FiQA E2 cell is now running against this immutable profile. T0.scale/case remain pending.
 
-Official FiQA exact E2 runner passed its integration checks; 66 tests, Ruff and dependency checks pass. Planned comparison:45 map/variant/seed cells plus60 primary scheduler cells with3 duplicate random cells reused (102 unique official cells). One exact development preflight checks all45 bootstrap variants/seeds, then the fixed greedy development trajectory to10%/25% before test relevance is opened. No official cell has started.
+Official FiQA exact E2 runner passed its integration checks; 66 tests, Ruff and dependency checks pass. Planned comparison:45 map/variant/seed cells plus60 primary scheduler cells with3 duplicate random cells reused (102 unique official cells). One exact development preflight checks all45 bootstrap variants/seeds, then the fixed greedy development trajectory to10%/25% before test relevance is opened. The fixed first official cell is now running; the remaining cells are gated on its technical completion.
 
-Active readiness run: `E2_PREFLIGHT-fiqa-889d06a882c6` / task `E2.exact.preflight.5c3d3b7c2746`. It is checking45 exact bootstrap cells with fixed calibration IDs, then the predetermined greedy development prefix. Official102-cell matrix is declared but not executing; the first official cell is gated on this preflight.
+Completed readiness run: `E2_PREFLIGHT-fiqa-889d06a882c6` / task `E2.exact.preflight.5c3d3b7c2746`. It completed45 exact bootstrap cells with fixed calibration IDs and the predetermined greedy development prefix, passed25% checkpoint restore and is remotely VERIFIED. The fixed first official cell has started; the rest of the102-cell matrix remains gated.
 
-Preflight latest: all45 exact bootstrap cells passed across seeds17/29/43 and five variants. The fixed greedy development trajectory to10%/25% is running; no test relevance opened.
+Preflight complete: all45 exact bootstrap cells passed across seeds17/29/43 and five variants. The fixed greedy development trajectory to10%/25% and checkpoint restore passed; no test relevance was opened by preflight.
 
-Scale input preparation has started independently: Arctic model snapshots are downloaded and revision-pinned; document/query smoke on scale data is still pending. MS MARCO documents v1 + ORCAS raw downloads are running; no ingest/join/split validation or scale readiness is claimed from raw files alone.
+Scale input preparation has started independently: Arctic model snapshots are downloaded and revision-pinned; document/query smoke on scale data is still pending. MS MARCO documents v1 + ORCAS raw downloads and gzip/checksum checks are complete; ingest/join/split validation and scale readiness remain pending.
 
 Public-access verification: anonymous HF API reads succeed for `mixindex-data-fiqa`, `mixindex-data-trec-covid` and `mixindex-runs-001`; all report `private=false`.
 
-Additional inputs are downloading sequentially within each source task: BGE model snapshots and the three remaining BEIR archives (NQ/HotpotQA/FEVER). These are input-only downloads; their dataset/model-specific validation and tuning remain pending.
+Additional BGE/Nomic snapshots and NQ/HotpotQA/FEVER archives are downloaded and pinned/verified. NQ is fully validated/published; HotpotQA/FEVER full validation is running. BGE CPU adapter smoke passed, while Nomic adapter review and model/case-specific H100 tuning remain pending.
 
-BGE download inspection: bge-base snapshot is pinned. Original BGE-M3 revision `5617a9f61b028005a4858fdac845db406aefb181` publishes `pytorch_model.bin` only; the current safetensors-only resolver rejected it as designed. Pinned binary weights are downloaded and recorded by SHA256; restricted-format conversion/adapter review is still pending. BGE smoke and readiness remain incomplete; FiQA uses the validated MiniLM/MPNet adapters.
+BGE download inspection: bge-base snapshot is pinned. Original BGE-M3 revision `5617a9f61b028005a4858fdac845db406aefb181` publishes `pytorch_model.bin` only; the current safetensors-only resolver rejected it as designed. Pinned binary weights are downloaded and recorded by SHA256; restricted-format conversion/adapter review is still pending. BGE real CPU document/query and manual dense CLS smoke passed after conversion; H100 tuning remains incomplete. FiQA uses the validated MiniLM/MPNet adapters.
 
 <!-- health:begin -->
-Latest resource/download check (2026-10-20 15:58 UTC+7): preflight process is alive and accumulating CPU time; all45 bootstrap checks passed and the fixed greedy10%/25% trajectory remains in progress. Official experiments have not started. Disk free is5.37TiB; container-effective RAM available is98.8GiB including only reclaimable inactive file cache (250GiB limit); H100 free VRAM is8.7GiB at this snapshot, reduced by shared workloads. No cgroup OOM or OOM kills recorded. Download workers use bounded streaming buffers and no GPU memory; they can add network/disk/cache pressure and slow the shared run. Partial files remain separate until checksum/archive validation succeeds; full data joins/splits still gate later use. BGE-M3 binary download is complete but remains excluded from ready models pending restricted conversion/adapter review. New GPU workers must satisfy the existing reservation plus safety-margin gate. Evidence: `state/health-latest.json`.
+Latest resource check (2026-10-20 16:17 UTC+7): first official FiQA run `E2-fiqa-residual_mlp-primary-greedy-m17-t101-0b0e24d75fc0` is active. Disk free5.35TiB; container-effective RAM available82.4GiB including reclaimable inactive file cache (250GiB limit); H100 free VRAM8.6GiB on the shared device. No OOM/OOM kills recorded. Additional input workers use no GPU and reduced CPU/IO priority. Evidence: `state/health-latest.json`.
 <!-- health:end -->
 
 <!-- t0-download-check:begin -->
@@ -151,3 +152,21 @@ T0 download round-trip confirmed (2026-10-20 16:01 UTC+7): downloaded the comple
 
 Additional data: NQ raw ZIP integrity/SHA256 verification passed (`state/beir-downloads.json`); full ingest/count/join/split validation is now running (`state/nq-prepare.json`) at reduced CPU/IO priority with one CPU thread and no GPU. Publication remains pending validation and source-specific attribution review. MS MARCO raw files have completed transfer and initial gzip checks; the independent raw-file verification pass is running before ORCAS. HotpotQA download is active.
 <!-- t0-download-check:end -->
+
+<!-- current-execution:begin -->
+Current execution (2026-10-20 16:11 UTC+7): **the first official FiQA E2 cell has started**, and the user has been explicitly notified. Run `E2-fiqa-residual_mlp-primary-greedy-m17-t101-0b0e24d75fc0`; full57,638-document FiQA, MiniLM→MPNet, residual MLP, primary/greedy, exact search, cached-access quality mode, map_seed17/traffic_seed101. T0.core and development preflight are compute-done and remotely VERIFIED. Preflight checked45 cells, reached14,409 total paid documents (25%), restored successfully and never opened test labels. Its25 positive-gain greedy selections and12,364 fallback selections are recorded without a quality/performance claim. Remaining101 official FiQA cells are pending the fixed first cell; full E2 and scale/case stages remain incomplete.
+
+Measured shared-host preflight timing: to10% accessed375.42s; continuation10%→25%844.38s. Full100% cell remains unmeasured. Immutable profile stays `a38d8e8b5b27686edceb4d80ab4822d3164545b1327bc29a35db0f687b87a0e3`.
+
+Independent input preparation: MS MARCO document-v1/ORCAS raw transfer plus gzip/checksum checks are complete (`state/scale-download.json`); full ingest/count/join/split validation is pending. NQ full validation passed with2,681,468 docs,3,452 eval-only query groups and4,201 test qrels (`state/nq-prepare.json`); no independent scheduling/calibration/tune queries exist in this downloaded release, so primary greedy is N/A for that case. Public NQ publication is remotely VERIFIED, with full document semantic round-trip and anonymous access checks passed. BGE-M3 restricted conversion and real CPU document/query dense-CLS reference smoke passed; H100 runtime/tuning remains pending. New code is isolated in `/root/paper-P2-inputs`, branch `codex/input-adapters` (69 tests pass); the active official cell keeps its original code/configuration. FEVER raw archive is verified; HotpotQA/FEVER full ingest validation is running.
+<!-- current-execution:end -->
+
+<!-- additional-input-progress:begin -->
+Input extension update (2026-10-20 16:17 UTC+7): NQ is fully validated and publicly published at https://huggingface.co/datasets/deadgod3005/mixindex-data-nq . All uploaded artifacts are remotely checksum-verified. Reading every exported Parquet row reconstructs the exact canonical source document SHA256 across2,681,468 rows; anonymous repository access and downloaded-shard SHA256 pass (`state/nq-publication-semantic-check.json`). No independent development queries exist in this release; no test query is reassigned.
+
+BGE base/M3 real document/query CPU smoke and manual dense CLS reference comparisons PASS (`state/model-smoke-fiqa-bge-cpu.json`). The converted M3 tensors exactly match pinned upstream binary weights. This proves adapter correctness on CPU; matching H100 runtime/tuning remains required. Nomic v1/v1.5 snapshots are downloaded/pinned (`state/nomic-download.json`); external model code is downloaded for review only and has not been executed. All five BEIR raw archives plus MS MARCO document-v1/ORCAS are downloaded and archive-verified; HotpotQA/FEVER full ingest/count/join/split validation is running at low CPU/IO priority (`state/beir-prepared-extra.json`).
+
+Input extension commit `68b6dfe` on `codex/input-adapters`:69 tests and Ruff pass. Original active official FiQA source/config remain unchanged. Current effective RAM available is82.4GiB including reclaimable inactive file cache; free H100 VRAM is8.6GiB; disk free is5.35TiB. No OOM/OOM kills have been recorded in cgroup memory events.
+<!-- additional-input-progress:end -->
+
+Input extension is reviewable in [draft PR #2](https://github.com/hieukendu/paper-P2/pull/2), stacked on #1; it adds reviewed large-BEIR publication and verified BGE-M3 format conversion. Active FiQA code remains on the immutable setup revision.
