@@ -237,8 +237,60 @@ def build_presetup_tasks(scope, cfg, root):
         }
         from .queue import validate_jobs
         return validate_jobs([task])
+    if scope == "scale":
+        overrides = deepcopy(cfg)
+        overrides["dataset"]["name"] = "msmarco-docs-v1"
+        overrides["dataset"]["subset_size"] = None
+        overrides["models"]["pair"] = "arctic"
+        overrides["models"]["batch_size"] = 8
+        overrides["tuning"]["scope"] = "scale"
+        overrides["execution"]["phase"] = "development"
+        overrides["execution"]["mode"] = "cached_access"
+        state_path = Path(cfg["paths"]["state"]) / "tasks.json"
+        e3_dependencies = []
+        if state_path.exists():
+            state = read_json(state_path).get("tasks", {})
+            e3_dependencies = [identifier for identifier, row in state.items()
+                                if identifier.startswith("E3.")
+                                and row.get("status") == "COMPUTE_DONE"
+                                and row.get("sync_status") == "VERIFIED"
+                                and row.get("handle_alive") is False]
+        if len(e3_dependencies) < 6:
+            raise ValueError("T0.scale requires all six verified E3 tasks")
+        prefix = f"T0.scale.{digest({'config': redacted_config(overrides), 'source': source_hash(root)})[:12]}"
+        common = {"config": "configs/base.yaml", "phase": "development",
+                  "measurement_mode": "exclusive", "development_hardware": not cfg["execution"]["require_target"],
+                  "config_overrides": overrides,
+                  "resources": {"gpu_device": None, "gpu_memory_gib": 0, "host_ram_gib": 8,
+                                 "cpu_cores": 4, "disk_scratch_gib": 12, "io_heavy": True}}
+        jobs = []
+        data_ids = []
+        for dataset in ("msmarco-docs-v1", "orcas"):
+            item = {**common, "task_id": f"{prefix}.data.{dataset}", "experiment": "DATA_PREP",
+                    "config_overrides": {**deepcopy(overrides), "dataset": {**overrides["dataset"],
+                                                                                "name": dataset}},
+                    "measurement_mode": "quality", "resources": {"gpu_device": None,
+                        "gpu_memory_gib": 0, "host_ram_gib": 4, "cpu_cores": 2,
+                        "disk_scratch_gib": 16, "io_heavy": True}, "depends_on": []}
+            jobs.append(item)
+            data_ids.append(item["task_id"])
+        models = {**common, "task_id": f"{prefix}.models", "experiment": "MODEL_DOWNLOAD",
+                  "measurement_mode": "quality", "depends_on": []}
+        jobs.append(models)
+        smoke = {**common, "task_id": f"{prefix}.smoke", "experiment": "MODEL_SMOKE",
+                 "resources": {"gpu_device": 0, "gpu_memory_gib": 8, "host_ram_gib": 12,
+                                "cpu_cores": 4, "disk_scratch_gib": 8, "io_heavy": False},
+                 "depends_on": data_ids + [models["task_id"]]}
+        jobs.append(smoke)
+        freeze = {**common, "task_id": f"{prefix}.freeze", "experiment": "T0",
+                  "resources": {"gpu_device": 0, "gpu_memory_gib": 12, "host_ram_gib": 32,
+                                 "cpu_cores": 8, "disk_scratch_gib": 64, "io_heavy": True},
+                  "depends_on": [smoke["task_id"], *e3_dependencies]}
+        jobs.append(freeze)
+        from .queue import validate_jobs
+        return validate_jobs(jobs)
     if scope != "core":
-        raise ValueError("Scale preparation requires the MS MARCO/ORCAS adapter and E3 gate")
+        raise ValueError("Only T0.core, T0.scale and the explicit TREC case are supported")
     if scope == "core" and (cfg["dataset"]["name"], cfg["models"]["pair"]) != ("fiqa", "minilm_mpnet"):
         raise ValueError("T0.core requires FiQA and MiniLM/MPNet")
     revision = digest({"config": redacted_config(cfg), "source": source_hash(root)})[:12]
@@ -482,6 +534,9 @@ def run_presetup(task, inputs, cfg):
     cfg = deepcopy(cfg)
     cfg["execution"]["mode"] = "live_encode"
     scope = cfg["tuning"]["scope"]
+    if scope == "scale":
+        from .experiments_scale import run_scale_presetup
+        return run_scale_presetup(task, cfg)
     if scope != "core":
         return _run_case_trec_presetup(task, cfg)
     environment = probe_hardware()

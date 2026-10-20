@@ -42,7 +42,7 @@ def main(argv=None):
     run.add_argument("--development-hardware", action="store_true",
                      help="Label development diagnostics on other hardware; never certify target gates")
     presetup = commands.add_parser("presetup", help="Enqueue the bounded core setup DAG and run ready tasks")
-    presetup.add_argument("--scope", choices=["core"], default="core")
+    presetup.add_argument("--scope", choices=["core", "scale"], default="core")
     presetup.add_argument("--config", default="configs/base.yaml")
     presetup.add_argument("--enqueue-only", action="store_true")
     presetup.add_argument("--once", action="store_true")
