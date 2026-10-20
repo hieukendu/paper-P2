@@ -48,10 +48,15 @@ Seed cố định: `master_seed=20261020`, `map_seed=17`, `traffic_seed=101`; ti
 
 Đo riêng encode/query/search/heap/backfill/refit/remap/HNSW/checkpoint, docs/tokens/s, RSS/VRAM, bytes và stalls; upload/verify đo sau measurement window. E4 còn probe tới100k scheduling groups và actual full bootstrap graph trước E5. Không ngoại suy HNSW tuyến tính từ subset hoặc chia đôi thời gian chỉ vì cho phép2 jobs.
 
-Runner cập nhật dự báo gọn tại đây sau khi có số đo, kèm link tới `estimate.json`; hiện không có thời gian đã đo:
+Runner cập nhật dự báo từ số đo thực tế. FiQA đã có timing development; thời điểm kết thúc toàn bộ E2–E7 chưa đủ bằng chứng để chốt. Không nhân timing prefix với toàn bộ cells hoặc ngoại suy100% như một số đo đã có:
 
 | Phạm vi | Trạng thái dự báo |
 |---|---|
+| E2 FiQA greedy development, bootstrap→10% accessed | ĐÃ ĐO:375.42s ≈6 phút15 giây; cùng57,638 docs/4,400 scheduling queries, shared H100 |
+| E2 FiQA greedy development,10%→25% accessed | ĐÃ ĐO:844.38s ≈14 phút04 giây; tổng hai chặng≈20 phút19 giây, chưa gồm full100%/official evaluation/upload |
+| E2 FiQA cell chính thức đầu tiên, đến100% true | ĐANG CHẠY từ2026-10-20 khoảng16:10 UTC+7; thời gian full-cell CHƯA ĐO, chưa chốt ETA. Encode/reference cache ban đầu là chi phí dùng chung, ghi riêng |
+| E2 FiQA:102 unique official cells | CHƯA ĐỦ SỐ ĐỂ CHỐT ngày xong; cần full-cell timing theo từng scheduler/variant và chi phí dùng chung. Concurrency hiện1; không coi102 cells có cùng chi phí |
+| E2 TREC/E3/T0.scale | CHƯA ĐO; cần đúng-case gates và implementation tương ứng |
 | E5:60 cells tới10% accessed | CHƯA ĐO; shared encode/cache + per-cell costs, refine tại E4 full bootstrap |
 | E5:continuation25/50/100% true | CHƯA ĐO; forecast riêng refit/remap/update/checkpoint, không cộng thêm100% scheduled |
 | E7:20 dataset/model cases và eligible schedulers | CHƯA ĐO; cần đúng-case token/runtime profiles và actual task counts |
@@ -170,3 +175,13 @@ Input extension commit `68b6dfe` on `codex/input-adapters`:69 tests and Ruff pas
 <!-- additional-input-progress:end -->
 
 Input extension is reviewable in [draft PR #2](https://github.com/hieukendu/paper-P2/pull/2), stacked on #1; it adds reviewed large-BEIR publication and verified BGE-M3 format conversion. Active FiQA code remains on the immutable setup revision.
+
+<!-- live-official-check:begin -->
+Live check (2026-10-20 16:20 UTC+7): official FiQA run `E2-fiqa-residual_mlp-primary-greedy-m17-t101-0b0e24d75fc0` is RUNNING; workerPID98338 is alive, accumulating CPU time, and source hash matches the frozen run configuration. No worker error or cgroup OOM/OOM-kill observed. Effective available RAM≈78.3GiB. Quality conclusions and100% exact completion gate remain pending.
+
+HotpotQA full validation PASSED:5,233,329 documents,97,844 unique query groups from97,852 source IDs,7,405 test queries and14,810 test qrels; all joins and train/dev/test query roles validated. It is now being prepared/published publicly with source-order Parquet semantic verification. FEVER full validation is still running. NQ public release is verified with complete semantic round-trip and anonymous access; BGE base/M3 CPU adapter reference checks pass; Nomic code review and scale ingest remain pending.
+<!-- live-official-check:end -->
+
+<!-- t0-threshold:begin -->
+T099% threshold clarification: **mean candidate recall@11 ≥0.99 AND serving recall@10 ≥0.99** are HNSW fidelity gates against exact retrieval over the same stored-vector snapshot on the case's Q_tune. FiQA selectedL50/ef200 achieves worst mean candidate recall@11=0.99654545 (99.65%) and worst serving recall@10=0.997 (99.70%) across OP/LA/MLP primary bootstrap snapshots. This is an ANN correctness/fidelity gate, not99% NDCG/ARR/model accuracy or proof of beating baselines. T0.core also requires finite map/validation selection, held-out/calibration/budget checks, runtime/hardware admission, checkpoint restore and immutable-profile checks; those core gates pass. Scale/other cases require their own gates; full T0 remains unticked.
+<!-- t0-threshold:end -->
