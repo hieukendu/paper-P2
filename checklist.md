@@ -108,6 +108,7 @@ Agent/runner cập nhật block sau mỗi run hoặc sync transition. Checkbox c
 
 
 
+
 - [x] E1-debug-fiqa-e690dfc90eb5 — compute=COMPUTE_DONE; sync=VERIFIED; outcome=diagnostic; HF=https://huggingface.co/datasets/deadgod3005/mixindex-runs-001/tree/fd22a0a96e1a3c652a40186072f61aa6ead3585b/runs/E1-debug-fiqa-e690dfc90eb5/4c7aba85abcbf74d3f6c2037b0709ea6742c0b48816243875ea24f35bc3898ab
 - [x] E1-debug-fiqa-182b57d9b856 — compute=COMPUTE_DONE; sync=VERIFIED; outcome=diagnostic; HF=https://huggingface.co/datasets/deadgod3005/mixindex-runs-001/tree/948532f0f5a98bd5fcd9f24814969cc1650025aa/runs/E1-debug-fiqa-182b57d9b856/85ab2017880d55da613d1a6dfa415953e073a4fc9d28b68a7158285cfeefd5c0
 - [x] CORE_SMOKE-debug-fiqa-f661ce715552 — compute=COMPUTE_DONE; sync=VERIFIED; outcome=diagnostic; HF=https://huggingface.co/datasets/deadgod3005/mixindex-runs-001/tree/95570d2f2f91d5e22b86ffff8b06dd91c3e2439d/runs/CORE_SMOKE-debug-fiqa-f661ce715552/a03c1418cfb58ac955b4f6e937da2ca8220b358dabd95637ad4ec6031cdd2c99
@@ -182,7 +183,7 @@ Additional BGE/Nomic snapshots and NQ/HotpotQA/FEVER archives are downloaded and
 BGE download inspection: bge-base snapshot is pinned. Original BGE-M3 revision `5617a9f61b028005a4858fdac845db406aefb181` publishes `pytorch_model.bin` only; the current safetensors-only resolver rejected it as designed. Pinned binary weights are downloaded and recorded by SHA256; restricted-format conversion/adapter review is still pending. BGE real CPU document/query and manual dense CLS smoke passed after conversion; H100 tuning remains incomplete. FiQA uses the validated MiniLM/MPNet adapters.
 
 <!-- health:begin -->
-Latest resource check (2026-10-20 16:17 UTC+7): first official FiQA run `E2-fiqa-residual_mlp-primary-greedy-m17-t101-0b0e24d75fc0` is active. Disk free5.35TiB; container-effective RAM available82.4GiB including reclaimable inactive file cache (250GiB limit); H100 free VRAM8.6GiB on the shared device. No OOM/OOM kills recorded. Additional input workers use no GPU and reduced CPU/IO priority. Evidence: `state/health-latest.json`.
+Latest resource check (2026-10-20 19:26 UTC+7): compact E2 preflight `E2.exact.preflight.c68c145789e2` is active; no official cell is active yet. Disk remains above5TiB; host RAM is ample; H100 free VRAM is≈8.7GiB on the shared device. Worker RSS is≈1.9GiB; cgroup `oom=0`, `oom_kill=0`. Additional input workers use no GPU and reduced CPU/IO priority. Evidence: live `state/tasks.json` and cgroup/NVIDIA checks.
 <!-- health:end -->
 
 <!-- t0-download-check:begin -->
@@ -192,7 +193,7 @@ Additional data: NQ raw ZIP integrity/SHA256 verification passed (`state/beir-do
 <!-- t0-download-check:end -->
 
 <!-- current-execution:begin -->
-Current execution (2026-10-20 12:25 UTC): the previous compact revisions are stopped and their records are `CANCELLED` as superseded queue revisions; their valid artifacts are preserved but excluded because the source revision changed. Compact revision `c68c145789e2` is running its 9-cell preflight under verified-sync and serial cell gates; 21 FiQA cells wait for its terminal verified artifact, while 3 TREC cells remain dependency-gated. Existing bundles are preserved but excluded from the new aggregate.
+Current execution (2026-10-20 12:26 UTC): the previous compact revisions are stopped and their records are `CANCELLED` as superseded queue revisions; their valid artifacts are preserved but excluded because the source revision changed. Compact revision `c68c145789e2` is still running its 9-cell preflight under verified-sync and serial cell gates; all 9 bootstrap log checks are PASS, but compute and remote sync are not terminal yet. No official cell is active: 21 FiQA cells wait for the preflight's terminal verified artifact, while 3 TREC cells remain dependency-gated. Existing bundles are preserved but excluded from the new aggregate.
 
 Measured shared-host preflight timing: to10% accessed375.42s; continuation10%→25%844.38s. Full100% cell remains unmeasured. Immutable profile stays `a38d8e8b5b27686edceb4d80ab4822d3164545b1327bc29a35db0f687b87a0e3`.
 
@@ -210,7 +211,7 @@ Input extension commit `1e00855` on `codex/input-adapters`:74 tests, Ruff and co
 Input extension is reviewable in [draft PR #2](https://github.com/hieukendu/paper-P2/pull/2), stacked on #1; head `1e00855` adds the validated MS MARCO/ORCAS scale publisher with source rechecks, bounded Parquet/traffic layouts, completion markers and remote checksum verification, plus the explicit empty-query source policy. The input branch passes 74 tests, Ruff and compile; reviewed large-BEIR publication, BGE-M3 conversion and Nomic adapters remain included. Active FiQA code remains on the immutable setup revision. The publisher is prepared but will not mark a scale release uploaded until the live MS MARCO and ORCAS manifests are `VALIDATED` and remote checksums verify.
 
 <!-- live-official-check:begin -->
-Live check (2026-10-20 12:25 UTC): compact revision `c68c145789e2` preflight is RUNNING under one H100 worker; downstream cells remain blocked until `COMPUTE_DONE + sync=VERIFIED + worker exit`, and each later cell is chained to the immediately preceding pass. Prior FiQA pilots/preflights are retained only as historical diagnostic evidence; no failed orchestration attempt is reported as an experiment result. Cgroup memory events remain `oom=0` and `oom_kill=0`. Scale preparation is independent.
+Live check (2026-10-20 12:26 UTC): compact revision `c68c145789e2` preflight is RUNNING under one H100 worker; all 9 bootstrap checks are logged PASS, but downstream cells remain blocked until `COMPUTE_DONE + sync=VERIFIED + worker exit`, and each later cell is chained to the immediately preceding pass. Prior FiQA pilots/preflights are retained only as historical diagnostic evidence; no failed orchestration attempt is reported as an experiment result. Cgroup memory events remain `oom=0` and `oom_kill=0`. Scale preparation is independent.
 
 HotpotQA full validation PASSED:5,233,329 documents,97,844 unique query groups from97,852 source IDs,7,405 test queries and14,810 test qrels; all joins and train/dev/test query roles validated. Its source-order Parquet semantic round-trip and public upload are remotely verified at `deadgod3005/mixindex-data-hotpotqa`. FEVER full validation PASSED with5,416,568 documents,6,666 test queries and7,937 test qrels; its public semantic upload is remotely VERIFIED at `deadgod3005/mixindex-data-fever` revision `f1f326e3ca213dc7ca93357492473d137769b1eb`. NQ public release is verified with complete semantic round-trip and anonymous access; BGE base/M3 CPU adapter and Nomic v1/v1.5 CPU adapter checks pass; MS MARCO/ORCAS scale ingest remains in progress.
 <!-- live-official-check:end -->
