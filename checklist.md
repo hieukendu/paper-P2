@@ -435,3 +435,5 @@ E3 verified bundles: exact [HF](https://huggingface.co/datasets/deadgod3005/mixi
 Current status audit (2026-10-20 UTC): E2 `compact_v1` remains complete at **24/24 official cells**; no E2 worker is alive and no E2 cell remains. E3 is also complete at 6/6 verified tasks; E4 is the next stage and has not started.
 
 Status query audit (2026-10-20 23:13 UTC): E2 remains **24/24 official cells verified**, so **0/24 cells remain**. This count is unchanged while the scale-input ORCAS preparation continues independently; no E2 worker is running.
+
+Scale-prep audit (2026-10-20 23:36 UTC): MS MARCO documents v1 is `VALIDATED` (3,213,835 documents; release `200a19df9868ff31a18cf860cf4e05ff71e8ff76db8b671b229cba117374ce68`), and Arctic old/new CUDA smoke is `PASS` at pinned revisions `d8fb21ca8d905d2832ee8b96c894d3298964346b` / `ac6544c8a46e00af67e330e85a9028c66b8cfd9a`. ORCAS aggregate preparation is still running; `PREP.scale` and `T0.scale` remain open until its manifest and validation pass.
