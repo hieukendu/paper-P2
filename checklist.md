@@ -109,6 +109,7 @@ Agent/runner cập nhật block sau mỗi run hoặc sync transition. Checkbox c
 - [x] E2-fiqa-la-diagonal-random-m17-t101-db4ac5ad0130 — compute=COMPUTE_DONE; sync=VERIFIED; outcome=inconclusive; HF=https://huggingface.co/datasets/deadgod3005/mixindex-runs-001/tree/28dfa53e72a08511e4c5b9e9767f39395018a37e/runs/E2-fiqa-la-diagonal-random-m17-t101-db4ac5ad0130/ac90e259759ac3228d51c2b006c6847ec570126f8a68b346dbdb1f8e1d484386
 - [x] E2-fiqa-la-diagonal-random-m29-t101-b25fae438a16 — compute=COMPUTE_DONE; sync=VERIFIED; outcome=inconclusive; HF=https://huggingface.co/datasets/deadgod3005/mixindex-runs-001/tree/10f0de5093a47ea90df9a66474c8fe4b3b46e704/runs/E2-fiqa-la-diagonal-random-m29-t101-b25fae438a16/abc3b6dfc873c2693d70c68fdea839b87ac61bf0ccefd86ef4283be922094dfa
 - [x] E2-fiqa-la-diagonal-random-m43-t101-2fd748dab54c — compute=COMPUTE_DONE; sync=PENDING; outcome=inconclusive; HF=pending
+- [ ] E2-fiqa-la-global-random-m17-t101-a263e90edbc4 — compute=RUNNING; sync=NOT_READY; outcome=inconclusive; HF=pending
 <!-- progress:end -->
 
 <!-- expect-audit-policy:begin -->
