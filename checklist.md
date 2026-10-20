@@ -109,8 +109,9 @@ Agent/runner cập nhật block sau mỗi run hoặc sync transition. Checkbox c
 - [x] E2-fiqa-la-diagonal-random-m17-t101-db4ac5ad0130 — compute=COMPUTE_DONE; sync=VERIFIED; outcome=inconclusive; HF=https://huggingface.co/datasets/deadgod3005/mixindex-runs-001/tree/28dfa53e72a08511e4c5b9e9767f39395018a37e/runs/E2-fiqa-la-diagonal-random-m17-t101-db4ac5ad0130/ac90e259759ac3228d51c2b006c6847ec570126f8a68b346dbdb1f8e1d484386
 - [x] E2-fiqa-la-diagonal-random-m29-t101-b25fae438a16 — compute=COMPUTE_DONE; sync=VERIFIED; outcome=inconclusive; HF=https://huggingface.co/datasets/deadgod3005/mixindex-runs-001/tree/10f0de5093a47ea90df9a66474c8fe4b3b46e704/runs/E2-fiqa-la-diagonal-random-m29-t101-b25fae438a16/abc3b6dfc873c2693d70c68fdea839b87ac61bf0ccefd86ef4283be922094dfa
 - [x] E2-fiqa-la-diagonal-random-m43-t101-2fd748dab54c — compute=COMPUTE_DONE; sync=VERIFIED; outcome=inconclusive; HF=https://huggingface.co/datasets/deadgod3005/mixindex-runs-001/tree/a676cbcbb091ce42d158909e63b1da31a1d23ccc/runs/E2-fiqa-la-diagonal-random-m43-t101-2fd748dab54c/7658eab326134e8a6546215742672b6aec8e2ab4d5964e7477d7eb6271120b6f
-- [ ] E2-fiqa-la-global-random-m29-t101-39c15fbe39a2 — compute=RUNNING; sync=NOT_READY; outcome=inconclusive; HF=pending
 - [x] E2-fiqa-la-global-random-m17-t101-a263e90edbc4 — compute=COMPUTE_DONE; sync=VERIFIED; outcome=inconclusive; HF=https://huggingface.co/datasets/deadgod3005/mixindex-runs-001/tree/8a57ffcb0deaf243ba1a465377e64c5a066fb4ef/runs/E2-fiqa-la-global-random-m17-t101-a263e90edbc4/8981461218aadd678eff1a0425fe40fe3f2120584cc887c08a9814d058bbdda7
+- [x] E2-fiqa-la-global-random-m29-t101-39c15fbe39a2 — compute=COMPUTE_DONE; sync=PENDING; outcome=inconclusive; HF=pending
+- [ ] E2-fiqa-la-global-random-m43-t101-62d6bca7e38c — compute=RUNNING; sync=NOT_READY; outcome=inconclusive; HF=pending
 <!-- progress:end -->
 
 <!-- expect-audit-policy:begin -->
