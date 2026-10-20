@@ -43,6 +43,18 @@ def finalize_run(run_dir, summary, cfg, root):
     worker_signal = os.getenv("MIXINDEX_WORKER_STATUS_PATH")
     if worker_signal:
         write_json(Path(worker_signal), {"compute_status": summary["compute_status"], "run_dir": str(run_dir)})
+    # Failed runs are local diagnostics only.  They are not uploaded or added
+    # to the scientific checklist, and large transient artifacts are removed
+    # after the failure summary is retained for reconciliation.
+    if summary.get("compute_status") != "COMPUTE_DONE":
+        for child in tuple(run_dir.iterdir()):
+            if child.name not in {"summary.json", "config.lock.json", "environment.json", "source"}:
+                if child.is_dir():
+                    import shutil
+                    shutil.rmtree(child, ignore_errors=True)
+                else:
+                    child.unlink(missing_ok=True)
+        return {**summary, "run_id": run_dir.name, "sync_status": "NOT_READY", "hf_url": None}
     update_checklist(root, run_dir.name, {**summary, "sync_status": "PENDING"})
     receipt = auto_sync_experiment(run_dir, cfg["sync"], root, cfg["paths"]) if cfg["sync"]["enabled"] else {"status": "PENDING"}
     update_checklist(root, run_dir.name, {**summary, "sync_status": receipt["status"],

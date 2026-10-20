@@ -23,8 +23,10 @@ def update_checklist(project_root, task_id, result):
     done = "x" if compute == "COMPUTE_DONE" else " "
     sync = result.get("sync_status", "NOT_READY")
     url = result.get("hf_url", "pending")
+    expectation = result.get("expect_classification")
+    expectation_text = f"; expect={expectation}" if expectation else ""
     row = (f"- [{done}] {task_id} — compute={compute}; sync={sync}; "
-           f"outcome={result.get('outcome', 'diagnostic')}; HF={url}")
+           f"outcome={result.get('outcome', 'diagnostic')}{expectation_text}; HF={url}")
     with file_lock(path.with_suffix(".lock")):
         text = path.read_text()
         begin, end = "<!-- progress:begin -->", "<!-- progress:end -->"

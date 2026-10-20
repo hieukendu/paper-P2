@@ -48,7 +48,7 @@ def main(argv=None):
     presetup.add_argument("--once", action="store_true")
     presetup.add_argument("--development-hardware", action="store_true")
     plan = commands.add_parser("plan", help="Write the declared exact FiQA experiment matrix without starting it")
-    plan.add_argument("--experiment", choices=["E2"], required=True)
+    plan.add_argument("--experiment", choices=["E2", "E3"], required=True)
     plan.add_argument("--config", default="configs/experiments/e2.yaml")
     plan.add_argument("--output", type=Path, default=Path("configs/jobs.yaml"))
     enqueue = commands.add_parser("enqueue", help="Add explicit immutable jobs without executing dependencies")
@@ -76,7 +76,11 @@ def main(argv=None):
             from .experiments_static import build_static_tasks
             import yaml
             from .io import atomic_bytes
-            tasks = build_static_tasks(cfg, root)
+            if args.experiment == "E3":
+                from .experiments_systems import build_systems_tasks
+                tasks = build_systems_tasks(cfg, root)
+            else:
+                tasks = build_static_tasks(cfg, root)
             atomic_bytes(args.output, yaml.safe_dump({"jobs": tasks}, sort_keys=False).encode())
             result = {"output": str(args.output), "tasks": len(tasks), "status": "PLANNED"}
         elif args.command == "presetup":

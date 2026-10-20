@@ -73,6 +73,12 @@ experiment:
   run_budget_policy: compact_v1
   cell_role: mapping
   preflight_run: null
+  tuning_scope: null
+  system_task: null
+  snapshot_run: null
+  q_tune_cache: null
+  systems_horizon_fraction: 1.0
+  systems_validation_stride: 10
 execution:
   phase: development
   mode: cached_access

@@ -78,7 +78,8 @@ def collect_run_artifacts(run_dir, checkpoint=None):
     allowed = {"config.lock.json", "summary.json", "metrics.parquet", "retrieval.trec.gz",
                "events.jsonl", "accessed_ids.npz", "timing.json", "estimate.json",
                "environment.json", "models.lock.json", "dataset_manifest.json", "selection.parquet",
-               "development_queries.json", "throughput_probe.json", "tuning_profile.json", "reference_inputs.json"}
+               "development_queries.json", "throughput_probe.json", "tuning_profile.json", "reference_inputs.json",
+               "systems_metrics.json"}
     names = [name for name in allowed if (run_dir / name).is_file()]
     checkpoints = run_dir / "checkpoints"
     if checkpoint is not None:

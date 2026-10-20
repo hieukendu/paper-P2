@@ -1,0 +1,214 @@
+jobs:
+- config: configs/experiments/e3.yaml
+  phase: official
+  measurement_mode: exclusive
+  development_hardware: false
+  tuning_scope: core
+  input_refs: &id001
+    dataset: fiqa
+    hardware:
+      cpu_cores: 16.0
+      devices:
+      - compute_capability:
+        - 9
+        - 0
+        name: NVIDIA H100 80GB HBM3
+        vram_total_bytes: 84929478656
+      hnsw_build:
+        commit: d9b3608c83d83b46c96e25088cb1d729b29dcfe9
+        sha256: adf8c94849c6015ad81ae58e7cddf2c9a99914ebeb60cb03aaf1986d43e762df
+        source: https://github.com/nmslib/hnswlib.git
+      packages:
+        hnswlib: 0.9.0
+        huggingface-hub: 0.34.4
+        numpy: 2.2.6
+        pyarrow: 20.0.0
+        scikit-learn: 1.6.1
+        scipy: 1.15.3
+        sentence-transformers: 4.1.0
+        torch: 2.6.0+cu124
+        transformers: 4.51.3
+      ram_limit_bytes: 268435456000
+      torch_cuda: '12.4'
+    models:
+      new:
+        adapter: sentence_transformer
+        dim: 768
+        document_prefix: ''
+        download_patterns:
+        - '*.json'
+        - '*.safetensors'
+        - '*.txt'
+        - '*.model'
+        - '*.md'
+        dtype: float32
+        max_tokens: 384
+        pooling: mean
+        query_prefix: ''
+        repo_id: sentence-transformers/all-mpnet-base-v2
+        resolved_revision: e8c3b32edf5434bc2275fc9bab85f82640a19130
+        trust_remote_code: false
+      old:
+        adapter: sentence_transformer
+        dim: 384
+        document_prefix: ''
+        download_patterns:
+        - '*.json'
+        - '*.safetensors'
+        - '*.txt'
+        - '*.model'
+        - '*.md'
+        dtype: float32
+        max_tokens: 256
+        pooling: mean
+        query_prefix: ''
+        repo_id: sentence-transformers/all-MiniLM-L6-v2
+        resolved_revision: 1110a243fdf4706b3f48f1d95db1a4f5529b4d41
+        trust_remote_code: false
+    pair: minilm_mpnet
+    release: 584640e32aecdf4ce3517078a50ac7e771025e768c8c21fd3ae824d0699c5058
+    split_hash: 44b9adf3317face605a7d9ce7bd875bfa88142dc4967a1cc2d5c4efbc2d22594
+  profile_hash: a38d8e8b5b27686edceb4d80ab4822d3164545b1327bc29a35db0f687b87a0e3
+  variant_id: primary
+  overrides: &id002 {}
+  resources: &id003
+    gpu_device: null
+    gpu_memory_gib: 0
+    host_ram_gib: 16
+    cpu_cores: 8
+    disk_scratch_gib: 12
+    io_heavy: true
+  task_id: E3.systems.exact_reference.57bd0934a30c
+  experiment: E3
+  config_overrides:
+    experiment:
+      profile_hash: a38d8e8b5b27686edceb4d80ab4822d3164545b1327bc29a35db0f687b87a0e3
+      tuning_scope: core
+      system_task: exact_reference
+      snapshot_run: E2-fiqa-scheduler-residual_mlp-primary-random-m17-t101-9e978e5700de
+      q_tune_cache: cache/vectors/queries/3d569f3c6c2020e9e029032f3ed7b537db3b4c14023e47a1ce54621078e0f6f9/queries.npy
+    search:
+      backend: exact
+  depends_on:
+  - E2.trec.mapping.residual_mlp.primary.random.m17.t101.cf5f547435e2
+  priority: 80
+- config: configs/experiments/e3.yaml
+  phase: official
+  measurement_mode: exclusive
+  development_hardware: false
+  tuning_scope: core
+  input_refs: *id001
+  profile_hash: a38d8e8b5b27686edceb4d80ab4822d3164545b1327bc29a35db0f687b87a0e3
+  variant_id: primary
+  overrides: *id002
+  resources: *id003
+  task_id: E3.systems.hnsw_fixed_snapshot.d617c89911fd
+  experiment: E3
+  config_overrides:
+    experiment:
+      profile_hash: a38d8e8b5b27686edceb4d80ab4822d3164545b1327bc29a35db0f687b87a0e3
+      tuning_scope: core
+      system_task: hnsw_fixed_snapshot
+      snapshot_run: E2-fiqa-scheduler-residual_mlp-primary-random-m17-t101-9e978e5700de
+      q_tune_cache: cache/vectors/queries/3d569f3c6c2020e9e029032f3ed7b537db3b4c14023e47a1ce54621078e0f6f9/queries.npy
+    search:
+      backend: hnsw
+  depends_on:
+  - E3.systems.exact_reference.57bd0934a30c
+  priority: 80
+- config: configs/experiments/e3.yaml
+  phase: official
+  measurement_mode: exclusive
+  development_hardware: false
+  tuning_scope: core
+  input_refs: *id001
+  profile_hash: a38d8e8b5b27686edceb4d80ab4822d3164545b1327bc29a35db0f687b87a0e3
+  variant_id: primary
+  overrides: *id002
+  resources: *id003
+  task_id: E3.systems.cadence_1pct.d0f9c1d33167
+  experiment: E3
+  config_overrides:
+    experiment:
+      profile_hash: a38d8e8b5b27686edceb4d80ab4822d3164545b1327bc29a35db0f687b87a0e3
+      tuning_scope: core
+      system_task: cadence_1pct
+      snapshot_run: E2-fiqa-scheduler-residual_mlp-primary-random-m17-t101-9e978e5700de
+      q_tune_cache: cache/vectors/queries/3d569f3c6c2020e9e029032f3ed7b537db3b4c14023e47a1ce54621078e0f6f9/queries.npy
+    search:
+      backend: hnsw
+  depends_on:
+  - E3.systems.hnsw_fixed_snapshot.d617c89911fd
+  priority: 80
+- config: configs/experiments/e3.yaml
+  phase: official
+  measurement_mode: exclusive
+  development_hardware: false
+  tuning_scope: core
+  input_refs: *id001
+  profile_hash: a38d8e8b5b27686edceb4d80ab4822d3164545b1327bc29a35db0f687b87a0e3
+  variant_id: primary
+  overrides: *id002
+  resources: *id003
+  task_id: E3.systems.cadence_5pct.0b5103c5af5b
+  experiment: E3
+  config_overrides:
+    experiment:
+      profile_hash: a38d8e8b5b27686edceb4d80ab4822d3164545b1327bc29a35db0f687b87a0e3
+      tuning_scope: core
+      system_task: cadence_5pct
+      snapshot_run: E2-fiqa-scheduler-residual_mlp-primary-random-m17-t101-9e978e5700de
+      q_tune_cache: cache/vectors/queries/3d569f3c6c2020e9e029032f3ed7b537db3b4c14023e47a1ce54621078e0f6f9/queries.npy
+    search:
+      backend: hnsw
+  depends_on:
+  - E3.systems.cadence_1pct.d0f9c1d33167
+  priority: 80
+- config: configs/experiments/e3.yaml
+  phase: official
+  measurement_mode: exclusive
+  development_hardware: false
+  tuning_scope: core
+  input_refs: *id001
+  profile_hash: a38d8e8b5b27686edceb4d80ab4822d3164545b1327bc29a35db0f687b87a0e3
+  variant_id: primary
+  overrides: *id002
+  resources: *id003
+  task_id: E3.systems.cadence_10pct.9b80808483db
+  experiment: E3
+  config_overrides:
+    experiment:
+      profile_hash: a38d8e8b5b27686edceb4d80ab4822d3164545b1327bc29a35db0f687b87a0e3
+      tuning_scope: core
+      system_task: cadence_10pct
+      snapshot_run: E2-fiqa-scheduler-residual_mlp-primary-random-m17-t101-9e978e5700de
+      q_tune_cache: cache/vectors/queries/3d569f3c6c2020e9e029032f3ed7b537db3b4c14023e47a1ce54621078e0f6f9/queries.npy
+    search:
+      backend: hnsw
+  depends_on:
+  - E3.systems.cadence_5pct.0b5103c5af5b
+  priority: 80
+- config: configs/experiments/e3.yaml
+  phase: official
+  measurement_mode: exclusive
+  development_hardware: false
+  tuning_scope: core
+  input_refs: *id001
+  profile_hash: a38d8e8b5b27686edceb4d80ab4822d3164545b1327bc29a35db0f687b87a0e3
+  variant_id: primary
+  overrides: *id002
+  resources: *id003
+  task_id: E3.systems.serving_save_load.a91f12be27da
+  experiment: E3
+  config_overrides:
+    experiment:
+      profile_hash: a38d8e8b5b27686edceb4d80ab4822d3164545b1327bc29a35db0f687b87a0e3
+      tuning_scope: core
+      system_task: serving_save_load
+      snapshot_run: E2-fiqa-scheduler-residual_mlp-primary-random-m17-t101-9e978e5700de
+      q_tune_cache: cache/vectors/queries/3d569f3c6c2020e9e029032f3ed7b537db3b4c14023e47a1ce54621078e0f6f9/queries.npy
+    search:
+      backend: hnsw
+  depends_on:
+  - E3.systems.cadence_10pct.9b80808483db
+  priority: 80
