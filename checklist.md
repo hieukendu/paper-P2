@@ -108,6 +108,7 @@ Agent/runner cập nhật block sau mỗi run hoặc sync transition. Checkbox c
 - [x] E2-fiqa-residual_mlp-primary-greedy-m17-t101-0b0e24d75fc0 — correctness/provenance/scope gates PASS; compute=COMPUTE_DONE; sync=VERIFIED; exact agreement=1.0; outcome=inconclusive; HF=https://huggingface.co/datasets/deadgod3005/mixindex-runs-001/tree/da28eea4ec888713116a3fb3fe63881c5c5f7faa/runs/E2-fiqa-residual_mlp-primary-greedy-m17-t101-0b0e24d75fc0/e3b6e73c640f676f378c7ce4bc9d8001c59d9fb91f2a39d2d86d9932a0b64f22
 - [x] E2-fiqa-la-diagonal-random-m17-t101-db4ac5ad0130 — compute=COMPUTE_DONE; sync=VERIFIED; outcome=inconclusive; HF=https://huggingface.co/datasets/deadgod3005/mixindex-runs-001/tree/28dfa53e72a08511e4c5b9e9767f39395018a37e/runs/E2-fiqa-la-diagonal-random-m17-t101-db4ac5ad0130/ac90e259759ac3228d51c2b006c6847ec570126f8a68b346dbdb1f8e1d484386
 - [x] E2-fiqa-la-diagonal-random-m29-t101-b25fae438a16 — compute=COMPUTE_DONE; sync=PENDING; outcome=inconclusive; HF=pending
+- [ ] E2-fiqa-la-diagonal-random-m43-t101-2fd748dab54c — compute=RUNNING; sync=NOT_READY; outcome=inconclusive; HF=pending
 <!-- progress:end -->
 
 <!-- expect-audit-policy:begin -->
