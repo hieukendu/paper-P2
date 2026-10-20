@@ -260,10 +260,14 @@ def probe_encoder(encoder, text_sample, batch_grid, repeats=3, gpu_headroom_gib=
         if not passing:
             raise RuntimeError("No encoder batch fits measured headroom")
         chosen = min(passing, key=lambda r: (-r["median_documents_per_second"], r["peak_vram_bytes"], r["batch_size"]))
+        lengths = getattr(encoder, "last_lengths", {})
         return {"selected_batch_size": chosen["batch_size"], "table": table,
                 "sample_documents": len(text_sample), "role": "runtime_research",
                 "device": encoder.device, "repeats": repeats,
                 "adapter": {key: value for key, value in encoder.spec.items() if key != "snapshot"},
+                "sample_token_lengths": {key: {"min": int(np.min(values)),
+                    "median": float(np.median(values)), "p95": float(np.quantile(values, .95)),
+                    "max": int(np.max(values))} for key, values in lengths.items()},
                 "exclusive": "unverified", "encoder_total_cost": dict(encoder.cost)}
     finally:
         encoder.batch_size = original

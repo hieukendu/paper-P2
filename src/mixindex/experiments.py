@@ -224,6 +224,7 @@ def build_presetup_tasks(scope, cfg, root):
             task["measurement_mode"] = "exclusive"
         if experiment == "T0":
             task["resources"]["cpu_cores"] = 8
+            task["config_overrides"]["execution"]["mode"] = "live_encode"
         if experiment in {"E1", "CORE_SMOKE"}:
             task["config"] = ("configs/experiments/e1.yaml" if experiment == "E1" else
                               "configs/experiments/core_smoke.yaml")
@@ -265,6 +266,7 @@ def run_presetup(task, inputs, cfg):
     """Tune on paid document pools and Q_tune; never construct a test evaluator."""
     root = Path(task["root"])
     cfg = deepcopy(cfg)
+    cfg["execution"]["mode"] = "live_encode"
     scope = cfg["tuning"]["scope"]
     if scope != "core":
         raise ValueError("Only T0.core is integrated; case/scale profiles must not be certified yet")

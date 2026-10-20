@@ -84,6 +84,7 @@ class EncoderAdapter:
         tokenized = self.model.tokenizer(prepared, truncation=False, add_special_tokens=True,
                                           verbose=False)["input_ids"]
         lengths = np.array([min(len(ids), self.spec["max_tokens"]) for ids in tokenized])
+        self.last_lengths = {"raw": np.array([len(ids) for ids in tokenized]), "effective": lengths}
         if self.device.startswith("cuda"):
             self.torch.cuda.synchronize()
         start = time.monotonic()

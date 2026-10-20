@@ -93,6 +93,7 @@ Agent/runner cập nhật block sau mỗi run hoặc sync transition. Checkbox c
 - [x] E0-fiqa-93d6f570216b — compute=COMPUTE_DONE; sync=VERIFIED; outcome=diagnostic; HF=https://huggingface.co/datasets/deadgod3005/mixindex-runs-001/tree/e2c8a6a910e16d57b8d89151bf5068ac4238a05b/runs/E0-fiqa-93d6f570216b/0c619da2768d0bf09326b1daec65e0934aa2e96c1afd4277c7cb4f8ae8e6e9b6
 - [x] E1-fiqa-b68e354ee3f3 — compute=COMPUTE_DONE; sync=VERIFIED; outcome=diagnostic; HF=https://huggingface.co/datasets/deadgod3005/mixindex-runs-001/tree/78c06322e334dd5228146f92ae3817c0f7bc454f/runs/E1-fiqa-b68e354ee3f3/6f522e5545e90d33bea1def7ebd5d2f11651a402e8050c783ff098d30e74d0ca
 - [x] CORE_SMOKE-fiqa-3db596c22bef — compute=COMPUTE_DONE; sync=VERIFIED; outcome=diagnostic; HF=https://huggingface.co/datasets/deadgod3005/mixindex-runs-001/tree/cb4c5f99784c096260b41505f3dce3b92cf78877/runs/CORE_SMOKE-fiqa-3db596c22bef/fe3771fe1461028285a3912ca96d22e53441a84b4379004cf061b39abdc7a8fb
+- [x] RUNTIME_PROBE-fiqa-minilm_mpnet-fb16c618c9df — compute=COMPUTE_DONE; sync=VERIFIED; outcome=diagnostic; HF=https://huggingface.co/datasets/deadgod3005/mixindex-runs-001/tree/c0c4ee043c2cfeb6408301d4dc7a35f4d0db2da6/runs/RUNTIME_PROBE-fiqa-minilm_mpnet-fb16c618c9df/307b6d81a413f3cbfcaad2941596367be1f3bb5acb991fbaaaf29e2a3479672d
 <!-- progress:end -->
 
 ## Ghi chú ngắn
@@ -110,3 +111,5 @@ Code đã push ở branch `codex/mixindex-setup`, [draft PR #1](https://github.c
 Current setup revision `T0.core.2012c977849c`: validated data and model smoke complete; E0 verified on HF; E1 and regional/calibration/greedy smoke compute complete. E0/E1/core-smoke uploads are verified. Runtime encoder batch probes are now running, followed by T0 map/ANN selection. All 63 tests and lint pass. RAM admission counts only reclaimable inactive file cache in addition to cgroup headroom, preserves the 25GiB safety reserve, and still checks free VRAM before each worker.
 
 The 2,000-document core smoke produced 112 cal-fit / 105 cal-check pairs, below the fixed 200-pair minimum. It correctly recorded `insufficient_calibration`, radius N/A and 1,930 fallback selections; this is correctness evidence for fallback, not a measurement of positive-gain greedy scheduling. Full-corpus T0 uses separate fixed calibration pools.
+
+Before T0 profile freeze, corrected inherited `cached_access` labeling to `live_encode` for actual paid bootstrap encoding. Added sampled raw/effective token-length statistics. The source revision changed deliberately; the strict source guard will preserve/reject affected in-flight outputs, then a fresh setup revision will run. No profile is frozen from mismatched metadata.

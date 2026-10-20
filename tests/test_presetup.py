@@ -82,6 +82,7 @@ def test_presetup_dag_orders_inputs_correctness_runtime_and_freeze():
     assert by_experiment["RUNTIME_PROBE"]["task_id"] in by_experiment["T0"]["depends_on"]
     assert by_experiment["MODEL_SMOKE"]["task_id"] in by_experiment["E0"]["depends_on"]
     assert by_experiment["T0"]["measurement_mode"] == "exclusive"
+    assert by_experiment["T0"]["config_overrides"]["execution"]["mode"] == "live_encode"
     assert by_experiment["T0"]["config_overrides"]["dataset"]["subset_size"] is None
     assert by_experiment["E1"]["config_overrides"]["dataset"]["subset_size"] == 2000
     assert by_experiment["E1"]["config_overrides"]["mapping"]["kind"] == "op"
@@ -170,6 +171,7 @@ def test_core_presetup_freezes_real_maps_and_restores_without_reading_test_label
     assert entry["inputs"]["release"] == "fixture"
     assert set(entry["selections"]["map"]) == {"op", "la", "residual_mlp"}
     run = tmp_path / "runs" / result["run_id"]
+    assert read_json(run / "config.lock.json")["config"]["execution"]["mode"] == "live_encode"
     assert len(list((run / "checkpoints").glob("*/M0.safetensors"))) == 3
     assert read_json(run / "estimate.json")["total_seconds"] is None
     assert entry["selections"]["ann_status"] == "PASS"
