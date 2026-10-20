@@ -202,7 +202,7 @@ HotpotQA full validation PASSED:5,233,329 documents,97,844 unique query groups f
 <!-- live-official-check:end -->
 
 <!-- live-scale-check:begin -->
-Live scale check (2026-10-20 17:27 UTC+7): MS MARCO document-v1 preparation attempt 1 reached 3,213,835/3,213,835 documents but terminated `FAILED` on the old registry qrel count (observed 5,193, expected 5,478); no unvalidated release was published. The corrective input registry is committed as `8aca6bf`; validation attempt 2 is `RUNNING` and has written 944,557/3,213,835 documents into its new stage against the verified 5,193-row artifact. ORCAS is `BLOCKED` on the failed dependency and will only start after a `VALIDATED` MS MARCO manifest.
+Live scale check (2026-10-20 17:27 UTC+7): MS MARCO document-v1 preparation attempt 1 reached 3,213,835/3,213,835 documents but terminated `FAILED` on the old registry qrel count (observed 5,193, expected 5,478); no unvalidated release was published. The corrective input registry is committed as `8aca6bf`; validation attempt 2 is `RUNNING` and has written 1,032,301/3,213,835 documents into its new stage against the verified 5,193-row artifact. ORCAS is `BLOCKED` on the failed dependency and will only start after a `VALIDATED` MS MARCO manifest.
 <!-- live-scale-check:end -->
 
 <!-- e1-verification:begin -->
