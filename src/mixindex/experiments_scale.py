@@ -184,6 +184,8 @@ def _run_scale_scheduler_probe(doc_ids, old, new, pools, cfg, queries, roles, sc
                                     map_seed=17, traffic_seed=101, calibration_queries=cal)
         initial = len(accessor.paid)
         first = run_migration(state, [max(initial, int(.10 * len(doc_ids)))], traffic=traffic)
+        paid_at_10pct = len(accessor.paid)
+        events_10pct = len(first["events"])
         second = run_migration(state, [max(len(accessor.paid), int(.25 * len(doc_ids)))], traffic=traffic)
         checkpoint = emit_checkpoint(state, run_dir / "checkpoints", f"{scheduler}-25pct",
                                      digest({"scheduler": scheduler, "n": len(doc_ids)}))
@@ -193,7 +195,7 @@ def _run_scale_scheduler_probe(doc_ids, old, new, pools, cfg, queries, roles, sc
         if not np.array_equal(restored.index.vectors, state.index.vectors):
             raise ValueError(f"Scale scheduler restore differs for {scheduler}")
         row = {"scheduler": scheduler, "initial_paid": initial,
-               "paid_at_10pct": len(accessor.paid), "events_10pct": len(first["events"]),
+               "paid_at_10pct": paid_at_10pct, "events_10pct": events_10pct,
                "events_to_25pct": len(second["events"]),
                "greedy_count": sum(e.get("greedy_count", 0) for e in first["events"] + second["events"]),
                "fallback_count": sum(e.get("fallback_count", 0) for e in first["events"] + second["events"]),
