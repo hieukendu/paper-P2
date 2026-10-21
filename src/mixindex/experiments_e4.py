@@ -49,6 +49,10 @@ def _profile_context(cfg, root):
     profile = profiles["profiles"].get(profile_hash)
     if profile is None or profile.get("scope") != "scale":
         raise ValueError("E4_PROFILE_REQUIRED: unknown T0.scale profile")
+    runtime = profile.get("selections", {}).get("runtime", {})
+    batches = runtime.get("batches", {})
+    if any(role not in batches or int(batches[role]) < 1 for role in ("old", "new")):
+        raise ValueError("E4_PROFILE_REQUIRED: scale runtime batches are missing")
     profile_task = {"phase": "official", "profile_hash": profile_hash,
                     "tuning_scope": "scale", "input_refs": profile["inputs"],
                     "variant_id": "primary", "overrides": {}}
@@ -148,17 +152,18 @@ def _encode_full_vectors(cfg, context, root, timing):
              for role, spec in model_specs("arctic", root).items()}
     cache_root = Path(cfg["paths"]["cache"]) / "vectors"
     stores = {}
+    batches = context["profile"]["selections"]["runtime"]["batches"]
     for role, spec in specs.items():
         key = vector_cache_key(context["docs_manifest"], spec, f"e4_full_{role}")
         output = cache_root / f"e4-full-{role}-{key}"
         started = time.monotonic()
-        encoder = build_encoder(spec, cfg["execution"]["device"],
-                                cfg["models"]["batch_size"])
+        encoder = build_encoder(spec, cfg["execution"]["device"], int(batches[role]))
         try:
             stores[role] = encode_corpus(store, encoder, output, key)
             timing.append({"component": f"encode_full_{role}",
                            "wall_seconds": time.monotonic() - started,
                            "source": "measured", "rows": len(stores[role]),
+                           "batch_size": int(batches[role]),
                            "encoder_cost": dict(encoder.cost), "cache_key": key})
         finally:
             encoder.close()
@@ -214,6 +219,8 @@ def _full_bootstrap(cfg, root, context, run_dir, timing):
     footprint_bytes = sum(p.stat().st_size for p in graph_dir.rglob("*") if p.is_file())
     return {"task": "full_bootstrap", "documents": len(doc_ids),
             "old_cache_rows": len(old), "new_cache_rows": len(new),
+            "runtime_batches": {role: int(context["profile"]["selections"]["runtime"]["batches"][role])
+                                for role in ("old", "new")},
             "fidelity": fidelity, "restored_fidelity": roundtrip,
             "graph_footprint_bytes": footprint_bytes,
             "peak_rss_bytes": _peak_rss_bytes(), "quality_claim": False,

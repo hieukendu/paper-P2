@@ -18,8 +18,8 @@ from .data.prepare import validate_prepared
 from .data.splits import sample_document_pools, stable_key
 from .data.store import DocumentStore
 from .encoders import build_encoder, model_specs, resolve_model
-from .experiments import (finalize_run, hardware_identity, select_map_hyperparameters,
-                          source_hash)
+from .experiments import (_completed_prerequisite, finalize_run, hardware_identity,
+                          select_map_hyperparameters, source_hash)
 from .hf_sync import snapshot_source
 from .io import digest, file_digest, read_json, write_json
 from .maps import save_map_state
@@ -67,7 +67,7 @@ def _uniform_subset(doc_ids):
     return np.asarray(rows[:SCALE_SUBSET_SIZE], dtype=np.int64)
 
 
-def _encode_rows(store, rows, spec, cfg, output, key, timing, role):
+def _encode_rows(store, rows, spec, cfg, output, key, timing, role, batch_size=None):
     """Encode fixed rows into a checksummed local cache without loading text all at once."""
     output = Path(output)
     marker = output / "manifest.json"
@@ -82,7 +82,8 @@ def _encode_rows(store, rows, spec, cfg, output, key, timing, role):
             raise ValueError(f"{role} vector cache checksum mismatch")
         return array, {**meta, "cache_hit": True}
     output.mkdir(parents=True, exist_ok=True)
-    encoder = build_encoder(spec, cfg["execution"]["device"], cfg["models"]["batch_size"])
+    encoder = build_encoder(spec, cfg["execution"]["device"],
+                            int(batch_size or cfg["models"]["batch_size"]))
     try:
         values = np.lib.format.open_memmap(output / "vectors.part.npy", mode="w+",
                                            dtype=np.float32, shape=(len(rows), spec["dim"]))
@@ -215,6 +216,19 @@ def run_scale_presetup(task, cfg):
     cfg["execution"]["mode"] = "cached_access"
     cfg["execution"]["phase"] = "development"
     docs, orcas, docs_manifest, orcas_manifest, specs, environment, refs = _scale_inputs(cfg, root)
+    runtime_dir = _completed_prerequisite(cfg, root, "RUNTIME_PROBE",
+                                          docs_manifest["release_hash"], "arctic")
+    runtime_path = runtime_dir / "throughput_probe.json"
+    runtime = read_json(runtime_path)
+    if hardware_identity(runtime["environment"]) != hardware_identity(environment):
+        raise ValueError("RUNTIME_PROBE_REQUIRED: runtime hardware or dependencies changed")
+    batches = {role: int(runtime["results"][role]["selected_batch_size"])
+               for role in ("old", "new")}
+    if any(value < 1 for value in batches.values()):
+        raise ValueError("RUNTIME_PROBE_REQUIRED: invalid selected batch size")
+    refs["runtime_probe_run"] = runtime_dir.name
+    refs["runtime_probe_hash"] = file_digest(runtime_path)
+    refs["runtime_batches"] = batches
     doc_ids = (docs / "doc_ids.txt").read_text().splitlines()
     subset_rows = _uniform_subset(doc_ids)
     refs["subset_hash"] = digest([doc_ids[int(row)] for row in subset_rows])
@@ -235,6 +249,7 @@ def run_scale_presetup(task, cfg):
                "rows_path": "subset_rows.npy"})
     np.save(run_dir / "subset_rows.npy", subset_rows)
     snapshot_source(root, run_dir)
+    write_json(run_dir / "throughput_probe.json", runtime)
     timing, summary = [], {"compute_status": "FAILED", "phase": "development",
                            "outcome": "diagnostic", "performance_claim": False,
                            "run_budget_policy": "compact_v1", "scope": "T0.scale",
@@ -250,10 +265,10 @@ def run_scale_presetup(task, cfg):
                           "rows": subset_rows.tolist(), "role": "scale_new_subset"})
         old, old_meta = _encode_rows(store, subset_rows, specs["old"], cfg,
                                      Path(cfg["paths"]["cache"]) / "vectors/scale-old" / old_key,
-                                     old_key, timing, "scale_old_subset")
+                                     old_key, timing, "scale_old_subset", batches["old"])
         new, new_meta = _encode_rows(store, subset_rows, specs["new"], cfg,
                                      Path(cfg["paths"]["cache"]) / "vectors/scale-new" / new_key,
-                                     new_key, timing, "scale_new_subset")
+                                     new_key, timing, "scale_new_subset", batches["new"])
         selected, table = select_map_hyperparameters(
             (old[pools["train"]], new[pools["train"]]),
             (old[pools["validation"]], new[pools["validation"]]), cfg, seed=17)
@@ -261,7 +276,9 @@ def run_scale_presetup(task, cfg):
         pq.write_table(pa.Table.from_pylist(table), run_dir / "selection.parquet")
         roles = read_json(orcas / "splits/query_roles.json")["roles"]
         records, schedule = _query_records(orcas, roles)
-        queries = _encode_queries(records, roles, specs["new"], cfg, root, timing)
+        query_cfg = deepcopy(cfg)
+        query_cfg["models"]["batch_size"] = batches["new"]
+        queries = _encode_queries(records, roles, specs["new"], query_cfg, root, timing)
         proxies, join = _traffic_proxies(orcas, schedule, subset_rows)
         scheduler_rows = _run_scale_scheduler_probe(subset_ids, old, new, pools, cfg,
                                                      queries, roles, schedule, proxies, run_dir, timing)
@@ -291,6 +308,7 @@ def run_scale_presetup(task, cfg):
         write_json(run_dir / "estimate.json", estimate)
         selections = {"map": selected, "search": {"status": "SUBSET_ONLY", "candidates": 50,
                      "ef_search": 200}, "runtime": {"subset_rows": len(subset_rows),
+                     "batches": batches, "probe_run": runtime_dir.name,
                      "old": old_meta.get("encoder_cost"), "new": new_meta.get("encoder_cost")},
                      "correctness_pass": True, "local_restore_pass": True,
                      "target_hardware_pass": True, "timing_ref": f"{run_dir.name}/timing.json",
