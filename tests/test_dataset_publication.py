@@ -1,9 +1,11 @@
 import json
+import gzip
 
 import pyarrow.parquet as pq
 import pytest
 
-from mixindex.data.publish import stage_document_parquet, stage_scale_payload, verify_document_parquet
+from mixindex.data.publish import (_verify_scale_sources, stage_document_parquet,
+                                   stage_scale_payload, verify_document_parquet)
 from mixindex.io import file_digest
 
 
@@ -58,3 +60,20 @@ def test_scale_publication_payload_preserves_validated_release_and_source_hash(t
     assert publication["document_rows"] == 3
     assert publication["source_documents_sha256"] == file_digest(document_path)
     assert not list(payload.rglob("*.part"))
+
+
+def test_orcas_source_record_is_verified_from_manifest_metadata(tmp_path):
+    raw = tmp_path / "data" / "raw" / "orcas"
+    raw.mkdir(parents=True)
+    archive = raw / "orcas.tsv.gz"
+    with gzip.open(archive, "wt", encoding="utf-8") as stream:
+        stream.write("qid\tquery\tdoc\turl\n")
+    source_record = {"bytes": archive.stat().st_size, "sha256": file_digest(archive)}
+    manifest = {"source": {"file": source_record}}
+    verified = _verify_scale_sources(
+        "orcas", {"url": "https://example.test/orcas.tsv.gz", "md5": file_digest(archive, "md5")},
+        manifest, tmp_path,
+    )
+    assert verified["file"] == "orcas.tsv.gz"
+    assert verified["bytes"] == source_record["bytes"]
+    assert verified["sha256"] == source_record["sha256"]

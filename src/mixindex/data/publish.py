@@ -119,10 +119,22 @@ def _verify_scale_sources(name, spec, manifest, root):
                 raise ValueError(f"Raw MS MARCO source differs from validated manifest: {filename}")
             verified[filename] = observed
         return verified
-    filename = manifest["source"]["file"]
+    source = manifest["source"]
+    source_record = source["file"]
+    # ORCAS manifests record the source archive under ``source.file`` as a
+    # metadata object.  Older preparations may have stored only the filename,
+    # so keep that representation readable while deriving the current filename
+    # from the pinned source URL when the object has no explicit name.
+    if isinstance(source_record, dict):
+        filename = source_record.get("name") or Path(spec["url"]).name
+        expected_bytes = source_record["bytes"]
+        expected_sha256 = source_record["sha256"]
+    else:
+        filename = source_record
+        expected_bytes = source["bytes"]
+        expected_sha256 = source["sha256"]
     observed = verify_source_file(raw_root / filename, ("md5", spec["md5"]))
-    expected = manifest["source"]
-    if observed["bytes"] != expected["bytes"] or observed["sha256"] != expected["sha256"]:
+    if observed["bytes"] != expected_bytes or observed["sha256"] != expected_sha256:
         raise ValueError("Raw ORCAS source differs from validated manifest")
     return observed
 
