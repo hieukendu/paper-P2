@@ -23,6 +23,13 @@ RESOURCE_KEYS = {"gpu_device", "gpu_memory_gib", "host_ram_gib", "cpu_cores", "d
 # to report it as a completed run.
 TERMINAL = {"COMPUTE_DONE", "FAILED", "BLOCKED_DATA", "CANCELLED"}
 
+# These are validated setup gates rather than experiment result bundles.  The
+# setup workers prove the local source/model/smoke inputs; their optional HF
+# artifact upload is tracked separately and must not deadlock the next local
+# setup stage.  Scientific dependencies still require a remotely verified
+# bundle below.
+LOCAL_SETUP_EXPERIMENTS = {"DATA_PREP", "MODEL_DOWNLOAD", "MODEL_SMOKE"}
+
 
 def validate_jobs(jobs):
     by_id = {}
@@ -151,7 +158,9 @@ def can_admit(task, running, capacity, tasks, max_compute_jobs=2, cfg=None):
         # its immutable artifact.  Scientific cells must not start in that
         # window: the predecessor is admissible only after remote verification
         # and after its worker handle has exited.
-        if record.get("sync_status") != "VERIFIED":
+        dependency_experiment = record.get("spec", {}).get("experiment")
+        if (dependency_experiment not in LOCAL_SETUP_EXPERIMENTS and
+                record.get("sync_status") != "VERIFIED"):
             return False, f"DEPENDENCY_SYNC_PENDING:{dependency}"
         if record.get("handle_alive") is not False:
             return False, f"DEPENDENCY_WORKER_ACTIVE:{dependency}"

@@ -82,6 +82,26 @@ def test_exclusive_jobs_dependencies_target_and_joint_probe_are_independent():
     assert can_admit(request, [existing], unknown, {}, 2)[1] == "JOINT_THROUGHPUT_PROBE_REQUIRED"
 
 
+def test_validated_setup_dependency_does_not_require_artifact_upload():
+    request = job("smoke")
+    request["depends_on"] = ["data"]
+    setup = job("data", gpu=None)
+    setup["experiment"] = "DATA_PREP"
+    records = {"data": {"spec": setup, "status": "COMPUTE_DONE",
+                         "sync_status": "PENDING", "handle_alive": False}}
+    assert can_admit(request, [], capacity(), records, 2)[0]
+
+
+def test_scientific_dependency_still_requires_verified_upload():
+    request = job("cell")
+    request["depends_on"] = ["smoke"]
+    smoke = job("smoke", gpu=0)
+    smoke["experiment"] = "E1"
+    records = {"smoke": {"spec": smoke, "status": "COMPUTE_DONE",
+                          "sync_status": "PENDING", "handle_alive": False}}
+    assert can_admit(request, [], capacity(), records, 2)[1] == "DEPENDENCY_SYNC_PENDING:smoke"
+
+
 def test_pid_birth_time_and_compute_signal_prevent_duplicate_restarts(tmp_path):
     pid = os.getpid()
     birth = psutil.Process(pid).create_time()
