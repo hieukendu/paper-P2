@@ -31,6 +31,11 @@ TERMINAL = {"COMPUTE_DONE", "FAILED", "BLOCKED_DATA", "CANCELLED"}
 LOCAL_SETUP_EXPERIMENTS = {"DATA_PREP", "MODEL_DOWNLOAD", "MODEL_SMOKE"}
 
 
+def _requires_remote_sync(record):
+    """Return whether a completed dependency must have a verified HF bundle."""
+    return record.get("spec", {}).get("experiment") not in LOCAL_SETUP_EXPERIMENTS
+
+
 def validate_jobs(jobs):
     by_id = {}
     for task in jobs:
@@ -158,9 +163,7 @@ def can_admit(task, running, capacity, tasks, max_compute_jobs=2, cfg=None):
         # its immutable artifact.  Scientific cells must not start in that
         # window: the predecessor is admissible only after remote verification
         # and after its worker handle has exited.
-        dependency_experiment = record.get("spec", {}).get("experiment")
-        if (dependency_experiment not in LOCAL_SETUP_EXPERIMENTS and
-                record.get("sync_status") != "VERIFIED"):
+        if _requires_remote_sync(record) and record.get("sync_status") != "VERIFIED":
             return False, f"DEPENDENCY_SYNC_PENDING:{dependency}"
         if record.get("handle_alive") is not False:
             return False, f"DEPENDENCY_WORKER_ACTIVE:{dependency}"
@@ -260,7 +263,7 @@ def run_single(task, root):
     for dependency in task["depends_on"]:
         record = tasks.get(dependency, {})
         if (record.get("status") != "COMPUTE_DONE" or
-                record.get("sync_status") != "VERIFIED" or
+                (_requires_remote_sync(record) and record.get("sync_status") != "VERIFIED") or
                 record.get("handle_alive") is not False):
             raise ValueError("Worker dependency gate has not completed verified sync")
     if task["phase"] == "official":
