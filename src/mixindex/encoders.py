@@ -169,9 +169,24 @@ class EncoderAdapter:
                     self.cost["padded_tokens"] += int(lengths[indices].max()) * len(indices)
                     self.cost["truncated_documents"] += sum(
                         len(tokenized[i]) > self.spec["max_tokens"] for i in indices)
-                    values = self.model.encode([prepared[i] for i in indices], batch_size=len(indices),
-                                                convert_to_numpy=True, normalize_embeddings=True,
-                                                show_progress_bar=False)
+                    batch_texts = [prepared[i] for i in indices]
+                    if hasattr(self.model, "tokenize") and hasattr(self.model, "forward"):
+                        # SentenceTransformer.encode repeats sorting, device setup, and
+                        # result-list bookkeeping for every fixed four-document batch.
+                        # Reuse its exact tokenize -> forward -> normalize semantics while
+                        # keeping the small profiled forward batch and row order unchanged.
+                        from sentence_transformers.util import batch_to_device, truncate_embeddings
+                        features = batch_to_device(self.model.tokenize(batch_texts), self.model.device)
+                        out_features = self.model.forward(features)
+                        embeddings = truncate_embeddings(
+                            out_features["sentence_embedding"], self.model.truncate_dim)
+                        values = self.torch.nn.functional.normalize(embeddings, p=2, dim=1)
+                        values = values.detach().cpu().numpy()
+                    else:
+                        # Keep small test/custom adapters source-compatible.
+                        values = self.model.encode(batch_texts, batch_size=len(indices),
+                                                  convert_to_numpy=True, normalize_embeddings=True,
+                                                  show_progress_bar=False)
                     output[indices] = values
                     cursor += len(indices)
             output = np.asarray(output, dtype=np.float32)
