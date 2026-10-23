@@ -1,7 +1,7 @@
 """Publish a prepared BEIR release only after full ingestion and ID checks."""
 
 import csv
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from collections import Counter, defaultdict
 import gzip
 import hashlib
@@ -34,6 +34,7 @@ def iter_source_documents(path):
 AOL_DOCUMENT_CAP = 50_000
 AOL_EVENT_CAP = 50_000
 AOL_WEEKS = 8
+AOL_START_DATE = date(2006, 3, 1)
 AOL_SOURCE_URL = "https://archive.org/download/aolsearchdata2006/aol-data.tar.gz"
 AOL_OFFICIAL_SOURCE_URL = "https://ir-datasets.com/aol-ia.html"
 AOL_ARCHIVE_MD5 = "31cd27ce12c3a3f2df62a38050ce4c0a"
@@ -168,21 +169,25 @@ def prepare_aol_dataset(cfg, root):
     last_time = None
     source_events = 0
     source_users = set()
+    week_counts = {week: Counter() for week in range(AOL_WEEKS)}
+    source_events_by_week = Counter()
     for record in _iter_aol_log_records(archive_path):
         source_events += 1
         source_users.add(record["user_id"])
         first_time = record["timestamp"] if first_time is None else min(first_time, record["timestamp"])
         last_time = record["timestamp"] if last_time is None else max(last_time, record["timestamp"])
-    if first_time is None or last_time is None:
-        raise ValueError("AOL_SOURCE_INVALID: query log is empty")
-    start_date = first_time.date()
-    week_counts = {week: Counter() for week in range(AOL_WEEKS)}
-    source_events_by_week = Counter()
-    for record in _iter_aol_log_records(archive_path):
-        week = (record["timestamp"].date() - start_date).days // 7
+        # The official AOL-IA release starts on 2006-03-01; count temporal
+        # blocks in the same pass as source coverage so preparation needs only
+        # one source scan for statistics and one for the selected events.
+        week = (record["timestamp"].date() - AOL_START_DATE).days // 7
         if 0 <= week < AOL_WEEKS:
             week_counts[week][record["user_id"]] += 1
             source_events_by_week[week] += 1
+    if first_time is None or last_time is None:
+        raise ValueError("AOL_SOURCE_INVALID: query log is empty")
+    if first_time.date() != AOL_START_DATE:
+        raise ValueError("AOL_SOURCE_INVALID: unexpected chronology start date")
+    start_date = AOL_START_DATE
     selected_users = {}
     selected_counts = {}
     for week in range(AOL_WEEKS):
