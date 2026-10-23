@@ -74,7 +74,7 @@ jobs:
     cpu_cores: 15
     disk_scratch_gib: 96
     io_heavy: true
-  task_id: E4.scale.full_bootstrap.resume.20261023a
+  task_id: E4.scale.full_bootstrap.forwardresume.20261023a
   experiment: E4
   config_overrides:
     experiment:
