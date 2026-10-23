@@ -200,7 +200,9 @@ class NomicEncoderAdapter:
                 self.torch.cuda.synchronize()
             self.cost["wall_seconds"] += time.monotonic() - started
 
-    def encode_documents(self, texts):
+    def encode_documents(self, texts, *, token_budget=None):
+        if token_budget is not None:
+            raise ValueError("Nomic adapter does not support token-budget batching")
         return self._encode(texts, self.spec["document_prefix"])
 
     def encode_queries(self, texts):

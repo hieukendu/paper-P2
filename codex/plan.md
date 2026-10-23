@@ -1,8 +1,8 @@
 # Plan triển khai và nối toàn bộ thí nghiệm MixIndex
 
-Trạng thái: **đặc tả đã viết; implementation và thí nghiệm chưa chạy**. Target **server H100 80GB**. Agent làm lần lượt các phần dưới, giữ cập nhật [checklist gốc](../checklist.md); không tạo một plan khác thay cho plan này.
+Trạng thái: **đặc tả đã viết; E4 đang chạy và E5-E7 chưa mở**. Target **server H100 80GB**. Agent làm lần lượt các phần dưới, giữ cập nhật [checklist gốc](../checklist.md); không tạo một plan khác thay cho plan này.
 
-Điểm vào của agent là [codex/README.md](README.md). Luồng thực thi đã rà lại: **tải/validate inputs → E0/E1 correctness → code đầy đủ core → T0.core → freeze → E2/E3 → tải/validate scale inputs → T0.scale → E4 full-size gate → E5**. E6/E7 mở từng case sau T0 tương thích; không chờ tải hết mọi dữ liệu mới bắt đầu smoke.
+Điểm vào của agent là [codex/README.md](README.md). Luồng thực thi đã rà lại: **tải/validate inputs → E0/E1 correctness → code đầy đủ core → T0.core → freeze → E2/E3 → tải/validate scale inputs → T0.scale → E4 artifact/profile/hash verified → E5-E7 với `e567_scale_v2_50k`**. E6/E7 mở từng case sau T0 tương thích; không chờ tải hết mọi dữ liệu mới bắt đầu smoke.
 
 ## P0 — Bắt buộc hiểu paper và expected outputs trước khi code
 
@@ -104,9 +104,11 @@ ANN gate không đạt: giữ exact result và diagnostic, chưa claim ANN full-
 4. Đo encoder batch/length, peak VRAM/RSS, refresh/gain memory, CPU throttling và I/O; scale query-count probe tới100k scheduling groups khi có. Sau subset feasible, encode old vectors/build **actual full bootstrap stored graph**, kiểm full-corpus Q_tune ANN fidelity và peak footprint trước E5. Reference ở gate dùng stored vectors, không unpaid targets. Cập nhật profile search chung và forecast bằng full-bootstrap measurements trước khi nhìn official test.
 5. Config `live_encode` cost probes exclusive; `cached_access` quality pilots có thể co-schedule sau probes nhưng labels/cost modes tách rõ.
 
-E4 gate đúng thì mở E5; đây là controlled full-size bootstrap readiness, chưa phải full quality matrix. Nếu resource không đủ, shard/stream hoặc giảm concurrency; không cleanup local trong phase này. Đổi primary semantics/token budget phải tạo variant, không lặng lẽ sửa. Mức128GiB RAM/16 CPU/1TB NVMe là recommendation/gate hoạch định trong report, không thay phép đo thực. Full-new evaluator cache được chuẩn bị trong task riêng, tính research cost và giữ cách ly.
+E4 gate đúng thì base policy mở E5 full-scale. Với `e567_scale_v2_50k`, không chạy lại E4: chỉ xác minh và reuse parent artifact/profile/hash rồi tạo child manifests 50k để mở E5-E7. Nếu resource không đủ, shard/stream hoặc giảm concurrency; không cleanup local trong phase này. Đổi primary semantics/token budget phải tạo variant, không lặng lẽ sửa. Mức128GiB RAM/16 CPU/1TB NVMe là recommendation/gate hoạch định trong report, không thay phép đo thực. Full-new evaluator cache được chuẩn bị trong task riêng, tính research cost và giữ cách ly.
 
 ## P7 — E5 primary static và extensions
+
+Server execution áp dụng [16_e567_downscale.md](16_e567_downscale.md): giữ nguyên 12 cells và checkpoint semantics nhưng dùng MS MARCO child manifest 50k/ORCAS tối đa 5k groups. E4 không chạy lại; xác minh parent artifact/profile/hash rồi tạo reduced manifests trước E5. Primary ARR@10 vẫn ở 10% accessed; judged metrics có thể là `N/A_REDUCED_COVERAGE` nếu manifest không đủ coverage.
 
 Đọc [15_run_budget.md](15_run_budget.md) trước khi expand task. Bản chạy mặc định là **12 primary cells**, gồm 4 scheduler × 3 map seed `{17,29,43}` × traffic seed `101`; không mở full 3×5 traffic grid. Mỗi cell chạy tiếp đến checkpoint bootstrap/5/10/25/50% accessed và 100% true trong cùng run ID. Có tối đa 4 E5 traffic-sensitivity cells (`random`, `greedy` × map seed17 × traffic `{103,109}`) nếu primary đã hợp lệ; chúng không chặn E5 và không được dùng để tune lại profile. Primary ARR@10 ở10% total accessed; judged-dev nDCG là secondary, cost measured/estimated phải có nhãn.
 
@@ -117,6 +119,8 @@ E4 gate đúng thì mở E5; đây là controlled full-size bootstrap readiness,
 5. Aggregate paired contrasts3 baselines, CI/effect/Holm/seed variation. Không có significance cũng hoàn thành scientific run nếu gates đúng; không đổi primary khi kết quả âm.
 
 ## P8 — E6 temporal và E7 generalization
+
+E6/E7 cũng dùng `e567_scale_v2_50k` nhưng không đổi số cell: E6 cap 50k recovered documents và 50k events/tuần trên chronology thật; E7 cap 50k documents và 500 queries cho NQ/HotpotQA/FEVER, còn FiQA/TREC-COVID chỉ reuse exact validated scope. Tất cả reduced manifests phải freeze/hash trước quality run; aggregate không được trộn với full-scale output.
 
 Hai nhánh có thể chuẩn bị/chạy xen với E5 theo DAG và resource, không phải đợi E5 thắng:
 
@@ -142,11 +146,11 @@ flowchart TD
     E3 --> SCALE[Tai va validate Arctic MS MARCO ORCAS]
     SCALE --> T0S[T0.scale va SMOKE-TIME]
     T0S --> E4[E4 subset va full-bootstrap gate]
-    E4 --> E5[E5 static full corpus]
+    E4 --> E5[E5 static e567 reduced]
     E4 --> AOL[AOL recovery validate va T0.case]
     AOL --> E6[E6 temporal neu du data]
     E3 --> CASE[Data model validation va T0.case BEIR]
-    CASE --> E7[E7 matrix; large jobs can scale gate]
+    CASE --> E7[E7 matrix; e567 reduced cases]
     E5 --> DONE[Finalize từng run/checkpoint]
     E6 --> DONE
     E7 --> DONE

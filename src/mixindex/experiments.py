@@ -282,10 +282,17 @@ def build_presetup_tasks(scope, cfg, root):
                                 "cpu_cores": 4, "disk_scratch_gib": 8, "io_heavy": False},
                  "depends_on": data_ids + [models["task_id"]]}
         jobs.append(smoke)
+        runtime = {**common, "task_id": f"{prefix}.runtime", "experiment": "RUNTIME_PROBE",
+                   "resources": {"gpu_device": 0, "gpu_memory_gib": 12, "host_ram_gib": 16,
+                                  "cpu_cores": 8, "disk_scratch_gib": 8, "io_heavy": False},
+                   "measurement_mode": "exclusive", "depends_on": [smoke["task_id"]]}
+        runtime["config_overrides"] = deepcopy(overrides)
+        runtime["config_overrides"]["execution"]["mode"] = "live_encode"
+        jobs.append(runtime)
         freeze = {**common, "task_id": f"{prefix}.freeze", "experiment": "T0",
                   "resources": {"gpu_device": 0, "gpu_memory_gib": 12, "host_ram_gib": 32,
                                  "cpu_cores": 8, "disk_scratch_gib": 64, "io_heavy": True},
-                  "depends_on": [smoke["task_id"], *e3_dependencies]}
+                  "depends_on": [runtime["task_id"], *e3_dependencies]}
         jobs.append(freeze)
         from .queue import validate_jobs
         return validate_jobs(jobs)

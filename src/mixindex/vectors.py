@@ -73,7 +73,7 @@ class VectorStore:
                 yield start + local, array[local:local + batch_size]
 
 
-def encode_corpus(data, encoder, output, cache_key, shard_bytes=1 << 30):
+def encode_corpus(data, encoder, output, cache_key, shard_bytes=1 << 30, token_budget=None):
     output = Path(output)
     with file_lock(output.with_suffix(".lock")):
         if (output / "manifest.json").exists():
@@ -81,23 +81,130 @@ def encode_corpus(data, encoder, output, cache_key, shard_bytes=1 << 30):
         output.mkdir(parents=True, exist_ok=True)
         n, dim = len(data), encoder.spec["dim"]
         shard_rows = max(1, shard_bytes // (4 * dim))
+        progress_path = output / "progress.json"
+        encoder_batch_size = max(1, int(encoder.batch_size))
+        # Keep the measured forward batch immutable, but amortize tokenizer and
+        # document-reader overhead over a larger host-side stream.  This is
+        # independent of GPU forward batch size: the Arctic-new probe selects
+        # forward batch 4, while a 256-row host stream avoids thousands of
+        # unnecessarily small tokenizer calls on the full corpus.  The cap
+        # bounds tokenized Python objects for the 8k-token new model.
+        document_read_batch_size = min(256, max(64, encoder_batch_size * 64))
+        progress_stride = max(8_192, document_read_batch_size * 32)
+
+        # A full scale encode can outlive a worker lease.  Reuse only a
+        # contiguous prefix of committed, checksummed shards from the same
+        # cache key; never reuse a .part file or a shard after a gap/corruption.
+        # This keeps retry data out of the completed-cache namespace while
+        # avoiding an unnecessary re-encode of hours of valid work.
         shards = []
-        for start in range(0, n, shard_rows):
+        processed = 0
+        resume = None
+        try:
+            resume = read_json(progress_path)
+        except (FileNotFoundError, ValueError):
+            resume = None
+        if (isinstance(resume, dict)
+                and resume.get("cache_key") == cache_key
+                and int(resume.get("rows_total", -1)) == n
+                and int(resume.get("dim", dim)) == dim):
+            for record in resume.get("shards", []):
+                start = int(record.get("start", -1))
+                end = int(record.get("end", -1))
+                expected_end = min(n, start + shard_rows)
+                path = output / str(record.get("path", ""))
+                if (start != processed or end != expected_end or not path.is_file()
+                        or file_digest(path) != record.get("sha256")):
+                    break
+                try:
+                    array = np.load(path, mmap_mode="r", allow_pickle=False)
+                    valid_shape = array.shape == (end - start, dim)
+                    valid_dtype = array.dtype == np.dtype(np.float32)
+                except (OSError, ValueError):
+                    valid_shape = valid_dtype = False
+                if not (valid_shape and valid_dtype):
+                    break
+                shards.append({"path": path.name, "start": start, "end": end,
+                               "sha256": record["sha256"]})
+                processed = end
+
+        keep = {record["path"] for record in shards}
+        for stale in set(output.glob("vectors-*.npy")) | set(output.glob("vectors-*.part.npy")):
+            if stale.name not in keep:
+                stale.unlink()
+
+        def write_progress(status="RUNNING", rows_completed=processed):
+            write_json(progress_path, {"status": status, "cache_key": cache_key,
+                                       "rows_total": n, "dim": dim,
+                                       "rows_completed": rows_completed,
+                                       "batch_size": encoder_batch_size,
+                                       "document_read_batch_size": document_read_batch_size,
+                                       "shards": list(shards)})
+
+        last_progress = processed
+        write_progress()
+
+        def open_shard(start):
             end = min(n, start + shard_rows)
             path = output / f"vectors-{start:09d}.npy"
             part = path.with_suffix(".part.npy")
-            array = np.lib.format.open_memmap(part, mode="w+", dtype=np.float32, shape=(end - start, dim))
-            for offset in range(start, end, encoder.batch_size):
-                rows = list(range(offset, min(end, offset + encoder.batch_size)))
-                documents = data.get_documents(rows)
-                array[offset - start:offset - start + len(rows)] = encoder.encode_documents([d.text for d in documents])
+            part.unlink(missing_ok=True)
+            array = np.lib.format.open_memmap(part, mode="w+", dtype=np.float32,
+                                              shape=(end - start, dim))
+            return end, path, part, array
+
+        def commit_shard(start, end, path, part, array):
             array.flush()
             del array
             part.replace(path)
-            shards.append({"path": path.name, "start": start, "end": end, "sha256": file_digest(path)})
+            record = {"path": path.name, "start": start, "end": end,
+                      "sha256": file_digest(path)}
+            shards.append(record)
+            write_progress(rows_completed=end)
+
+        if n and processed < n:
+            shard_start = processed
+            shard_end, path, part, array = open_shard(shard_start)
+            for documents in data.iter_batches(batch_size=document_read_batch_size):
+                # The store yields from row zero.  On a retry, discard the
+                # already committed prefix before encoding the next row.
+                if not documents or documents[-1].row < processed:
+                    continue
+                if documents[0].row < processed:
+                    documents = documents[processed - documents[0].row:]
+                cursor = 0
+                while cursor < len(documents):
+                    if processed >= shard_end:
+                        commit_shard(shard_start, shard_end, path, part, array)
+                        shard_start = processed
+                        shard_end, path, part, array = open_shard(shard_start)
+                    take = min(len(documents) - cursor, shard_end - processed)
+                    texts = [document.text for document in documents[cursor:cursor + take]
+                             ]
+                    if token_budget is not None and hasattr(encoder, "supports_token_budget"):
+                        values = encoder.encode_documents(texts, token_budget=token_budget)
+                    else:
+                        # Keep small test/custom adapters and non-Arctic adapters
+                        # source-compatible with the original corpus path.
+                        values = encoder.encode_documents(texts)
+                    if values.shape != (take, dim):
+                        raise ValueError("Encoder returned the wrong corpus vector shape")
+                    array[processed - shard_start:processed - shard_start + take] = values
+                    processed += take
+                    cursor += take
+                    if processed == n or processed - last_progress >= progress_stride:
+                        write_progress(rows_completed=processed)
+                        last_progress = processed
+            if processed != n:
+                raise ValueError(f"Document stream ended at {processed}, expected {n}")
+            commit_shard(shard_start, shard_end, path, part, array)
+        else:
+            processed = 0
+
         write_json(output / "manifest.json", {"cache_key": cache_key, "rows": n, "dim": dim,
                                               "dtype": "float32", "shards": shards,
                                               "encoder_cost": encoder.cost})
+        write_progress(status="COMPLETE", rows_completed=n)
         return VectorStore(output, cache_key)
 
 

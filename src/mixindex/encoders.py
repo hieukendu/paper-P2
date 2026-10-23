@@ -102,6 +102,8 @@ def resolve_model(spec, paths, root):
 
 
 class EncoderAdapter:
+    supports_token_budget = True
+
     def __init__(self, spec, device="cuda", batch_size=8):
         if spec["adapter"] != "sentence_transformer":
             raise NotImplementedError("Custom model code must be inspected and pinned before use")
@@ -129,24 +131,37 @@ class EncoderAdapter:
         self.cost = {"calls": 0, "documents": 0, "nonpad_tokens": 0,
                      "padded_tokens": 0, "truncated_documents": 0, "wall_seconds": 0.0}
 
-    def _encode(self, texts, prefix):
+    def _encode(self, texts, prefix, token_budget=None):
         if not texts:
             return np.empty((0, self.spec["dim"]), dtype=np.float32)
         prepared = [prefix + t for t in texts]
         tokenized = self.model.tokenizer(prepared, truncation=False, add_special_tokens=True,
                                           verbose=False)["input_ids"]
         lengths = np.array([min(len(ids), self.spec["max_tokens"]) for ids in tokenized])
-        self.last_lengths = {"raw": np.array([len(ids) for ids in tokenized]), "effective": lengths}
+        self.last_lengths = {"raw": np.array([len(ids) for ids in tokenized]),
+                             "effective": lengths}
+        order = np.argsort(-lengths, kind="stable")
         if self.device.startswith("cuda"):
             self.torch.cuda.synchronize()
         start = time.monotonic()
         # Bucket by actual token lengths and restore caller order. Each encode call is
         # one batch, so the padding count below describes batches actually executed.
-        order = np.argsort(-lengths, kind="stable")
         output = np.empty((len(prepared), self.spec["dim"]), dtype=np.float32)
         try:
             with self.torch.inference_mode():
-                for indices in (order[i:i + self.batch_size] for i in range(0, len(order), self.batch_size)):
+                cursor = 0
+                while cursor < len(order):
+                    if token_budget is None:
+                        take = self.batch_size
+                    else:
+                        max_length = max(1, int(lengths[order[cursor]]))
+                        # Keep the profiled forward batch as a hard lower bound
+                        # and cap adaptive packing.  Without this cap, short
+                        # documents can form batches of 64 and exhaust the
+                        # H100 even though the fixed probe selected batch 4.
+                        take = min(8, max(self.batch_size,
+                                          int(token_budget) // max_length))
+                    indices = order[cursor:cursor + take]
                     # Charge attempted forwards too: OOM or validation failure is not free compute.
                     self.cost["calls"] += 1
                     self.cost["documents"] += len(indices)
@@ -158,6 +173,7 @@ class EncoderAdapter:
                                                 convert_to_numpy=True, normalize_embeddings=True,
                                                 show_progress_bar=False)
                     output[indices] = values
+                    cursor += len(indices)
             output = np.asarray(output, dtype=np.float32)
             validate_vectors(output, self.spec["dim"])
             return output
@@ -168,8 +184,8 @@ class EncoderAdapter:
             finally:
                 self.cost["wall_seconds"] += time.monotonic() - start
 
-    def encode_documents(self, texts):
-        return self._encode(texts, self.spec["document_prefix"])
+    def encode_documents(self, texts, *, token_budget=None):
+        return self._encode(texts, self.spec["document_prefix"], token_budget)
 
     def encode_queries(self, texts):
         return self._encode(texts, self.spec["query_prefix"])

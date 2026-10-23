@@ -29,7 +29,7 @@ Tổng mặc định là **69 required cells/tasks**, cộng tối đa 4 E5 sens
 1. Chạy E2 mapping 9 FiQA cells trước. Nếu correctness, budget hoặc evaluator fail thì dừng branch và sửa code; không mở scheduler matrix.
 2. Chạy E2 scheduler 12 cells, sau đó TREC 3 cells. Kết quả âm hoặc inconclusive vẫn là kết quả hợp lệ.
 3. Chạy E3 sáu systems tasks và chỉ mở E4 khi ANN/fidelity gate đạt. Exact branch được giữ nếu ANN fail.
-4. Chạy E4 ba tasks. E5 chỉ mở khi full-bootstrap graph, footprint và Q_tune profile pass.
+4. Base `compact_v1` chạy E4 ba tasks và mở E5 sau full-bootstrap graph, footprint và Q_tune profile pass. Với `e567_scale_v2_50k`, dùng parent E4 artifact/profile/hash đã verified và không chạy lại E4.
 5. Chạy 12 E5 primary cells trước. E5-sensitivity chỉ được enqueue sau khi primary cells đã có artifact hợp lệ; không chạy để cứu một kết quả âm.
 6. E6 và E7 có thể chạy xen kẽ khi đúng-case T0 và dữ liệu đã sẵn sàng. Không mở thêm model/dataset chỉ vì một compact cell có kết quả tốt.
 
@@ -43,3 +43,15 @@ Tổng mặc định là **69 required cells/tasks**, cộng tối đa 4 E5 sens
 ## Output và checklist
 
 `summary.json` phải ghi `run_budget_policy: compact_v1`, stage, cell role (`required` hoặc `optional_sensitivity`) và source run nếu reuse. `checklist.md` chỉ tick E-stage khi đủ required cells/tasks của bảng trên; optional sensitivity không chặn hoàn tất stage.
+
+## Scale override đã khóa cho server: E5-E7
+
+Khi chạy server theo yêu cầu downscale, dùng [16_e567_downscale.md](16_e567_downscale.md) với `scale_variant: e567_scale_v2_50k`. Đây là override chỉ cho E5, E6 và E7; không thay đổi số cell của M15 và không thay đổi E4.
+
+- E4 dùng nguyên artifact/profile/hash sau khi đã verified; không enqueue hoặc rerun E4 vì scale override này. E5-E7 admission phải chờ parent E4 đạt gate thật.
+- E5 giữ 12 cell nhưng dùng MS MARCO child manifest uniform 50k và ORCAS manifest tối đa 5k groups từ T0.scale/E4 IDs; checkpoint vẫn bootstrap/5/10/25/50/100% trong cùng run.
+- E6 giữ 4 cell, chronology 8 tuần và 7 quyết định; dùng document cap 50k và event cap 50k/tuần, chỉ khi AOL-IA thật đã recovered.
+- E7 giữ 20 cell; NQ/HotpotQA/FEVER dùng 50k documents và 500 queries/case; FiQA/TREC-COVID chỉ reuse exact validated scope khi hash khớp.
+- Mọi summary E5-E7 phải ghi `run_budget_policy: compact_v1`, `scale_variant: e567_scale_v2_50k`, parent E4 artifact/hash và subset manifest hash.
+
+Kết quả variant này là reduced-scale pilot evidence. Không trộn aggregate với full-scale result và không diễn giải là full-corpus replication.

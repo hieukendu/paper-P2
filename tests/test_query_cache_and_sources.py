@@ -3,9 +3,11 @@ import numpy as np
 import pytest
 
 from mixindex.config import load_config
+from mixindex.data.store import Document
 from mixindex.experiments import source_hash
 from mixindex.hf_sync import snapshot_source
-from mixindex.vectors import encode_query_pool
+from mixindex.io import file_digest, read_json, write_json
+from mixindex.vectors import encode_corpus, encode_query_pool
 
 
 def test_query_cache_checks_identity_order_and_integrity(tmp_path, monkeypatch):
@@ -50,3 +52,49 @@ def test_new_profiles_and_queued_jobs_do_not_change_closed_scientific_source(tmp
     # Scientific source edits still invalidate the match.
     (root / "src/example.py").write_text("value = 2\n")
     assert source_hash(root) != initial
+
+
+def test_corpus_encoding_resumes_only_verified_contiguous_shards(tmp_path):
+    documents = [Document(row, f"d{row}", f"text-{row}") for row in range(4)]
+
+    class Data:
+        def __len__(self):
+            return len(documents)
+
+        def iter_batches(self, batch_size=256):
+            yield documents
+
+    class Encoder:
+        batch_size = 2
+        cost = {"calls": 0}
+        spec = {"dim": 2}
+
+        def __init__(self):
+            self.calls = []
+
+        def encode_documents(self, texts):
+            self.calls.append(list(texts))
+            return np.array([[1, 0] if text.endswith("0") or text.endswith("2")
+                             else [0, 1] for text in texts], dtype=np.float32)
+
+    output = tmp_path / "vectors"
+    output.mkdir()
+    first = np.array([[1, 0], [0, 1]], dtype=np.float32)
+    first_path = output / "vectors-000000000.npy"
+    np.save(first_path, first)
+    write_json(output / "progress.json", {
+        "status": "RUNNING", "cache_key": "resume-key", "rows_total": 4,
+        "dim": 2, "rows_completed": 2, "shards": [{
+            "path": first_path.name, "start": 0, "end": 2,
+            "sha256": file_digest(first_path),
+        }],
+    })
+
+    encoder = Encoder()
+    store = encode_corpus(Data(), encoder, output, "resume-key", shard_bytes=16)
+
+    assert encoder.calls == [["text-2", "text-3"]]
+    assert store.manifest["rows"] == 4
+    assert store.manifest["shards"][0]["start"] == 0
+    assert store.manifest["shards"][-1]["end"] == 4
+    assert read_json(output / "progress.json")["status"] == "COMPLETE"

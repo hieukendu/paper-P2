@@ -477,3 +477,130 @@ profiles:
       source_run: T0-core-fiqa-b9698dc39c17
       target_hardware_pass: true
       timing_ref: T0-core-fiqa-b9698dc39c17/timing.json
+  fa9ee3637ed8ce717ada91150b73e260f5d7fa66cfc1e45fd9de3406aa64d5b6:
+    inputs:
+      dataset: msmarco-docs-v1
+      hardware:
+        cpu_cores: 16.0
+        devices:
+        - compute_capability:
+          - 9
+          - 0
+          name: NVIDIA H100 80GB HBM3
+          vram_total_bytes: 84929478656
+        hnsw_build:
+          commit: d9b3608c83d83b46c96e25088cb1d729b29dcfe9
+          sha256: adf8c94849c6015ad81ae58e7cddf2c9a99914ebeb60cb03aaf1986d43e762df
+          source: https://github.com/nmslib/hnswlib.git
+        packages:
+          hnswlib: 0.9.0
+          huggingface-hub: 0.34.4
+          numpy: 2.2.6
+          pyarrow: 20.0.0
+          scikit-learn: 1.6.1
+          scipy: 1.15.3
+          sentence-transformers: 4.1.0
+          torch: 2.6.0+cu124
+          transformers: 4.51.3
+        ram_limit_bytes: 268435456000
+        torch_cuda: '12.4'
+      models:
+        new:
+          adapter: sentence_transformer
+          dim: 1024
+          document_prefix: ''
+          download_patterns:
+          - '*.json'
+          - '*.safetensors'
+          - '*.txt'
+          - '*.model'
+          - '*.md'
+          dtype: float32
+          max_tokens: 8192
+          pooling: cls
+          query_prefix: 'query: '
+          repo_id: Snowflake/snowflake-arctic-embed-l-v2.0
+          resolved_revision: ac6544c8a46e00af67e330e85a9028c66b8cfd9a
+          trust_remote_code: false
+        old:
+          adapter: sentence_transformer
+          dim: 1024
+          document_prefix: ''
+          download_patterns:
+          - '*.json'
+          - '*.safetensors'
+          - '*.txt'
+          - '*.model'
+          - '*.md'
+          dtype: float32
+          max_tokens: 512
+          pooling: cls
+          query_prefix: 'Represent this sentence for searching relevant passages: '
+          repo_id: Snowflake/snowflake-arctic-embed-l
+          resolved_revision: d8fb21ca8d905d2832ee8b96c894d3298964346b
+          trust_remote_code: false
+      orcas_release: 124f5775a791cea49a66881753f3a5381cc43d4870e5778c8124f8e65c62d583
+      orcas_split_hash: 8dc37eb460e58aeb588d0416fbd4a695040192a1da6011246aa6d1f4d1fec94c
+      pair: arctic
+      release: 200a19df9868ff31a18cf860cf4e05ff71e8ff76db8b671b229cba117374ce68
+      runtime_batches: &id001
+        new: 4
+        old: 16
+      runtime_probe_hash: ca0d95bfcae554d14dbc1809ff42cd9ecebbe9921db824a22f867d5e60ce90d4
+      runtime_probe_run: RUNTIME_PROBE-msmarco-docs-v1-arctic-d0b2489257db
+      subset_hash: 928bad692e114e7d5efc7fb94a492bff2b1caf8907d14424f747e64f01e69a24
+      subset_seed: 20261020
+      subset_size: 100000
+    policy_hash: 106e032124fe933cd8d64c92e02b7901659ee5dd63f3245f7dc78076f7373053
+    scope: scale
+    selections:
+      correctness_pass: true
+      estimate_ref: T0-scale-msmarco-arctic-58d2b8be46c0/estimate.json
+      local_restore_pass: true
+      map:
+        la:
+          epochs: 50
+          kind: la
+          lr: 0.001
+          status: PASS
+          validation_loss: 0.846897542476654
+        op:
+          epochs: 0
+          kind: op
+          lr: null
+          status: PASS
+          validation_loss: 0.7830491065979004
+        residual_mlp:
+          epochs: 22
+          kind: residual_mlp
+          lr: 0.001
+          status: PASS
+          validation_loss: 0.5944281816482544
+      map_ref: T0-scale-msmarco-arctic-58d2b8be46c0/scale_map.safetensors
+      q_tune_ref: T0-scale-msmarco-arctic-58d2b8be46c0/q_tune.npy
+      runtime:
+        batches: *id001
+        new:
+          calls: 25000
+          documents: 100000
+          nonpad_tokens: 151981035
+          padded_tokens: 340743692
+          truncated_documents: 3364
+          wall_seconds: 11814.45651361905
+        old:
+          calls: 1563
+          documents: 100000
+          nonpad_tokens: 43841960
+          padded_tokens: 51200000
+          truncated_documents: 68465
+          wall_seconds: 1573.333920144476
+        probe_run: RUNTIME_PROBE-msmarco-docs-v1-arctic-d0b2489257db
+        subset_rows: 100000
+      search:
+        candidates: 1000
+        ef_search: 2000
+        status: SUBSET_ONLY
+      source_run: T0-scale-msmarco-arctic-58d2b8be46c0
+      subset_manifest: T0-scale-msmarco-arctic-58d2b8be46c0/subset_manifest.json
+      target_hardware_pass: true
+      timing_ref: T0-scale-msmarco-arctic-58d2b8be46c0/timing.json

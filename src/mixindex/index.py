@@ -5,6 +5,7 @@ from dataclasses import asdict, dataclass
 import importlib.metadata
 from pathlib import Path
 import threading
+import time
 
 import numpy as np
 
@@ -154,14 +155,46 @@ class HnswIndex(ExactIndex):
         if candidates < 11 or ef_search < candidates:
             raise ValueError("HNSW needs L >= 11 and ef >= L")
         super().__init__(vectors, ids, fidelity, calibration, chunk_rows)
-        import hnswlib
         self.parameters = {"candidates": candidates, "ef_search": ef_search, "M": M,
                            "ef_construction": ef_construction, "threads": threads, "seed": seed}
-        self.graph = hnswlib.Index(space="ip", dim=self.vectors.shape[1])
-        self.graph.init_index(max_elements=len(ids), ef_construction=ef_construction, M=M, random_seed=seed)
-        self.graph.set_num_threads(threads)
-        self.graph.add_items(self.vectors, np.arange(len(ids)))
-        self.graph.set_ef(ef_search)
+        self.rebuild_count = 0
+        self.rebuild_seconds = 0.0
+        self.graph = self._new_graph()
+
+    def _new_graph(self):
+        import hnswlib
+        graph = hnswlib.Index(space="ip", dim=self.vectors.shape[1])
+        graph.init_index(max_elements=len(self.ids),
+                         ef_construction=self.parameters["ef_construction"],
+                         M=self.parameters["M"], random_seed=self.parameters["seed"])
+        graph.set_num_threads(self.parameters["threads"])
+        graph.add_items(self.vectors, np.arange(len(self.ids)))
+        graph.set_ef(self.parameters["ef_search"])
+        return graph
+
+    def _rebuild_graph(self):
+        started = time.monotonic()
+        self.graph = self._new_graph()
+        self.rebuild_count += 1
+        self.rebuild_seconds += time.monotonic() - started
+
+    def search(self, query_vectors, k=10, calibrated=True):
+        queries = np.asarray(query_vectors, dtype=np.float32)
+        try:
+            with self.lock.read():
+                self._check()
+                return self._search(queries, k, calibrated)
+        except RuntimeError as exc:
+            # hnswlib can lose enough reachable candidates after stock same-ID
+            # updates that its contiguous result allocation fails.  Rebuild the
+            # same fixed-parameter graph under the writer lock, then retry; do
+            # not silently substitute exact search or alter the locked grid.
+            if "Cannot return the results in a contiguous 2D array" not in str(exc):
+                raise
+            with self.lock.write():
+                self._check()
+                self._rebuild_graph()
+                return self._search(queries, k, calibrated)
 
     def _search(self, queries, k, calibrated=True):
         labels, distances = self.graph.knn_query(queries, k=min(self.parameters["candidates"], len(self.ids)))
@@ -182,7 +215,9 @@ class HnswIndex(ExactIndex):
 
     def _save_backend(self, path, metadata):
         self.graph.save_index(str(path / "hnsw.bin"))
-        metadata.update(backend="hnsw", parameters=self.parameters)
+        metadata.update(backend="hnsw", parameters=self.parameters,
+                        rebuild_count=self.rebuild_count,
+                        rebuild_seconds=self.rebuild_seconds)
 
     def configure_search(self, candidates, ef_search):
         if candidates < 11 or ef_search < candidates:
@@ -210,6 +245,8 @@ def load_index(path):
         index.graph.load_index(str(path / "hnsw.bin"), max_elements=len(ids))
         index.graph.set_ef(index.parameters["ef_search"])
         index.graph.set_num_threads(index.parameters["threads"])
+        index.rebuild_count = int(meta.get("rebuild_count", 0))
+        index.rebuild_seconds = float(meta.get("rebuild_seconds", 0.0))
         if index.graph.get_current_count() != len(ids):
             raise ValueError("Restored HNSW population differs")
         if not np.allclose(index.graph.get_items(np.arange(len(ids))), vectors, atol=1e-6):

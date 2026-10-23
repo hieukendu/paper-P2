@@ -49,6 +49,10 @@ def _profile_context(cfg, root):
     profile = profiles["profiles"].get(profile_hash)
     if profile is None or profile.get("scope") != "scale":
         raise ValueError("E4_PROFILE_REQUIRED: unknown T0.scale profile")
+    runtime = profile.get("selections", {}).get("runtime", {})
+    batches = runtime.get("batches", {})
+    if any(role not in batches or int(batches[role]) < 1 for role in ("old", "new")):
+        raise ValueError("E4_PROFILE_REQUIRED: scale runtime batches are missing")
     profile_task = {"phase": "official", "profile_hash": profile_hash,
                     "tuning_scope": "scale", "input_refs": profile["inputs"],
                     "variant_id": "primary", "overrides": {}}
@@ -148,17 +152,22 @@ def _encode_full_vectors(cfg, context, root, timing):
              for role, spec in model_specs("arctic", root).items()}
     cache_root = Path(cfg["paths"]["cache"]) / "vectors"
     stores = {}
+    batches = context["profile"]["selections"]["runtime"]["batches"]
     for role, spec in specs.items():
         key = vector_cache_key(context["docs_manifest"], spec, f"e4_full_{role}")
         output = cache_root / f"e4-full-{role}-{key}"
         started = time.monotonic()
-        encoder = build_encoder(spec, cfg["execution"]["device"],
-                                cfg["models"]["batch_size"])
+        encoder = build_encoder(spec, cfg["execution"]["device"], int(batches[role]))
         try:
+            # Keep the frozen scale profile's forward batch as the primary
+            # contract.  Host-side reader batching is optimized in
+            # encode_corpus, while dynamic token-budget packing remains an
+            # explicit, separately profiled variant and is not used here.
             stores[role] = encode_corpus(store, encoder, output, key)
             timing.append({"component": f"encode_full_{role}",
                            "wall_seconds": time.monotonic() - started,
                            "source": "measured", "rows": len(stores[role]),
+                           "batch_size": int(batches[role]),
                            "encoder_cost": dict(encoder.cost), "cache_key": key})
         finally:
             encoder.close()
@@ -214,6 +223,8 @@ def _full_bootstrap(cfg, root, context, run_dir, timing):
     footprint_bytes = sum(p.stat().st_size for p in graph_dir.rglob("*") if p.is_file())
     return {"task": "full_bootstrap", "documents": len(doc_ids),
             "old_cache_rows": len(old), "new_cache_rows": len(new),
+            "runtime_batches": {role: int(context["profile"]["selections"]["runtime"]["batches"][role])
+                                for role in ("old", "new")},
             "fidelity": fidelity, "restored_fidelity": roundtrip,
             "graph_footprint_bytes": footprint_bytes,
             "peak_rss_bytes": _peak_rss_bytes(), "quality_claim": False,
@@ -331,13 +342,29 @@ def build_scale_tasks(cfg, root):
     if not state_path.exists():
         raise ValueError("E4_DEPENDENCY_REQUIRED: state/tasks.json")
     state = read_json(state_path)
-    verified = [(identifier, record) for identifier, record in state.get("tasks", {}).items()
-                if identifier.startswith("T0.scale.") and identifier.endswith(".freeze")
-                and record.get("status") == "COMPUTE_DONE"
-                and record.get("sync_status") == "VERIFIED"
-                and record.get("handle_alive") is False]
+    # The dependency is the verified T0.scale profile, not a particular task
+    # naming convention.  The speed-optimized T0 revision has the same locked
+    # scale scope and provenance but intentionally does not end in `.freeze`.
+    # Keep the result/provenance gates strict so failed, cancelled, or unrelated
+    # diagnostic tasks can never open E4.
+    verified = []
+    for identifier, record in state.get("tasks", {}).items():
+        result = record.get("result") or {}
+        if not identifier.startswith("T0.scale."):
+            continue
+        if (record.get("status") != "COMPUTE_DONE"
+                or record.get("sync_status") != "VERIFIED"
+                or record.get("handle_alive") is not False):
+            continue
+        if (result.get("compute_status") != "COMPUTE_DONE"
+                or result.get("sync_status") != "VERIFIED"
+                or result.get("scope") != "T0.scale"
+                or not result.get("profile_hash")
+                or not record.get("run_dir")):
+            continue
+        verified.append((identifier, record))
     if len(verified) != 1:
-        raise ValueError("E4_DEPENDENCY_REQUIRED: one verified T0.scale freeze is required")
+        raise ValueError("E4_DEPENDENCY_REQUIRED: one verified T0.scale profile is required")
     t0_id, t0_record = verified[0]
     t0_run = Path(t0_record["run_dir"]).relative_to(
         root / cfg["paths"]["runs"]).as_posix()
