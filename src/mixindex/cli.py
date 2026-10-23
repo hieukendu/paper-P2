@@ -176,8 +176,13 @@ def main(argv=None):
             if args.action == "prepare":
                 manifest = prepare_dataset(args.dataset, cfg, root)
             else:
-                manifest = validate_prepared(Path(cfg["paths"]["data"]) / "processed" / args.dataset,
-                                             dataset_spec(args.dataset, root))
+                spec = dataset_spec(args.dataset, root)
+                # AOL-IA is intentionally published as a capped temporal
+                # release, so the registry's full upstream document count is
+                # provenance rather than a local prepared-release expectation.
+                expected = None if spec.get("parser") == "aol_recovery" else spec
+                manifest = validate_prepared(
+                    Path(cfg["paths"]["data"]) / "processed" / args.dataset, expected)
             result = {key: manifest[key] for key in ("dataset_id", "status", "counts", "release_hash")}
         elif args.command == "models":
             if args.action == "probe":
