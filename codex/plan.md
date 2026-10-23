@@ -2,7 +2,7 @@
 
 Trạng thái: **đặc tả đã viết; E4 đang chạy và E5-E7 chưa mở**. Target **server H100 80GB**. Agent làm lần lượt các phần dưới, giữ cập nhật [checklist gốc](../checklist.md); không tạo một plan khác thay cho plan này.
 
-Điểm vào của agent là [codex/README.md](README.md). Luồng thực thi đã rà lại: **tải/validate inputs → E0/E1 correctness → code đầy đủ core → T0.core → freeze → E2/E3 → tải/validate scale inputs → T0.scale → E4 artifact/profile/hash verified → E5-E7 với `e567_scale_v2_50k`**. E6/E7 mở từng case sau T0 tương thích; không chờ tải hết mọi dữ liệu mới bắt đầu smoke.
+Điểm vào của agent là [codex/README.md](README.md). Luồng thực thi đã rà lại: **tải/validate inputs → E0/E1 correctness → code đầy đủ core → T0.core → freeze → E2/E3 → tải/validate scale inputs → T0.scale → freeze common v3 50k/5k manifest → E4 artifact/profile/hash verified → E5-E7 với `e4e567_scale_v3_50k`**. E6/E7 mở từng case sau T0 tương thích; không chờ tải hết mọi dữ liệu mới bắt đầu smoke.
 
 ## P0 — Bắt buộc hiểu paper và expected outputs trước khi code
 
@@ -104,7 +104,7 @@ ANN gate không đạt: giữ exact result và diagnostic, chưa claim ANN full-
 4. Đo encoder batch/length, peak VRAM/RSS, refresh/gain memory, CPU throttling và I/O; scale query-count probe tới100k scheduling groups khi có. Sau subset feasible, encode old vectors/build **actual full bootstrap stored graph**, kiểm full-corpus Q_tune ANN fidelity và peak footprint trước E5. Reference ở gate dùng stored vectors, không unpaid targets. Cập nhật profile search chung và forecast bằng full-bootstrap measurements trước khi nhìn official test.
 5. Config `live_encode` cost probes exclusive; `cached_access` quality pilots có thể co-schedule sau probes nhưng labels/cost modes tách rõ.
 
-E4 gate đúng thì base policy mở E5 full-scale. Với `e567_scale_v2_50k`, không chạy lại E4: chỉ xác minh và reuse parent artifact/profile/hash rồi tạo child manifests 50k để mở E5-E7. Nếu resource không đủ, shard/stream hoặc giảm concurrency; không cleanup local trong phase này. Đổi primary semantics/token budget phải tạo variant, không lặng lẽ sửa. Mức128GiB RAM/16 CPU/1TB NVMe là recommendation/gate hoạch định trong report, không thay phép đo thực. Full-new evaluator cache được chuẩn bị trong task riêng, tính research cost và giữ cách ly.
+E4 gate đúng thì base policy mở E5 full-scale. Với `e4e567_scale_v3_50k`, E4 chạy lại trên common manifest 50k/5k; chỉ sau khi artifact/profile/hash + sync verified mới mở E5-E7. Nếu resource không đủ, shard/stream hoặc giảm concurrency; không cleanup local trong phase này. Đổi primary semantics/token budget phải tạo variant, không lặng lẽ sửa. Mức128GiB RAM/16 CPU/1TB NVMe là recommendation/gate hoạch định trong report, không thay phép đo thực. Full-new evaluator cache được chuẩn bị trong task riêng, tính research cost và giữ cách ly.
 
 ## P7 — E5 primary static và extensions
 
@@ -120,7 +120,7 @@ Server execution áp dụng [16_e567_downscale.md](16_e567_downscale.md): giữ 
 
 ## P8 — E6 temporal và E7 generalization
 
-E6/E7 cũng dùng `e567_scale_v2_50k` nhưng không đổi số cell: E6 cap 50k recovered documents và 50k events/tuần trên chronology thật; E7 cap 50k documents và 500 queries cho NQ/HotpotQA/FEVER, còn FiQA/TREC-COVID chỉ reuse exact validated scope. Tất cả reduced manifests phải freeze/hash trước quality run; aggregate không được trộn với full-scale output.
+E6/E7 cũng dùng `e4e567_scale_v3_50k` nhưng không đổi số cell: E6 cap 50k recovered documents và 50k events/tuần trên chronology thật; E7 cap 50k documents và 500 queries cho NQ/HotpotQA/FEVER, còn FiQA/TREC-COVID chỉ reuse exact validated scope. Tất cả reduced manifests phải freeze/hash trước quality run; aggregate không được trộn với full-scale hoặc v2 output.
 
 Hai nhánh có thể chuẩn bị/chạy xen với E5 theo DAG và resource, không phải đợi E5 thắng:
 

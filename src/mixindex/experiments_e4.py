@@ -1,10 +1,4 @@
-"""E4 scale-feasibility and full-bootstrap readiness tasks.
-
-E4 is an operability/readiness gate.  It uses the frozen T0.scale settings,
-keeps the 100k subset explicitly labelled, and never opens judged quality
-labels.  Full-corpus vectors are cached in validated shards so the bootstrap
-does not require a second in-memory copy of the old encoder output.
-"""
+"""E4 reduced-scale readiness tasks for the frozen v3 50k manifest."""
 
 from copy import deepcopy
 from pathlib import Path
@@ -17,21 +11,25 @@ import numpy as np
 from .config import load_tuning_profiles, redacted_config, validate_tuning_profile
 from .data.prepare import validate_prepared
 from .data.splits import sample_document_pools
-from .data.store import DocumentStore
+from .data.store import DocumentStore, RowSubsetDocumentStore
 from .encoders import build_encoder, model_specs, resolve_model
 from .experiments import finalize_run, source_hash
 from .hf_sync import snapshot_source
 from .index import ExactIndex, HnswIndex, load_index, validate_ann_snapshot
-from .io import digest, read_json, write_json
+from .io import digest, file_digest, read_json, write_json
 from .migration import bootstrap_migration
-from .progress import update_checklist
 from .runtime import probe_hardware, require_target_hardware
-from .vectors import PaidEmbeddingAccessor, encode_corpus, vector_cache_key
+from .scale_manifest import (DOCUMENT_CAP, SCALE_VARIANT, freeze_common_manifest,
+                             load_common_manifest, manifest_path)
+from .experiments_scale import (_encode_queries, _query_records, _run_scale_scheduler_probe,
+                                _traffic_proxies)
+from .vectors import (PaidEmbeddingAccessor, RowSubsetVectorStore, VectorStore,
+                      encode_corpus, vector_cache_key)
 
 
 RUN_BUDGET_POLICY = "compact_v1"
 E4_TASKS = ("subset_probe", "full_bootstrap", "restore_footprint")
-SUBSET_SIZE = 100_000
+SUBSET_SIZE = DOCUMENT_CAP
 SUBSET_SEED = 20261020
 
 
@@ -70,9 +68,15 @@ def _profile_context(cfg, root):
     orcas_manifest = validate_prepared(orcas)
     if orcas_manifest.get("documents_release_hash") != docs_manifest["release_hash"]:
         raise ValueError("E4_INPUT_RELEASE_MISMATCH: ORCAS uses another document release")
+    if cfg["experiment"].get("scale_variant") != SCALE_VARIANT:
+        raise ValueError("E4_SCALE_VARIANT_REQUIRED: e4e567_scale_v3_50k")
+    scale_manifest = load_common_manifest(cfg, root, source_run)
+    if cfg["experiment"].get("scale_manifest_hash") != scale_manifest["manifest_hash"]:
+        raise ValueError("E4_SCALE_MANIFEST_HASH_REQUIRED: config does not pin manifest")
     return {"profile_hash": profile_hash, "profile": profile, "source_run": source_run,
             "source_dir": source_dir, "docs": docs, "orcas": orcas,
-            "docs_manifest": docs_manifest, "orcas_manifest": orcas_manifest}
+            "docs_manifest": docs_manifest, "orcas_manifest": orcas_manifest,
+            "scale_variant": SCALE_VARIANT, "scale_manifest": scale_manifest}
 
 
 def _run_dir(cfg, task_name, locked):
@@ -84,29 +88,56 @@ def _peak_rss_bytes():
     return int(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss * 1024)
 
 
+def _artifact_hash(run_dir):
+    """Hash the completed E4 payload without creating a summary hash cycle."""
+    files = {}
+    for path in sorted(Path(run_dir).rglob("*")):
+        if not path.is_file() or path.name == "summary.json" or "source" in path.parts:
+            continue
+        files[str(path.relative_to(run_dir))] = file_digest(path)
+    return digest(files)
+
+
 def _write_header(run_dir, root, locked, context, environment):
     run_dir.mkdir(parents=True, exist_ok=True)
     write_json(run_dir / "config.lock.json", locked)
     write_json(run_dir / "environment.json", environment)
     write_json(run_dir / "dataset_manifest.json", {
-        "documents": context["docs_manifest"], "orcas": context["orcas_manifest"]})
+        "documents": context["docs_manifest"], "orcas": context["orcas_manifest"],
+        "common_scale": {key: value for key, value in context["scale_manifest"].items()
+                         if key not in {"document_rows_array", "path"}}})
+    common_manifest = context["scale_manifest"]
+    common_manifest_payload = {key: value for key, value in common_manifest.items()
+                               if key not in {"document_rows_array", "path",
+                                              "document_rows_path_resolved"}}
+    write_json(run_dir / "common_scale_manifest.json", common_manifest_payload)
+    shutil.copyfile(common_manifest["document_rows_path_resolved"],
+                    run_dir / "common_scale_document_rows.npy")
     write_json(run_dir / "reference_inputs.json", {
         "source_run": context["source_run"], "profile_hash": context["profile_hash"],
+        "scale_variant": context["scale_variant"],
+        "common_scale_manifest_hash": context["scale_manifest"]["manifest_hash"],
+        "official_doc_pool": DOCUMENT_CAP, "orcas_group_cap": 5000,
+        "claim_scope": "reduced_scale_pilot",
         "quality_labels_opened": False,
-        "scope": "E4 scale feasibility/readiness; no full-scale quality claim"})
+        "scope": "E4 reduced-scale readiness; no full-corpus quality claim"})
     snapshot_source(root, run_dir)
 
 
 def _subset_probe(cfg, context, run_dir, timing):
     source_dir = context["source_dir"]
     subset_manifest = read_json(source_dir / "subset_manifest.json")
-    subset_rows = np.load(source_dir / "subset_rows.npy", allow_pickle=False)
-    subset_new = np.load(source_dir / "subset_new.npy", mmap_mode="r", allow_pickle=False)
+    parent_rows = np.load(source_dir / "subset_rows.npy", allow_pickle=False)
+    subset_rows = context["scale_manifest"]["document_rows_array"]
+    subset_new_parent = np.load(source_dir / "subset_new.npy", mmap_mode="r", allow_pickle=False)
+    subset_new = subset_new_parent[:SUBSET_SIZE]
     q_tune = np.load(source_dir / "q_tune.npy", mmap_mode="r", allow_pickle=False)
     doc_ids = (context["docs"] / "doc_ids.txt").read_text().splitlines()
-    if (len(subset_rows) != SUBSET_SIZE or subset_manifest.get("rows") != SUBSET_SIZE or
-            subset_manifest.get("seed") != SUBSET_SEED):
-        raise ValueError("E4_SUBSET_GATE_FAILED: fixed uniform subset is missing or mis-sized")
+    if (len(parent_rows) != 100_000 or subset_manifest.get("rows") != 100_000 or
+            subset_manifest.get("seed") != SUBSET_SEED or
+            not np.array_equal(subset_rows, parent_rows[:SUBSET_SIZE]) or
+            len(subset_new_parent) != len(parent_rows)):
+        raise ValueError("E4_SUBSET_GATE_FAILED: common 50k child is not the frozen T0 prefix")
     ids = [doc_ids[int(row)] for row in subset_rows]
     selected = context["profile"]["selections"].get("search", {})
     candidates = int(selected.get("candidates", 50))
@@ -135,27 +166,77 @@ def _subset_probe(cfg, context, run_dir, timing):
     timing.append({"component": "subset_graph_restore",
                    "wall_seconds": time.monotonic() - started, "source": "measured"})
     shutil.rmtree(probe, ignore_errors=True)
-    scale_metrics = read_json(source_dir / "scale_metrics.json")
-    greedy = next((row for row in scale_metrics.get("scheduler_rows", [])
-                   if row.get("scheduler") == "greedy"), None)
-    if not greedy or greedy.get("restore") != "PASS":
-        raise ValueError("E4_SUBSET_GREEDY_GATE_FAILED: T0 greedy probe is unavailable")
+
+    # Re-run the readiness scheduler probe on the frozen child itself.  The
+    # older T0.scale scheduler rows are useful provenance, but they cannot
+    # certify this 50k/5k variant because they used a different corpus and
+    # ORCAS group cap.
+    root = context["source_dir"].parents[1]
+    specs = {role: resolve_model(spec, cfg["paths"], root)
+             for role, spec in model_specs("arctic", root).items()}
+    full_key = vector_cache_key(context["docs_manifest"], specs["old"], "e4_full_old")
+    full_path = Path(cfg["paths"]["cache"]) / "vectors" / f"e4-full-old-{full_key}"
+    if not full_path.is_dir():
+        raise ValueError("E4_SUBSET_GREEDY_GATE_FAILED: validated full old cache is missing")
+    old_full = VectorStore(full_path, full_key)
+    if len(old_full) != len(doc_ids):
+        raise ValueError("E4_SUBSET_GREEDY_GATE_FAILED: full old cache row count mismatch")
+    old = RowSubsetVectorStore(old_full, subset_rows)
+    pools = sample_document_pools(ids, cfg)
+    roles = read_json(context["orcas"] / "splits" / "query_roles.json")["roles"]
+    records, schedule = _query_records(context["orcas"], roles, group_cap=5000)
+    query_cfg = deepcopy(cfg)
+    query_cfg["models"]["batch_size"] = int(
+        context["profile"]["selections"]["runtime"]["batches"]["new"])
+    queries = _encode_queries(records, roles, specs["new"], query_cfg, root, timing)
+    proxies, join = _traffic_proxies(context["orcas"], schedule, subset_rows)
+    probe_cfg = deepcopy(cfg)
+    residual = context["profile"]["selections"]["map"]["residual_mlp"]
+    if residual.get("lr") is not None:
+        probe_cfg["mapping"]["lr"] = residual["lr"]
+    scheduler_rows = _run_scale_scheduler_probe(
+        ids, old, subset_new, pools, probe_cfg, queries, roles, schedule, proxies,
+        run_dir, timing)
+    greedy = next((row for row in scheduler_rows if row.get("scheduler") == "greedy"), None)
+    if (not greedy or greedy.get("restore") != "PASS"
+            or any(row.get("restore") != "PASS" for row in scheduler_rows)):
+        raise ValueError("E4_SUBSET_GREEDY_GATE_FAILED: reduced scheduler restore failed")
     return {"task": "subset_probe", "subset_size": len(ids), "subset_seed": SUBSET_SEED,
             "fidelity": fidelity, "restore_fidelity": restore_fidelity,
-            "greedy_probe": greedy, "orcas_join": scale_metrics.get("orcas_join"),
+            "greedy_probe": greedy, "scheduler_rows": scheduler_rows,
+            "orcas_join": join, "orcas_group_cap": 5000,
+            "common_scale_manifest_hash": context["scale_manifest"]["manifest_hash"],
             "quality_claim": False, "correctness_gate": "PASS"}
 
 
 def _encode_full_vectors(cfg, context, root, timing):
-    store = DocumentStore(context["docs"])
+    full_store = DocumentStore(context["docs"])
+    subset_rows = context["scale_manifest"]["document_rows_array"]
+    store = RowSubsetDocumentStore(full_store, subset_rows)
     specs = {role: resolve_model(spec, cfg["paths"], root)
              for role, spec in model_specs("arctic", root).items()}
     cache_root = Path(cfg["paths"]["cache"]) / "vectors"
     stores = {}
     batches = context["profile"]["selections"]["runtime"]["batches"]
+    subset_manifest = {**context["docs_manifest"],
+                       "release_hash": digest({
+                           "release": context["docs_manifest"]["release_hash"],
+                           "scale_manifest": context["scale_manifest"]["manifest_hash"]})}
     for role, spec in specs.items():
-        key = vector_cache_key(context["docs_manifest"], spec, f"e4_full_{role}")
-        output = cache_root / f"e4-full-{role}-{key}"
+        key = vector_cache_key(subset_manifest, spec, f"e4_v3_{role}")
+        output = cache_root / f"e4-v3-{role}-{key}"
+        if role == "old":
+            full_key = vector_cache_key(context["docs_manifest"], spec, "e4_full_old")
+            full_path = cache_root / f"e4-full-old-{full_key}"
+            if full_path.is_dir() and (full_path / "manifest.json").exists():
+                base = VectorStore(full_path, full_key)
+                if len(base) != len(full_store):
+                    raise ValueError("E4_OLD_CACHE_ROWS_MISMATCH: full old cache")
+                stores[role] = RowSubsetVectorStore(base, subset_rows)
+                timing.append({"component": "encode_full_old", "wall_seconds": 0.0,
+                               "source": "validated_full_cache_view", "rows": len(stores[role]),
+                               "batch_size": int(batches[role]), "cache_key": full_key})
+                continue
         started = time.monotonic()
         encoder = build_encoder(spec, cfg["execution"]["device"], int(batches[role]))
         try:
@@ -168,7 +249,8 @@ def _encode_full_vectors(cfg, context, root, timing):
                            "wall_seconds": time.monotonic() - started,
                            "source": "measured", "rows": len(stores[role]),
                            "batch_size": int(batches[role]),
-                           "encoder_cost": dict(encoder.cost), "cache_key": key})
+                           "encoder_cost": dict(encoder.cost), "cache_key": key,
+                           "scale_variant": context["scale_variant"]})
         finally:
             encoder.close()
     return store, stores["old"], stores["new"], specs
@@ -176,7 +258,9 @@ def _encode_full_vectors(cfg, context, root, timing):
 
 def _full_bootstrap(cfg, root, context, run_dir, timing):
     _store, old, new, _specs = _encode_full_vectors(cfg, context, root, timing)
-    doc_ids = (context["docs"] / "doc_ids.txt").read_text().splitlines()
+    full_doc_ids = (context["docs"] / "doc_ids.txt").read_text().splitlines()
+    doc_ids = [full_doc_ids[int(row)]
+               for row in context["scale_manifest"]["document_rows_array"]]
     if len(old) != len(doc_ids) or len(new) != len(doc_ids):
         raise ValueError("E4_FULL_VECTOR_GATE_FAILED: cache rows differ from manifest")
     pools = sample_document_pools(doc_ids, cfg)
@@ -290,6 +374,10 @@ def run_scale_task(cfg, root):
     locked = {"config": redacted_config(cfg), "source_hash": source_hash(root),
               "run_budget_policy": RUN_BUDGET_POLICY, "scale_task": task_name,
               "profile_hash": context["profile_hash"], "source_run": context["source_run"],
+              "scale_variant": context["scale_variant"],
+              "common_scale_manifest_hash": context["scale_manifest"]["manifest_hash"],
+              "official_doc_pool": DOCUMENT_CAP, "orcas_group_cap": 5000,
+              "claim_scope": "reduced_scale_pilot",
               "documents_release": context["docs_manifest"]["release_hash"],
               "orcas_release": context["orcas_manifest"]["release_hash"]}
     run_dir = _run_dir(cfg, task_name, locked)
@@ -304,10 +392,13 @@ def run_scale_task(cfg, root):
         "compute_status": "FAILED", "phase": "official", "outcome": "inconclusive",
         "performance_claim": False, "expect_classification": "KHỚP",
         "run_budget_policy": RUN_BUDGET_POLICY, "scale_task": task_name,
-        "profile_hash": context["profile_hash"],
+        "profile_hash": context["profile_hash"], "scale_variant": context["scale_variant"],
+        "common_scale_manifest_hash": context["scale_manifest"]["manifest_hash"],
+        "official_doc_pool": DOCUMENT_CAP, "orcas_group_cap": 5000,
+        "claim_scope": "reduced_scale_pilot", "e4_artifact_id": run_dir.name,
+        "e4_artifact_hash": None, "parent_e4_artifact_id": None,
+        "parent_e4_artifact_hash": None,
     }
-    update_checklist(root, run_dir.name,
-                     {**summary, "compute_status": "RUNNING", "sync_status": "PENDING"})
     try:
         if task_name == "subset_probe":
             metrics = _subset_probe(cfg, context, run_dir, timing)
@@ -321,8 +412,11 @@ def run_scale_task(cfg, root):
                     "exclusive": "unverified"})
         write_json(run_dir / "estimate.json", {
             "scope": "E4", "task": task_name, "run_budget_policy": RUN_BUDGET_POLICY,
+            "scale_variant": SCALE_VARIANT, "official_doc_pool": DOCUMENT_CAP,
+            "orcas_group_cap": 5000, "claim_scope": "reduced_scale_pilot",
             "measured": {r["component"]: r["wall_seconds"] for r in timing},
             "full_quality": "unmeasured_until_E5", "concurrency": 1})
+        summary["e4_artifact_hash"] = _artifact_hash(run_dir)
         summary.update(compute_status="COMPUTE_DONE", metrics=metrics,
                        correctness_gate="PASS", target_hardware_pass=True)
     except Exception as exc:
@@ -376,8 +470,11 @@ def build_scale_tasks(cfg, root):
     profile = profiles["profiles"].get(profile_hash)
     if profile is None or profile.get("scope") != "scale":
         raise ValueError("E4_DEPENDENCY_REQUIRED: T0.scale profile is not locked")
+    common_manifest = freeze_common_manifest(cfg, root, t0_run)
+    manifest_relative = manifest_path(cfg, root).relative_to(root).as_posix()
     revision = digest({"source": source_hash(root), "profile_hash": profile_hash,
-                       "budget": RUN_BUDGET_POLICY})[:12]
+                       "budget": RUN_BUDGET_POLICY, "scale_variant": SCALE_VARIANT,
+                       "manifest_hash": common_manifest["manifest_hash"]})[:12]
     common = {
         "config": "configs/experiments/e4.yaml", "phase": "official",
         "measurement_mode": "exclusive", "development_hardware": False,
@@ -394,7 +491,10 @@ def build_scale_tasks(cfg, root):
     for name in E4_TASKS:
         overrides = {
             "experiment": {"profile_hash": profile_hash, "tuning_scope": "scale",
-                           "scale_task": name, "source_run": t0_run},
+                           "scale_task": name, "source_run": t0_run,
+                           "scale_variant": SCALE_VARIANT,
+                           "scale_manifest_hash": common_manifest["manifest_hash"],
+                           "scale_manifest_path": manifest_relative},
         }
         if name == "restore_footprint":
             overrides["experiment"]["full_bootstrap_task_id"] = ids["full_bootstrap"]

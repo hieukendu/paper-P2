@@ -73,6 +73,56 @@ class VectorStore:
                 yield start + local, array[local:local + batch_size]
 
 
+class RowSubsetVectorStore:
+    """Read-only local-row view over an immutable validated vector store."""
+
+    def __init__(self, base, rows):
+        self.base = base
+        self.rows = tuple(int(row) for row in rows)
+        if any(row < 0 or row >= len(base) for row in self.rows):
+            raise ValueError("Vector subset row is outside the validated store")
+        if len(set(self.rows)) != len(self.rows):
+            raise ValueError("Vector subset rows must be unique")
+        self.manifest = {"rows": len(self.rows), "dim": base.manifest["dim"],
+                         "dtype": base.manifest.get("dtype", "float32"),
+                         "cache_key": base.manifest["cache_key"]}
+
+    def __len__(self):
+        return len(self.rows)
+
+    @property
+    def shape(self):
+        return (len(self), int(self.manifest["dim"]))
+
+    def get_rows(self, rows):
+        rows = np.asarray(rows, dtype=np.int64)
+        if np.any(rows < 0) or np.any(rows >= len(self)):
+            raise IndexError("Vector subset row outside cache")
+        return self.base.get_rows(np.asarray(self.rows, dtype=np.int64)[rows])
+
+    def __getitem__(self, key):
+        if isinstance(key, (int, np.integer)):
+            row = int(key)
+            if row < 0:
+                row += len(self)
+            return self.get_rows([row])[0]
+        if isinstance(key, slice):
+            rows = np.arange(*key.indices(len(self)), dtype=np.int64)
+        else:
+            rows = np.asarray(key, dtype=np.int64)
+            if rows.ndim == 0:
+                rows = rows.reshape(1)
+        return self.get_rows(rows)
+
+    def iter_batches(self, batch_size=4096):
+        batch_size = int(batch_size)
+        if batch_size < 1:
+            raise ValueError("batch_size must be positive")
+        for start in range(0, len(self), batch_size):
+            end = min(len(self), start + batch_size)
+            yield start, self.get_rows(np.arange(start, end, dtype=np.int64))
+
+
 def encode_corpus(data, encoder, output, cache_key, shard_bytes=1 << 30, token_budget=None):
     output = Path(output)
     with file_lock(output.with_suffix(".lock")):

@@ -11,7 +11,7 @@ Mọi case phải đi qua: **tải model → tải dữ liệu → validate/prep
 | Scope/task ID | Inputs phải sẵn sàng | Cho phép mở bước nào |
 |---|---|---|
 | `T0.core` | FiQA đầy đủ và MiniLM/MPNet; E0/E1 đã qua; LA/MLP, regional/calibration, scheduler, HNSW và acceptance code đã có | E2 exact trên FiQA; E2 ANN/E3 cần thêm ANN profile PASS |
-| `T0.scale` | E3 correctness; Arctic snapshots; MS MARCO documents v1 + ORCAS đã ingest/validate; subset 100k cố định | E4 trên subset; E5 còn cần gate full-corpus tại E4 |
+| `T0.scale` | E3 correctness; Arctic snapshots; MS MARCO documents v1 + ORCAS đã ingest/validate; subset 100k cố định | Diagnostic timing/profile source; E4 v3 còn cần common 50k/5k manifest và reduced-pool gate |
 | `T0.case.<dataset>.<pair>` | Inputs thật của case E2 bổ sung/E6/E7 đã validate; core code dùng lại | Case tương ứng, sau các dependency E3/E4 nếu có |
 
 `T0.core` không phụ thuộc E2/E3/E4; nó dùng implementation M05–M08 đã code trước khi chạy các E đó. `T0.scale` không phụ thuộc E4, và T0.case không phụ thuộc chính E đang chuẩn bị. T0 cho TREC dùng document train/validation để chọn lr; không có Q_tune thì search kế thừa FiQA cùng pair với nhãn `UNTUNED_TRANSFER`. AOL chỉ dùng document pools và query/history tuần1. Case thiếu corpus thật là `BLOCKED_DATA`; không block các case độc lập đã đủ inputs.
@@ -38,7 +38,7 @@ Chạy grid `(50,200),(100,200),(500,1000),(1000,2000)` trên Q_tune và bootstr
 
 HNSW trên FiQA/subset 100k không chứng nhận recall cho full MS MARCO hoặc model pair khác. E4 phải build actual full bootstrap graph rồi kiểm Q_tune trên snapshot đó trước E5; exact reference ở gate này dùng **stored vectors**, không target chưa paid. Những map seed còn lại được kiểm với settings đã freeze trước khi đọc test; gate fail không được âm thầm đổi settings riêng cho seed đó. Một sửa đổi development cần profile/version mới cho toàn comparison liên quan.
 
-E4 readiness tasks chỉ cần T0.scale input/lr/runtime/subset profile và resource reservation cho target size; **không yêu cầu full-corpus ANN profile mà E4 đang tạo**. E4 không đọc official quality để chọn; sau full-bootstrap gate nó publish một search profile entry mới cho full corpus, giữ nguyên subset entry. E5 mới bắt buộc full entry PASS. Preflight các bootstrap map seeds/variants trong comparison trước khi mở test của comparison đó; lỗi sau khi đã xem test không được dùng để retune rồi thay kết quả cũ.
+E4 readiness tasks cần T0.scale input/lr/runtime/subset profile, common v3 manifest và resource reservation cho reduced target size; **không đọc official quality để chọn**. Sau reduced-pool bootstrap gate, E4 publish search/restore evidence consumed by E5. Preflight các bootstrap map seeds/variants trong comparison trước khi mở test của comparison đó; lỗi sau khi đã xem test không được dùng để retune rồi thay kết quả cũ.
 
 Không có Q_tune hợp lệ: kế thừa profile FiQA cùng pair như M06, ghi `UNTUNED_TRANSFER`; exact evaluation vẫn hợp lệ, ANN fidelity của case chưa được chứng nhận. Không coi N/A/transfer là PASS0.99. ANN_GATE_FAILED chặn task ANN phụ thuộc; exact tasks đã qua correctness vẫn được chạy với nhãn exact. Không mở rộng grid/M/efC sau khi xem test để cứu kết quả.
 

@@ -107,10 +107,10 @@ def _encode_rows(store, rows, spec, cfg, output, key, timing, role, batch_size=N
         encoder.close()
 
 
-def _query_records(orcas_path, roles):
+def _query_records(orcas_path, roles, group_cap=SCALE_GROUP_CAP):
     wanted = set().union(*(set(roles.get(role, [])) for role in ("cal_fit", "cal_check", "tune")))
     schedule = sorted(roles.get("schedule", []),
-                      key=lambda value: stable_key(SCALE_SEED, "scale-schedule-sample", value))[:SCALE_GROUP_CAP]
+                      key=lambda value: stable_key(SCALE_SEED, "scale-schedule-sample", value))[:group_cap]
     wanted.update(schedule)
     records = {}
     parquet = pq.ParquetFile(orcas_path / "queries.parquet")

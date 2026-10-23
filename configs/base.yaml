@@ -80,6 +80,9 @@ experiment:
   systems_horizon_fraction: 1.0
   systems_validation_stride: 10
   scale_task: null
+  scale_variant: null
+  scale_manifest_hash: null
+  scale_manifest_path: null
   source_run: null
   full_bootstrap_task_id: null
 execution:

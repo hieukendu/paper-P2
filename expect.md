@@ -4,7 +4,7 @@ File này mô tả **giả thuyết cần kiểm tra**, baseline phải so sánh
 
 ## Override scale đang dùng cho E5-E7
 
-Khi chạy server theo plan downscale, áp dụng [codex/16_e567_downscale.md](codex/16_e567_downscale.md) với `scale_variant: e567_scale_v2_50k`. E4 giữ nguyên artifact/profile/hash và phải được verified trước khi làm parent; không chạy lại, thay thế hoặc đổi cấu hình E4. Override này chỉ đổi quy mô dữ liệu/workload của E5-E7, giữ nguyên cell count, scheduler, seed, budget, evaluator và checkpoint semantics. Vì vậy kết quả được đọc là reduced-scale pilot evidence, không phải full-corpus replication.
+Khi chạy server theo plan downscale, áp dụng [codex/16_e567_downscale.md](codex/16_e567_downscale.md) với `scale_variant: e4e567_scale_v3_50k`. E4 cũng chạy lại trên manifest chung 50k documents/5k ORCAS groups, rồi phải đạt compute + sync verified trước khi làm parent; không trộn artifact/profile/hash cũ. Override này giữ nguyên cell count, scheduler, seed, budget, evaluator và checkpoint semantics. Vì vậy kết quả được đọc là reduced-scale pilot evidence, không phải full-corpus replication.
 
 Trước E2–E7 phải hoàn tất T0 theo phạm vi của case: validate inputs, tuning có giới hạn trên development data và freeze profile theo [codex/14_presetup_tuning.md](codex/14_presetup_tuning.md). E1 là correctness smoke; T0 không thêm một E quality và không yêu cầu greedy thắng để mở official. T0.core cho FiQA, T0.scale trước E4/E5, T0.case cho dataset/model bổ sung.
 
@@ -141,13 +141,13 @@ TREC-COVID chỉ có 50 test queries trong protocol hiện tại: primary dùng 
 
 Nếu E4 không đạt, phải shard/stream/giảm concurrency hoặc điều chỉnh storage trước E5; không lấy kết quả subset để thay cho full-scale claim.
 
-Sau T0.scale/subset feasible, E4 còn kiểm **actual full-corpus bootstrap stored graph**: footprint và Q_tune recall trước E5. Đây là readiness gate, không phải quality evidence của compact E5 study. Timing/recall của100k docs không được tự xem là kết quả cho3.21M.
+Sau T0.scale/subset feasible, E4 còn kiểm **actual full bootstrap stored graph của reduced pool 50k**: footprint và Q_tune recall trước E5. Đây là readiness gate, không phải quality evidence của compact E5 study. Timing/recall của100k docs không được tự xem là kết quả cho50k hoặc3.21M.
 
 ### E5 — Scale chính, static ORCAS
 
-**Mục tiêu:** so scheduler trên cùng mixed-index state và cùng paid budget trong workload `e567_scale_v2_50k`: MS MARCO child manifest uniform 50k và ORCAS manifest tối đa 5k groups. Đây là reduced-scale static study; không gọi là full MS MARCO result.
+**Mục tiêu:** so scheduler trên cùng mixed-index state và cùng paid budget trong workload `e4e567_scale_v3_50k`: MS MARCO common manifest uniform 50k và ORCAS manifest tối đa 5k groups. Đây là reduced-scale static study; không gọi là full MS MARCO result.
 
-E5 không rerun E4. Nó dùng parent E4 artifact/profile/hash đã freeze và subset view/manifest đã hash trước quality run. Full rebuild, nếu được tính, là full rebuild của subset E5. Primary ARR@10 vẫn ở 10% accessed; judged-dev nDCG/Hit/NFR chỉ báo khi coverage gate của manifest đạt, nếu không ghi `N/A_REDUCED_COVERAGE`.
+E5 dùng parent E4 artifact/profile/hash đã freeze và common view/manifest đã hash trước quality run. Full rebuild, nếu được tính, là full rebuild của reduced pool 50k. Primary ARR@10 vẫn ở 10% accessed; judged-dev nDCG/Hit/NFR chỉ báo khi coverage gate của manifest đạt, nếu không ghi `N/A_REDUCED_COVERAGE`.
 
 **Primary contrasts:**
 
@@ -177,7 +177,7 @@ Không có ngưỡng được phép dùng các số placeholder như 98.6%, 89% 
 
 ### E6 — Temporal AOL-IA
 
-**Mục tiêu:** kiểm tra traffic có thời gian thật, không chỉ query graph tĩnh, trên workload capped của `e567_scale_v2_50k`. Tuần `t` chỉ dùng lịch sử đến `t`, backfill tối đa 1% tại boundary, rồi đánh giá tuần `t+1`.
+**Mục tiêu:** kiểm tra traffic có thời gian thật, không chỉ query graph tĩnh, trên workload capped của `e4e567_scale_v3_50k`. Tuần `t` chỉ dùng lịch sử đến `t`, backfill tối đa 1% tại boundary, rồi đánh giá tuần `t+1`.
 
 **Primary endpoint:** weighted ARR ở tuần 8 tại cùng 7% scheduled nếu đủ 8 tuần và coverage hợp lệ.
 
@@ -194,7 +194,7 @@ Nếu AOL-IA không khôi phục đủ, E6 là **chưa thực hiện**, không t
 
 ### E7 — Mở rộng BEIR và kiểm tra độ bền
 
-**Mục tiêu:** chạy compact representative matrix tám dataset/model cases theo [codex/15_run_budget.md](codex/15_run_budget.md) với scale override `e567_scale_v2_50k`, thay cho full 4 model pairs × 5 collections. Case lớn NQ/HotpotQA/FEVER dùng 50k documents và 500 queries cố định; FiQA/TREC-COVID chỉ reuse exact validated scope khi hash khớp. Đây là pilot tổng quát hóa, không đủ để tuyên bố phủ toàn bộ 20 cases hoặc full-corpus BEIR.
+**Mục tiêu:** chạy compact representative matrix tám dataset/model cases theo [codex/15_run_budget.md](codex/15_run_budget.md) với scale override `e4e567_scale_v3_50k`, thay cho full 4 model pairs × 5 collections. Case lớn NQ/HotpotQA/FEVER dùng 50k documents và 500 queries cố định; FiQA/TREC-COVID chỉ reuse exact validated scope khi hash khớp. Đây là pilot tổng quát hóa, không đủ để tuyên bố phủ toàn bộ 20 cases hoặc full-corpus BEIR.
 
 **So sánh:** cùng mapping/scheduler protocol trên nhiều domain và model pair; báo từng dataset/model, không chỉ một mean gộp.
 
@@ -230,6 +230,6 @@ Chỉ sau khi có gói này mới được trả lời “cái gì mạnh hơn c
 
 ## 6. Thứ tự đọc kết quả nên dùng
 
-Đọc **E1 → T0.core → E2 → E3 → T0.scale → E4 → E5**, rồi E6/E7 sau T0.case tương ứng; các nhánh độc lập có thể xen kẽ theo resource. Nếu correctness hoặc ANN gate fail thì chặn đúng branch, không giả đã scale PASS. Nếu E4 fail thì chưa chạy E5 full. Với `e567_scale_v2_50k`, parent E4 artifact/profile/hash phải hợp lệ nhưng không rerun E4; variant chỉ chạy E5-E7 trên reduced child manifests 50k. E5 không có bằng chứng tích cực vẫn chạy E7 để biết giới hạn tổng quát; E6 báo riêng, không sửa kết luận static sau khi xem kết quả.
+Đọc **E1 → T0.core → E2 → E3 → T0.scale → E4 → E5**, rồi E6/E7 sau T0.case tương ứng; các nhánh độc lập có thể xen kẽ theo resource. Nếu correctness hoặc ANN gate fail thì chặn đúng branch, không giả đã scale PASS. Nếu E4 fail thì chưa chạy E5 full. Với `e4e567_scale_v3_50k`, E4 phải được chạy trên common 50k/5k manifest và parent artifact/profile/hash phải hợp lệ trước khi mở E5-E7. E5 không có bằng chứng tích cực vẫn chạy E7 để biết giới hạn tổng quát; E6 báo riêng, không sửa kết luận static sau khi xem kết quả.
 
 Tham chiếu protocol gốc: [report.md](report.md) mục8.3/9/10/15; thứ tự thực thi tại [codex/plan.md](codex/plan.md).

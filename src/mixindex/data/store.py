@@ -77,6 +77,30 @@ class DocumentStore:
             yield batch
 
 
+class RowSubsetDocumentStore:
+    """Expose a deterministic row manifest as a local-row document stream."""
+
+    def __init__(self, base, rows):
+        self.base = base
+        self.rows = tuple(int(row) for row in rows)
+        if any(row < 0 or row >= len(base) for row in self.rows):
+            raise ValueError("Document subset row is outside the validated corpus")
+        if len(set(self.rows)) != len(self.rows):
+            raise ValueError("Document subset rows must be unique")
+
+    def __len__(self):
+        return len(self.rows)
+
+    def iter_batches(self, batch_size=256):
+        batch_size = int(batch_size)
+        if batch_size < 1:
+            raise ValueError("Document batch size must be positive")
+        for start in range(0, len(self.rows), batch_size):
+            documents = self.base.get_documents(self.rows[start:start + batch_size])
+            yield [Document(start + offset, document.doc_id, document.text)
+                   for offset, document in enumerate(documents)]
+
+
 def build_document_store(records, output):
     output = Path(output)
     output.mkdir(parents=True, exist_ok=True)

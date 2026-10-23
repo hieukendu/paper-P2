@@ -1,6 +1,6 @@
 # Tiến độ setup và chạy thí nghiệm MixIndex
 
-Server override hiện hành: E5–E7 dùng `e567_scale_v2_50k` theo [codex/16_e567_downscale.md](codex/16_e567_downscale.md); T0.scale và E4 giữ nguyên quy mô/gate của chúng. E4 phải `COMPUTE_DONE + sync=VERIFIED + worker exited` trước khi mở E5–E7.
+Server override hiện hành: E4–E7 dùng `e4e567_scale_v3_50k` theo [codex/16_e567_downscale.md](codex/16_e567_downscale.md); T0.scale 100k chỉ là diagnostic/forecast, còn E4 chính thức dùng manifest chung 50k/5k. E4 phải `COMPUTE_DONE + sync=VERIFIED + worker exited` trước khi mở E5–E7.
 
 Checklist ở gốc project, bên ngoài `codex/`; dùng `PROJECT_ROOT/checklist.md` trên server. Target corrected by the user: **H100 80GB in this workspace**; A100 was a typo. Cgroup limit: 250GiB RAM / 16 CPU cores. FiQA và TREC-COVID validated releases cùng run bundles đã public. E0, E1, T0.core và T0.case.trec-covid correctness/profile gates đã qua trên H100; shared-device timing vẫn không phải exclusive performance claim. Ma trận chính khóa `compact_v1`; E2 hiện đã hoàn tất 24/24 official cells với compute + HF sync verify.
 
@@ -47,9 +47,9 @@ T0.core mở E2 FiQA/E3, không chờ T0.scale/AOL. Dataset/model bổ sung ch�
 - [ ] SMOKE-TIME.compute — E1 flow timing + T0.scale timing thật đã sinh `timing.json`, encoder/storage probes và `estimate.json`; giữ measured/estimated/unmeasured rõ.
 - [ ] SMOKE-TIME.sync — Các artifacts timing/forecast đã upload và remote-verify.
 
-Seed cố định: `master_seed=20261020`, `map_seed=17`, `traffic_seed=101`; timing repeats dùng cùng seed. Reuse E1 FiQA2,000 exact completion/resume khi config/code không đổi. T0.scale dùng MS MARCO subset100,000 uniform và ORCAS tối đa10,000 groups từ scheduling pool; bốn scheduler tới10% total accessed, locked greedy tiếp tục25% để đo nhiều refit/remap. Fallback phải ghi rõ, không gọi timing random-fill là measured greedy với gain thật.
+Seed cố định: `master_seed=20261020`, `map_seed=17`, `traffic_seed=101`; timing repeats dùng cùng seed. Reuse E1 FiQA2,000 exact completion/resume khi config/code không đổi. T0.scale dùng MS MARCO subset100,000 uniform và ORCAS tối đa10,000 groups từ scheduling pool; bốn scheduler tới10% total accessed, locked greedy tiếp tục25% để đo nhiều refit/remap. E4 chính thức freeze manifest chung 50,000 documents/5,000 ORCAS groups; T0 100k không thay thế manifest đó. Fallback phải ghi rõ, không gọi timing random-fill là measured greedy với gain thật.
 
-Đo riêng encode/query/search/heap/backfill/refit/remap/HNSW/checkpoint, docs/tokens/s, RSS/VRAM, bytes và stalls; upload/verify đo sau measurement window. E4 còn probe tới100k scheduling groups và actual full bootstrap graph trước E5. Không ngoại suy HNSW tuyến tính từ subset hoặc chia đôi thời gian chỉ vì cho phép2 jobs.
+Đo riêng encode/query/search/heap/backfill/refit/remap/HNSW/checkpoint, docs/tokens/s, RSS/VRAM, bytes và stalls; upload/verify đo sau measurement window. E4 probe greedy và actual full bootstrap graph trên manifest chung 50k/5k trước E5. Không ngoại suy HNSW tuyến tính từ subset hoặc chia đôi thời gian chỉ vì cho phép2 jobs.
 
 Runner cập nhật dự báo từ số đo thực tế. FiQA đã có timing development; thời điểm kết thúc toàn bộ E2–E7 chưa đủ bằng chứng để chốt. Không nhân timing prefix với toàn bộ cells hoặc ngoại suy100% như một số đo đã có:
 
@@ -82,11 +82,11 @@ Tick compute khi mọi required cells/gates đã hoàn tất hợp lệ. Tick sy
 - [x] E3.sync — Toàn bộ 6 E3 bundles, config, systems metrics, timing và source snapshot đã `sync=VERIFIED` trên HF; chỉ các run đạt gate được report.
 - [ ] E4.compute — 3 tasks theo `compact_v1`: subset probe, actual full-bootstrap stored-graph gate và restore/footprint.
 - [ ] E4.sync — Subset IDs/probes/outputs đã sync verified.
-- [ ] E5.compute — `e567_scale_v2_50k`: 12 reduced-workload primary cells (MS MARCO child manifest50k, ORCAS tối đa5k groups) và required checkpoints tới100% true hoàn tất; sensitivity không chặn stage.
+- [ ] E5.compute — `e4e567_scale_v3_50k`: 12 reduced-workload primary cells (MS MARCO common manifest50k, ORCAS tối đa5k groups) và required checkpoints tới100% true hoàn tất; sensitivity không chặn stage.
 - [ ] E5.sync — All required primary states/results đã sync verified.
-- [ ] E6.compute — `e567_scale_v2_50k`: recovered AOL temporal study8 tuần/7 decisions, cap50k documents/50k events mỗi tuần và coverage hợp lệ.
+- [ ] E6.compute — `e4e567_scale_v3_50k`: recovered AOL temporal study8 tuần/7 decisions, cap50k documents/50k events mỗi tuần và coverage hợp lệ.
 - [ ] E6.sync — Temporal states/metrics/coverage artifacts đã sync verified.
-- [ ] E7.compute — `e567_scale_v2_50k`: 20 representative compact cells; NQ/HotpotQA/FEVER cap50k documents + 500 queries/case và required baselines hoàn tất.
+- [ ] E7.compute — `e4e567_scale_v3_50k`: 20 representative compact cells; NQ/HotpotQA/FEVER cap50k documents + 500 queries/case và required baselines hoàn tất.
 - [ ] E7.sync — Matrix weights/results/aggregate tables đã sync verified.
 
 ## Run đang chạy và run đã xong

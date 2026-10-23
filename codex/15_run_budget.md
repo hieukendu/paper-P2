@@ -16,7 +16,7 @@
 |---|---:|---|---|
 | E2 | **24 cells** | FiQA mapping: OP/LA/MLP × map seeds `{17,29,43}` với random = 9. FiQA scheduler: MLP × `{random, degree, re-embed-on-read, greedy}` × 3 map seeds, traffic `101` = 12. TREC-COVID mapping: OP/LA/MLP × map seed `17`, scheduler N/A = 3. | Pilot quality và kiểm tra xu hướng. Không claim interaction đầy đủ map×scheduler, không suy luận mạnh từ TREC 50 queries. Calibration/regional ablation chạy trong T0 hoặc một diagnostic riêng, không nhân vào 24 cell. |
 | E3 | **6 tasks** | Exact reference = 1; HNSW fixed snapshot = 1; cadence `{1%,5%,10%}` = 3; synchronized serving/failed-update save-load probe = 1. | Systems/fidelity gate. Không phải scheduler-quality study. |
-| E4 | **3 tasks** | One 100k-document subset probe với greedy; one actual full-corpus bootstrap stored-graph gate; one checkpoint/restore and footprint probe. Scheduler timing của random/degree/read/greedy đã nằm trong T0.scale, không lặp lại ở E4. | Readiness gate cho E5. Không gọi subset là full quality result. |
+| E4 | **3 tasks** | One 50k-document common-manifest probe với greedy; one actual reduced-pool bootstrap stored-graph gate; one checkpoint/restore and footprint probe. Scheduler timing của random/degree/read/greedy đã nằm trong T0.scale, không lặp lại ngoài probe cần thiết của E4. | Readiness gate cho E5. Không gọi reduced pool là full quality result. |
 | E5 | **12 primary cells** | Full MS MARCO + Arctic + ORCAS: schedulers `{random, degree, re-embed-on-read, greedy}` × map seeds `{17,29,43}` × traffic seed `101`. Mỗi cell tiếp tục đến các checkpoint bắt buộc trong cùng run. | Primary static result tại 10% accessed. Có map-seed robustness; traffic-seed robustness chỉ là sensitivity. |
 | E5-sensitivity | **tối đa 4 optional cells** | Chỉ `random` và `greedy`, map seed `17`, traffic seeds `{103,109}`. Chỉ chạy khi 12 primary cells đã hợp lệ và thời gian còn đủ. | Không bắt buộc để tick E5; báo riêng, không dùng để chọn lại method/profile. |
 | E6 | **4 cells** | Một timeline AOL-IA đã khôi phục, map seed `17`, bốn scheduler `{random, degree, re-embed-on-read, greedy}`. Mỗi cell chạy đủ 7 quyết định tuần. | Temporal case trên một chronology thật. Không tạo traffic seeds giả bằng cách shuffle thời gian; nếu recovery thiếu thì BLOCKED_DATA. |
@@ -29,7 +29,7 @@ Tổng mặc định là **69 required cells/tasks**, cộng tối đa 4 E5 sens
 1. Chạy E2 mapping 9 FiQA cells trước. Nếu correctness, budget hoặc evaluator fail thì dừng branch và sửa code; không mở scheduler matrix.
 2. Chạy E2 scheduler 12 cells, sau đó TREC 3 cells. Kết quả âm hoặc inconclusive vẫn là kết quả hợp lệ.
 3. Chạy E3 sáu systems tasks và chỉ mở E4 khi ANN/fidelity gate đạt. Exact branch được giữ nếu ANN fail.
-4. Base `compact_v1` chạy E4 ba tasks và mở E5 sau full-bootstrap graph, footprint và Q_tune profile pass. Với `e567_scale_v2_50k`, dùng parent E4 artifact/profile/hash đã verified và không chạy lại E4.
+4. Base `compact_v1` chạy E4 ba tasks và mở E5 sau full-bootstrap graph, footprint và Q_tune profile pass. Với `e4e567_scale_v3_50k`, E4 cũng chạy trên common manifest 50k/5k và phải được verified trước khi mở E5-E7.
 5. Chạy 12 E5 primary cells trước. E5-sensitivity chỉ được enqueue sau khi primary cells đã có artifact hợp lệ; không chạy để cứu một kết quả âm.
 6. E6 và E7 có thể chạy xen kẽ khi đúng-case T0 và dữ liệu đã sẵn sàng. Không mở thêm model/dataset chỉ vì một compact cell có kết quả tốt.
 
@@ -46,12 +46,12 @@ Tổng mặc định là **69 required cells/tasks**, cộng tối đa 4 E5 sens
 
 ## Scale override đã khóa cho server: E5-E7
 
-Khi chạy server theo yêu cầu downscale, dùng [16_e567_downscale.md](16_e567_downscale.md) với `scale_variant: e567_scale_v2_50k`. Đây là override chỉ cho E5, E6 và E7; không thay đổi số cell của M15 và không thay đổi E4.
+Khi chạy server theo yêu cầu downscale, dùng [16_e567_downscale.md](16_e567_downscale.md) với `scale_variant: e4e567_scale_v3_50k`. Đây là override cho E4, E5, E6 và E7; không thay đổi số cell của M15.
 
-- E4 dùng nguyên artifact/profile/hash sau khi đã verified; không enqueue hoặc rerun E4 vì scale override này. E5-E7 admission phải chờ parent E4 đạt gate thật.
+- E4 dùng exact common 50k/5k manifest và tạo artifact/profile/hash mới; E5-E7 admission phải chờ parent E4 đạt gate thật.
 - E5 giữ 12 cell nhưng dùng MS MARCO child manifest uniform 50k và ORCAS manifest tối đa 5k groups từ T0.scale/E4 IDs; checkpoint vẫn bootstrap/5/10/25/50/100% trong cùng run.
 - E6 giữ 4 cell, chronology 8 tuần và 7 quyết định; dùng document cap 50k và event cap 50k/tuần, chỉ khi AOL-IA thật đã recovered.
 - E7 giữ 20 cell; NQ/HotpotQA/FEVER dùng 50k documents và 500 queries/case; FiQA/TREC-COVID chỉ reuse exact validated scope khi hash khớp.
-- Mọi summary E5-E7 phải ghi `run_budget_policy: compact_v1`, `scale_variant: e567_scale_v2_50k`, parent E4 artifact/hash và subset manifest hash.
+- Mọi summary E4-E7 phải ghi `run_budget_policy: compact_v1`, `scale_variant: e4e567_scale_v3_50k`, `official_doc_pool: 50000`, `orcas_group_cap: 5000`, common manifest hash và E4 artifact/hash (E5-E7 ghi thêm parent fields).
 
 Kết quả variant này là reduced-scale pilot evidence. Không trộn aggregate với full-scale result và không diễn giải là full-corpus replication.
