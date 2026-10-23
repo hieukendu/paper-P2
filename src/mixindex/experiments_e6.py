@@ -379,6 +379,7 @@ def run_e6_cell(cfg, root):
         "case_manifest_hash": case_manifest["manifest_hash"],
         "weeks": E6_WEEKS, "decisions": E6_DECISIONS,
         "event_cap": E6_EVENT_CAP, "future_leakage": "forbidden",
+        "recovery_counts": data_manifest["counts"],
         "quality_labels_opened": True,
     })
     write_json(run_dir / "models.lock.json", {
@@ -512,6 +513,8 @@ def run_e6_cell(cfg, root):
             "primary_week_weighted_arr_at_10": primary_weekly["weighted_arr_at_10"],
             "user_block_bootstrap": user_bootstrap,
             "day_sensitivity": day_sensitivity,
+            "recovery_counts": data_manifest["counts"],
+            "final_scheduled_fraction": len(state.backfilled) / len(doc_ids),
             "quality_labels_opened": True, "performance_claim": False,
         })
         write_json(run_dir / "timing.json", {
@@ -532,6 +535,7 @@ def run_e6_cell(cfg, root):
                        primary_week=primary_week,
                        primary_week_weighted_arr_at_10=primary_weekly["weighted_arr_at_10"],
                        user_block_bootstrap=user_bootstrap, day_sensitivity=day_sensitivity,
+                       recovery_counts=data_manifest["counts"],
                        weekly=weekly, wall_seconds=time.monotonic() - started,
                        target_hardware_pass=True, performance_claim=False)
     except Exception as exc:
