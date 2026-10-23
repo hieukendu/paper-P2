@@ -241,6 +241,69 @@ def build_presetup_tasks(scope, cfg, root):
         }
         from .queue import validate_jobs
         return validate_jobs([task])
+    if scope.startswith("case."):
+        from .experiments_e7 import case_scope as make_case_scope, freeze_case_manifest
+        try:
+            dataset, pair = scope.removeprefix("case.").rsplit(".", 1)
+        except ValueError as exc:
+            raise ValueError("T0.case scope must be case.<dataset>.<pair>") from exc
+        if scope != make_case_scope(dataset, pair):
+            raise ValueError("T0.case scope does not match its dataset/model pair")
+        manifest = freeze_case_manifest(dataset, pair, cfg, root)
+        root_path = Path(root).resolve()
+        manifest_path = (root_path / cfg["paths"]["data"] / "processed" / dataset /
+                         "manifests" / f"e7_{pair}.json")
+        overrides = deepcopy(cfg)
+        overrides["dataset"]["name"] = dataset
+        overrides["dataset"]["subset_size"] = None
+        overrides["models"]["pair"] = pair
+        overrides["tuning"]["scope"] = scope
+        overrides["execution"]["phase"] = "development"
+        overrides["execution"]["mode"] = "live_encode"
+        overrides["experiment"]["case_scope"] = scope
+        overrides["experiment"]["case_manifest_hash"] = manifest["manifest_hash"]
+        overrides["experiment"]["case_manifest_path"] = str(manifest_path.relative_to(root_path))
+        revision = digest({"scope": scope, "manifest": manifest["manifest_hash"],
+                           "source": source_hash(root)})[:12]
+        prefix = f"T0.{scope}.{revision}"
+        common = {"config": "configs/base.yaml", "phase": "development",
+                  "measurement_mode": "quality",
+                  "development_hardware": not cfg["execution"]["require_target"]}
+        data_task = {**common, "task_id": f"{prefix}.data", "experiment": "DATA_PREP",
+                     "config_overrides": {**deepcopy(overrides), "dataset": {
+                         **overrides["dataset"], "name": dataset}}, "depends_on": [],
+                     "resources": {"gpu_device": None, "gpu_memory_gib": 0,
+                                   "host_ram_gib": 8, "cpu_cores": 2,
+                                   "disk_scratch_gib": 16, "io_heavy": True}}
+        model_task = {**common, "task_id": f"{prefix}.models", "experiment": "MODEL_DOWNLOAD",
+                      "config_overrides": deepcopy(overrides), "depends_on": [],
+                      "resources": {"gpu_device": None, "gpu_memory_gib": 0,
+                                    "host_ram_gib": 4, "cpu_cores": 2,
+                                    "disk_scratch_gib": 12, "io_heavy": True}}
+        smoke_task = {**common, "task_id": f"{prefix}.smoke", "experiment": "MODEL_SMOKE",
+                      "config_overrides": deepcopy(overrides),
+                      "depends_on": [data_task["task_id"], model_task["task_id"]],
+                      "resources": {"gpu_device": 0, "gpu_memory_gib": 8,
+                                    "host_ram_gib": 12, "cpu_cores": 4,
+                                    "disk_scratch_gib": 8, "io_heavy": False}}
+        runtime_overrides = deepcopy(overrides)
+        runtime_overrides["execution"]["mode"] = "live_encode"
+        runtime_task = {**common, "task_id": f"{prefix}.runtime", "experiment": "RUNTIME_PROBE",
+                        "config_overrides": runtime_overrides,
+                        "depends_on": [smoke_task["task_id"]],
+                        "measurement_mode": "exclusive",
+                        "resources": {"gpu_device": 0, "gpu_memory_gib": 16,
+                                      "host_ram_gib": 24, "cpu_cores": 8,
+                                      "disk_scratch_gib": 8, "io_heavy": False}}
+        t0_task = {**common, "task_id": f"T0.{scope}", "experiment": "T0",
+                   "config_overrides": deepcopy(overrides),
+                   "depends_on": [runtime_task["task_id"]],
+                   "measurement_mode": "exclusive",
+                   "resources": {"gpu_device": 0, "gpu_memory_gib": 20,
+                                 "host_ram_gib": 32, "cpu_cores": 8,
+                                 "disk_scratch_gib": 64, "io_heavy": True}}
+        from .queue import validate_jobs
+        return validate_jobs([data_task, model_task, smoke_task, runtime_task, t0_task])
     if scope == "scale":
         overrides = deepcopy(cfg)
         overrides["dataset"]["name"] = "msmarco-docs-v1"
@@ -548,6 +611,9 @@ def run_presetup(task, inputs, cfg):
     if scope == "scale":
         from .experiments_scale import run_scale_presetup
         return run_scale_presetup(task, cfg)
+    if scope.startswith("case.") and scope != "case.trec-covid.minilm_mpnet":
+        from .experiments_e7 import run_case_presetup
+        return run_case_presetup(task, cfg)
     if scope != "core":
         return _run_case_trec_presetup(task, cfg)
     environment = probe_hardware()

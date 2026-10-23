@@ -83,6 +83,9 @@ experiment:
   scale_variant: null
   scale_manifest_hash: null
   scale_manifest_path: null
+  case_manifest_hash: null
+  case_manifest_path: null
+  case_scope: null
   source_run: null
   full_bootstrap_task_id: null
 execution:

@@ -1,0 +1,33 @@
+execution:
+  phase: official
+  mode: cached_access
+  device: cuda
+  max_compute_jobs: 1
+search:
+  backend: exact
+  candidates: 1000
+  ef_search: 2000
+  threads: 8
+models:
+  pair: arctic
+  batch_size: 8
+mapping:
+  kind: residual_mlp
+scheduler:
+  kind: random
+experiment:
+  profile_hash: null
+  tuning_scope: case.aol-ia.arctic
+  run_budget_policy: compact_v1
+  cell_role: required
+  map_seed: 17
+  traffic_seed: 101
+  scale_variant: e4e567_scale_v3_50k
+  scale_manifest_hash: null
+  scale_manifest_path: null
+  case_manifest_hash: null
+  case_manifest_path: null
+  case_scope: case.aol-ia.arctic
+dataset:
+  name: aol-ia
+  subset_size: null

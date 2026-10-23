@@ -80,7 +80,8 @@ def collect_run_artifacts(run_dir, checkpoint=None):
                "environment.json", "models.lock.json", "dataset_manifest.json", "selection.parquet",
                "development_queries.json", "throughput_probe.json", "tuning_profile.json", "reference_inputs.json",
                "systems_metrics.json", "scale_metrics.json", "subset_manifest.json", "subset_rows.npy",
-               "q_tune.npy", "scale_map.safetensors", "e5_metrics.json",
+               "q_tune.npy", "scale_map.safetensors", "e5_metrics.json", "e6_metrics.json",
+               "e7_metrics.json", "case_manifest.json", "temporal_manifest.json",
                "common_calibration.json"}
     names = [name for name in allowed if (run_dir / name).is_file()]
     checkpoints = run_dir / "checkpoints"

@@ -39,6 +39,13 @@ SCALE_PUBLICATION_RECIPES = {
 }
 
 
+AOL_PUBLICATION_RECIPE = {
+    "title": "AOL-IA chronology metadata release",
+    "source_url": "https://ir-datasets.com/aol-ia.html",
+    "layout": "redacted-temporal-metadata-v1",
+}
+
+
 def verify_document_parquet(files, expected_rows, expected_source_sha256):
     """Reconstruct the canonical document JSONL digest without materializing a corpus."""
     checksum, count = hashlib.sha256(), 0
@@ -189,6 +196,65 @@ def stage_scale_payload(name, source, payload, manifest, source_verified, docume
     write_json(payload / "publication.json", publication)
     selected.append("publication.json")
     return selected
+
+
+def stage_aol_payload(source, payload, manifest):
+    """Stage only the validated, non-text AOL derivatives for public release."""
+    source, payload = Path(source), Path(payload)
+    payload.mkdir(parents=True, exist_ok=True)
+    selected = []
+    for name in ("doc_ids.txt", "qrels.parquet", "manifest.json"):
+        destination = payload / name
+        shutil.copyfile(source / name, destination)
+        selected.append(name)
+    split_destination = payload / "splits/query_roles.json"
+    split_destination.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(source / "splits/query_roles.json", split_destination)
+    selected.append("splits/query_roles.json")
+
+    # Keep chronology and opaque IDs, but deliberately drop query_text and all
+    # recovered document text from the public payload.
+    columns = ["event_id", "week", "timestamp", "user_cluster", "query_id",
+               "group_id", "doc_id", "doc_row", "rank", "clicked"]
+    events = pq.read_table(source / "temporal_events.parquet", columns=columns)
+    pq.write_table(events, payload / "temporal_events_redacted.parquet", compression="zstd")
+    selected.append("temporal_events_redacted.parquet")
+    publication = {
+        "layout": AOL_PUBLICATION_RECIPE["layout"],
+        "source_release_hash": manifest["release_hash"],
+        "document_rows": manifest["counts"]["documents"],
+        "event_rows": manifest["counts"]["selected_events"],
+        "opaque_user_field": "user_cluster",
+        "redacted_fields": ["query_text"],
+        "excluded_local_files": ["documents.jsonl", "lookup.sqlite", "queries.parquet",
+                                 "temporal_events.parquet"],
+        "public_text_policy": "no AOL query text or recovered web text",
+    }
+    write_json(payload / "publication.json", publication)
+    selected.append("publication.json")
+    return selected
+
+
+def _aol_card(manifest, repo_id, release):
+    return f"""---
+license: other
+language: [en]
+task_categories: [text-retrieval]
+---
+# Validated MixIndex AOL-IA metadata release
+
+This is a redacted, checksummed metadata release derived from [AOL-IA]({AOL_PUBLICATION_RECIPE['source_url']})
+for the MixIndex temporal pilot. It contains opaque document/query/group IDs,
+chronology metadata, qrels and split roles. It deliberately excludes AOL query text,
+user identifiers and recovered web-document text; the validated raw preparation stays
+local under the project data policy.
+
+The release contains {manifest['counts']['documents']:,} selected document IDs and
+{manifest['counts']['selected_events']:,} selected temporal events across
+{manifest['counts']['weeks']} weeks. `publication.json` lists the redaction policy;
+`manifest.json` contains source checksums and aggregate recovery counts.
+Release: `{release}`. Repository: `{repo_id}`.
+"""
 
 
 def _scale_card(name, release, manifest, repo_id, documents_repo_id=None):
@@ -352,11 +418,84 @@ def publish_scale_dataset(name, cfg, root):
         return receipt
 
 
+def publish_aol_dataset(cfg, root):
+    """Publish and verify a redacted AOL-IA metadata release."""
+    source = Path(cfg["paths"]["data"]) / "processed" / "aol-ia"
+    manifest = validate_prepared(source)
+    release = manifest["release_hash"]
+    raw = Path(cfg["paths"]["data"]) / "raw" / "aol-ia"
+    for filename, record in (("aol-data.tar.gz", manifest["source"]["archive_file"]),
+                             ("aol.id2wb.tsv.gz", manifest["source"]["id2wb_file"])):
+        if file_digest(raw / filename) != record["sha256"]:
+            raise ValueError(f"Raw AOL source differs from validated manifest: {filename}")
+    api, namespace = get_hf_client(root)
+    repo_id = f"{namespace}/mixindex-data-aol-ia"
+    receipt_path = Path(cfg["paths"]["state"]) / f"hf-dataset-aol-ia-{release}.json"
+    with file_lock(receipt_path.with_suffix(".lock")):
+        ensure_repo(api, repo_id, cfg["sync"])
+        if receipt_path.exists() and read_json(receipt_path).get("status") == "VERIFIED":
+            return read_json(receipt_path)
+        payload = Path(cfg["paths"]["staging"]) / f"dataset-aol-ia-{release}"
+        selected = stage_aol_payload(source, payload, manifest)
+        from ..io import atomic_bytes
+        atomic_bytes(payload / "README.md", _aol_card(manifest, repo_id, release).encode())
+        selected.append("README.md")
+        records = {filename: {"bytes": (payload / filename).stat().st_size,
+                              "sha256": file_digest(payload / filename)}
+                   for filename in selected}
+        bundle = prepare_bundle(
+            ArtifactBundle(
+                f"data-aol-ia-{release[:12]}", payload,
+                {"run_id": f"data-aol-ia-{release[:12]}",
+                 "compute_status": "COMPUTE_DONE", "files": records},
+            ),
+            Path(cfg["paths"]["staging"]) / "dataset-bundles",
+        )
+        prefix = f"releases/{release}"
+        revision = api.upload_folder(
+            repo_id=repo_id, repo_type="dataset", folder_path=str(bundle.path),
+            path_in_repo=prefix, commit_message=f"Publish validated AOL-IA metadata {release[:12]}"
+        ).oid
+        remote = [{"repo_id": repo_id, "prefix": prefix, "revision": revision,
+                   "files": list(bundle.manifest["files"])}]
+        verify_remote_bundle(api, remote, bundle.manifest)
+        marker = {"release_hash": release, "revision": revision,
+                  "manifest_sha256": file_digest(bundle.path / "artifact_manifest.json")}
+        write_json(payload / "COMPLETED.json", marker)
+        completion_revision = api.upload_file(
+            repo_id=repo_id, repo_type="dataset", path_in_repo=prefix + "/COMPLETED.json",
+            path_or_fileobj=str(payload / "COMPLETED.json"),
+            commit_message="Verify validated AOL-IA metadata release",
+        ).oid
+        check = hf_hub_download(repo_id, prefix + "/COMPLETED.json", repo_type="dataset",
+                                 revision=completion_revision, token=api.token, force_download=True)
+        if read_json(check) != marker:
+            raise ValueError("AOL dataset completion marker failed verification")
+        final_revision = api.upload_file(
+            repo_id=repo_id, repo_type="dataset", path_in_repo="README.md",
+            path_or_fileobj=str(payload / "README.md"),
+            commit_message="Describe redacted AOL-IA metadata release",
+        ).oid
+        root_card = hf_hub_download(repo_id, "README.md", repo_type="dataset",
+                                    revision=final_revision, token=api.token, force_download=True)
+        if file_digest(root_card) != file_digest(payload / "README.md"):
+            raise ValueError("Published AOL dataset card differs")
+        receipt = {"status": "VERIFIED", "dataset": "aol-ia", "repo_id": repo_id,
+                   "release_hash": release, "payload_revision": revision,
+                   "revision": final_revision, "files": records,
+                   "publication": "redacted-temporal-metadata-v1",
+                   "hf_url": f"https://huggingface.co/datasets/{repo_id}"}
+        write_json(receipt_path, receipt)
+        return receipt
+
+
 def publish_dataset(name, cfg, root):
     # Raw upstream copies and pretrained weights never enter automatic run bundles.
     # This command is a separate, explicitly requested dataset publication.
     if name in SCALE_PUBLICATION_RECIPES:
         return publish_scale_dataset(name, cfg, root)
+    if name == "aol-ia":
+        return publish_aol_dataset(cfg, root)
     source = Path(cfg["paths"]["data"]) / "processed" / name
     if name not in BEIR_PUBLICATION_RECIPES:
         raise ValueError("Dataset redistribution recipe must be verified for this release before publishing")
