@@ -11,7 +11,8 @@ import psutil
 
 def _snapshot(root):
     records = []
-    for name in ("downloaded_docs", "downloaded_docs_http", "downloaded_docs_targeted"):
+    for name in ("downloaded_docs", "downloaded_docs_http", "downloaded_docs_targeted",
+                 "downloaded_docs_targeted_https"):
         path = root / "data/raw/aol-ia" / name
         if not path.exists():
             continue

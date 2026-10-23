@@ -145,7 +145,8 @@ def prepare_aol_dataset(cfg, root):
     raw = Path(cfg["paths"]["data"]) / "raw" / "aol-ia"
     archive_path = raw / "aol-data.tar.gz"
     id2wb_path = raw / "aol.id2wb.tsv.gz"
-    recovery_options = ((raw / "downloaded_docs_targeted", "http-targeted"),
+    recovery_options = ((raw / "downloaded_docs_targeted_https", "https-targeted"),
+                        (raw / "downloaded_docs_targeted", "http-targeted"),
                         (raw / "downloaded_docs_http", "http"),
                         (raw / "downloaded_docs", "https"))
     completed_recovery = [(path, transport) for path, transport in recovery_options
