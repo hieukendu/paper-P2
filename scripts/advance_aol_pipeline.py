@@ -47,7 +47,7 @@ def _recovery_status():
 
 
 def _cli(*args):
-    return [sys.executable, "-m", "mixindex", "--root", str(ROOT), *args]
+    return [sys.executable, "-m", "mixindex.cli", "--root", str(ROOT), *args]
 
 
 def _run(label, command):
