@@ -142,7 +142,10 @@ def prepare_aol_dataset(cfg, root):
     raw = Path(cfg["paths"]["data"]) / "raw" / "aol-ia"
     archive_path = raw / "aol-data.tar.gz"
     id2wb_path = raw / "aol.id2wb.tsv.gz"
-    downloaded_path = raw / "downloaded_docs"
+    recovery_options = ((raw / "downloaded_docs_http", "http"),
+                        (raw / "downloaded_docs", "https"))
+    completed_recovery = [(path, transport) for path, transport in recovery_options
+                          if (path / "_done").exists()]
     if not archive_path.exists():
         raise ValueError("AOL_SOURCE_MISSING: aol-data.tar.gz is not downloaded")
     if not id2wb_path.exists():
@@ -151,8 +154,9 @@ def prepare_aol_dataset(cfg, root):
         raise ValueError("AOL_SOURCE_INVALID: query-log archive checksum differs")
     if file_digest(id2wb_path, "md5") != AOL_ID2WB_MD5:
         raise ValueError("AOL_SOURCE_INVALID: id2wb checksum differs")
-    if not (downloaded_path / "_done").exists():
+    if not completed_recovery:
         raise ValueError("AOL_RECOVERY_INCOMPLETE: aolia-tools has not recovered all documents")
+    downloaded_path, recovery_transport = completed_recovery[0]
 
     seed = int(cfg["splits"]["master_seed"])
     selected_doc_ids = _select_aol_documents(downloaded_path, AOL_DOCUMENT_CAP, seed)
@@ -310,6 +314,8 @@ def prepare_aol_dataset(cfg, root):
                            "sha256": file_digest(id2wb_path),
                            "md5": file_digest(id2wb_path, "md5")},
             "recovery_tool": "terrierteam/aolia-tools",
+            "recovery_transport": recovery_transport,
+            "recovery_directory": downloaded_path.name,
         }
         counts = {
             "documents": AOL_DOCUMENT_CAP, "recovered_documents": recovered_documents,
