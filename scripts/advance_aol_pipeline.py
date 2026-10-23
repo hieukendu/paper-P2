@@ -34,7 +34,8 @@ def _log(message):
 
 def _recovery_status():
     root = ROOT / "data/raw/aol-ia"
-    paths = (root / "downloaded_docs_http", root / "downloaded_docs")
+    paths = (root / "downloaded_docs_targeted",
+             root / "downloaded_docs_http", root / "downloaded_docs")
     status = []
     for path in paths:
         if not path.exists():

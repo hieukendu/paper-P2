@@ -145,7 +145,8 @@ def prepare_aol_dataset(cfg, root):
     raw = Path(cfg["paths"]["data"]) / "raw" / "aol-ia"
     archive_path = raw / "aol-data.tar.gz"
     id2wb_path = raw / "aol.id2wb.tsv.gz"
-    recovery_options = ((raw / "downloaded_docs_http", "http"),
+    recovery_options = ((raw / "downloaded_docs_targeted", "http-targeted"),
+                        (raw / "downloaded_docs_http", "http"),
                         (raw / "downloaded_docs", "https"))
     completed_recovery = [(path, transport) for path, transport in recovery_options
                           if (path / "_done").exists()]
@@ -160,6 +161,12 @@ def prepare_aol_dataset(cfg, root):
     if not completed_recovery:
         raise ValueError("AOL_RECOVERY_INCOMPLETE: aolia-tools has not recovered all documents")
     downloaded_path, recovery_transport = completed_recovery[0]
+    recovery_metadata = {}
+    recovery_metadata_path = downloaded_path / "recovery_metadata.json"
+    if recovery_metadata_path.exists():
+        recovery_metadata = json.loads(recovery_metadata_path.read_text())
+        if recovery_metadata.get("published") is not False:
+            raise ValueError("AOL_RECOVERY_INVALID: candidate metadata is publishable")
 
     seed = int(cfg["splits"]["master_seed"])
     selected_doc_ids = _select_aol_documents(downloaded_path, AOL_DOCUMENT_CAP, seed)
@@ -320,6 +327,15 @@ def prepare_aol_dataset(cfg, root):
             "recovery_transport": recovery_transport,
             "recovery_directory": downloaded_path.name,
         }
+        if recovery_metadata:
+            source["recovery_scope"] = {
+                "scope": recovery_metadata.get("scope"),
+                "selection": recovery_metadata.get("selection"),
+                "seed": recovery_metadata.get("seed"),
+                "candidate_documents": recovery_metadata.get("candidate_documents"),
+                "candidate_sha256": recovery_metadata.get("candidate_sha256"),
+                "published": False,
+            }
         counts = {
             "documents": AOL_DOCUMENT_CAP, "recovered_documents": recovered_documents,
             "source_events": source_events, "source_users": len(source_users),
@@ -333,6 +349,9 @@ def prepare_aol_dataset(cfg, root):
             "weeks": AOL_WEEKS, "start_date": start_date.isoformat(),
             "end_date": last_time.date().isoformat(),
         }
+        if recovery_metadata:
+            counts["recovery_candidate_documents"] = recovery_metadata.get(
+                "candidate_documents")
         artifacts = {}
         for file in sorted(stage.rglob("*")):
             if file.is_file():
