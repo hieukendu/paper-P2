@@ -22,7 +22,7 @@ from .index import ExactIndex, select_search_config
 from .io import digest, file_digest, read_json, write_json
 from .maps import fit_global_map
 from .migration import bootstrap_migration, emit_checkpoint, restore_migration, run_migration
-from .progress import update_checklist
+from .progress import remove_checklist, update_checklist
 from .runtime import (cost_scope, probe_encoder, probe_hardware, probe_storage, probe_threads,
                       require_target_hardware, target_hardware_matches)
 from .vectors import (PaidEmbeddingAccessor, encode_corpus, encode_query_pool, vector_cache_key)
@@ -47,6 +47,10 @@ def finalize_run(run_dir, summary, cfg, root):
     # to the scientific checklist, and large transient artifacts are removed
     # after the failure summary is retained for reconciliation.
     if summary.get("compute_status") != "COMPUTE_DONE":
+        # A failed/cancelled attempt is local diagnostics only.  Remove the
+        # transient RUNNING row so checklist.md contains only completed,
+        # remotely verified scientific results.
+        remove_checklist(root, run_dir.name)
         for child in tuple(run_dir.iterdir()):
             if child.name not in {"summary.json", "config.lock.json", "environment.json", "source"}:
                 if child.is_dir():

@@ -98,7 +98,7 @@ def freeze_common_manifest(cfg, root, source_run):
     return manifest
 
 
-def load_common_manifest(cfg, root, source_run=None):
+def load_common_manifest(cfg, root, source_run=None, validated_releases=None):
     root = Path(root)
     path = manifest_path(cfg, root)
     if not path.exists():
@@ -118,8 +118,15 @@ def load_common_manifest(cfg, root, source_run=None):
     rows = np.asarray(np.load(rows_path, allow_pickle=False), dtype=np.int64)
     docs = root / "data" / "processed" / "msmarco-docs-v1"
     orcas = root / "data" / "processed" / "orcas"
-    docs_manifest = validate_prepared(docs)
-    orcas_manifest = validate_prepared(orcas)
+    if validated_releases is None:
+        docs_manifest = validate_prepared(docs)
+        orcas_manifest = validate_prepared(orcas)
+    else:
+        docs_manifest = validated_releases["documents"]
+        orcas_manifest = validated_releases["orcas"]
+        if (docs_manifest.get("status") != "VALIDATED"
+                or orcas_manifest.get("status") != "VALIDATED"):
+            raise ValueError("SCALE_MANIFEST_INVALID: parent release attestation is not validated")
     if (len(rows) != DOCUMENT_CAP or manifest.get("document_rows") != DOCUMENT_CAP
             or manifest.get("documents_release_hash") != docs_manifest["release_hash"]
             or manifest.get("orcas_release_hash") != orcas_manifest["release_hash"]

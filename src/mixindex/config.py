@@ -179,7 +179,9 @@ def validate_tuning_profile(task, cfg, profiles):
     settings = entry["selections"]
     if not settings.get("target_hardware_pass"):
         raise ValueError("Official execution requires a profile measured on target hardware")
-    if cfg["search"]["backend"] == "hnsw" and settings.get("ann_status") != "PASS":
+    parent_ann_gate = bool(task.get("allow_ann_from_verified_parent"))
+    if (cfg["search"]["backend"] == "hnsw" and settings.get("ann_status") != "PASS"
+            and not parent_ann_gate):
         raise ValueError("ANN_GATE_FAILED: exact tasks remain independently eligible")
     selected_map = settings.get("map", {}).get(cfg["mapping"]["kind"])
     if selected_map and selected_map["lr"] is not None and cfg["mapping"]["lr"] != selected_map["lr"]:

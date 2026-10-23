@@ -314,6 +314,9 @@ def run_single(task, root):
     if task["experiment"] == "E4":
         from .experiments_e4 import run_scale_task
         return run_scale_task(cfg, root)
+    if task["experiment"] == "E5":
+        from .experiments_e5 import run_e5_cell
+        return run_e5_cell(cfg, root)
     raise NotImplementedError("This experiment branch has not yet been integrated")
 
 
@@ -348,7 +351,7 @@ def run_queue(cfg, root, max_compute_jobs=1, once=False, only_task_ids=None):
                         allowed, reason = False, "CONFIG_CHANGED_AFTER_ENQUEUE"
                     if task["experiment"] not in {"DATA_PREP", "MODEL_DOWNLOAD", "MODEL_SMOKE", "E0",
                                                   "E1", "CORE_SMOKE", "RUNTIME_PROBE", "T0", "E2_PREFLIGHT",
-                                                  "E2", "E3", "E4"}:
+                                                  "E2", "E3", "E4", "E5"}:
                         allowed, reason = False, "STAGE_NOT_IMPLEMENTED"
                     if task["measurement_mode"] == "exclusive" and alive:
                         allowed, reason = False, "WAITING_FOR_WORKER_AND_UPLOAD_DRAIN"

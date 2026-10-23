@@ -83,7 +83,11 @@ class RowSubsetDocumentStore:
     def __init__(self, base, rows):
         self.base = base
         self.rows = tuple(int(row) for row in rows)
-        if any(row < 0 or row >= len(base) for row in self.rows):
+        # Do not reopen the SQLite lookup database once per subset row.  The
+        # previous generator evaluated len(base) for every row, which turned
+        # a 50k-row scale view into tens of thousands of connection opens.
+        base_rows = len(base)
+        if any(row < 0 or row >= base_rows for row in self.rows):
             raise ValueError("Document subset row is outside the validated corpus")
         if len(set(self.rows)) != len(self.rows):
             raise ValueError("Document subset rows must be unique")

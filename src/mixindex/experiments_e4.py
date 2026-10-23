@@ -38,7 +38,7 @@ def _scale_paths(cfg):
     return data / "msmarco-docs-v1", data / "orcas"
 
 
-def _profile_context(cfg, root):
+def _profile_context(cfg, root, ann_parent_verified=False, validated_releases=None):
     root = Path(root)
     profile_hash = cfg["experiment"].get("profile_hash")
     if not profile_hash:
@@ -53,7 +53,8 @@ def _profile_context(cfg, root):
         raise ValueError("E4_PROFILE_REQUIRED: scale runtime batches are missing")
     profile_task = {"phase": "official", "profile_hash": profile_hash,
                     "tuning_scope": "scale", "input_refs": profile["inputs"],
-                    "variant_id": "primary", "overrides": {}}
+                    "variant_id": "primary", "overrides": {},
+                    "allow_ann_from_verified_parent": ann_parent_verified}
     validate_tuning_profile(profile_task, cfg, profiles)
     source_run = profile["selections"].get("source_run")
     if not source_run:
@@ -64,13 +65,17 @@ def _profile_context(cfg, root):
     if read_json(source_dir / "summary.json").get("compute_status") != "COMPUTE_DONE":
         raise ValueError("E4_PROFILE_REQUIRED: T0.scale is not compute-complete")
     docs, orcas = _scale_paths(cfg)
-    docs_manifest = validate_prepared(docs)
-    orcas_manifest = validate_prepared(orcas)
+    if validated_releases is None:
+        docs_manifest = validate_prepared(docs)
+        orcas_manifest = validate_prepared(orcas)
+    else:
+        docs_manifest = validated_releases["documents"]
+        orcas_manifest = validated_releases["orcas"]
     if orcas_manifest.get("documents_release_hash") != docs_manifest["release_hash"]:
         raise ValueError("E4_INPUT_RELEASE_MISMATCH: ORCAS uses another document release")
     if cfg["experiment"].get("scale_variant") != SCALE_VARIANT:
         raise ValueError("E4_SCALE_VARIANT_REQUIRED: e4e567_scale_v3_50k")
-    scale_manifest = load_common_manifest(cfg, root, source_run)
+    scale_manifest = load_common_manifest(cfg, root, source_run, validated_releases)
     if cfg["experiment"].get("scale_manifest_hash") != scale_manifest["manifest_hash"]:
         raise ValueError("E4_SCALE_MANIFEST_HASH_REQUIRED: config does not pin manifest")
     return {"profile_hash": profile_hash, "profile": profile, "source_run": source_run,
@@ -92,7 +97,10 @@ def _artifact_hash(run_dir):
     """Hash the completed E4 payload without creating a summary hash cycle."""
     files = {}
     for path in sorted(Path(run_dir).rglob("*")):
-        if not path.is_file() or path.name == "summary.json" or "source" in path.parts:
+        # sync.json is added by finalize_run after this identity is computed;
+        # it is a receipt, not part of the immutable E4 compute payload.
+        if (not path.is_file() or path.name in {"summary.json", "sync.json"}
+                or "source" in path.parts):
             continue
         files[str(path.relative_to(run_dir))] = file_digest(path)
     return digest(files)

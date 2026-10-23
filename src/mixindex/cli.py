@@ -37,7 +37,7 @@ def main(argv=None):
     restore.add_argument("--output", type=Path, required=True)
     commands.add_parser("status", help="Show local environment, inputs and synchronization status")
     run = commands.add_parser("run", help="Run a stage with hardware and input gates")
-    run.add_argument("--experiment", choices=["E0", "E1", "CORE_SMOKE", "T0", "E2_PREFLIGHT", "E2", "E4"], required=True)
+    run.add_argument("--experiment", choices=["E0", "E1", "CORE_SMOKE", "T0", "E2_PREFLIGHT", "E2", "E4", "E5"], required=True)
     run.add_argument("--config", required=True)
     run.add_argument("--development-hardware", action="store_true",
                      help="Label development diagnostics on other hardware; never certify target gates")
@@ -48,7 +48,7 @@ def main(argv=None):
     presetup.add_argument("--once", action="store_true")
     presetup.add_argument("--development-hardware", action="store_true")
     plan = commands.add_parser("plan", help="Write the declared exact FiQA experiment matrix without starting it")
-    plan.add_argument("--experiment", choices=["E2", "E3", "E4"], required=True)
+    plan.add_argument("--experiment", choices=["E2", "E3", "E4", "E5"], required=True)
     plan.add_argument("--config", default="configs/experiments/e2.yaml")
     plan.add_argument("--output", type=Path, default=Path("configs/jobs.yaml"))
     enqueue = commands.add_parser("enqueue", help="Add explicit immutable jobs without executing dependencies")
@@ -82,6 +82,9 @@ def main(argv=None):
             elif args.experiment == "E4":
                 from .experiments_e4 import build_scale_tasks
                 tasks = build_scale_tasks(cfg, root)
+            elif args.experiment == "E5":
+                from .experiments_e5 import build_e5_tasks
+                tasks = build_e5_tasks(cfg, root)
             else:
                 tasks = build_static_tasks(cfg, root)
             atomic_bytes(args.output, yaml.safe_dump({"jobs": tasks}, sort_keys=False).encode())
@@ -124,6 +127,12 @@ def main(argv=None):
                 from .experiments_e4 import run_scale_task
                 cfg["execution"]["require_target"] = not args.development_hardware
                 result = run_scale_task(cfg, root)
+                print(json.dumps(result, indent=2))
+                return 0 if result["compute_status"] == "COMPUTE_DONE" else 1
+            if args.experiment == "E5":
+                from .experiments_e5 import run_e5_cell
+                cfg["execution"]["require_target"] = not args.development_hardware
+                result = run_e5_cell(cfg, root)
                 print(json.dumps(result, indent=2))
                 return 0 if result["compute_status"] == "COMPUTE_DONE" else 1
             from .experiments import run_presetup

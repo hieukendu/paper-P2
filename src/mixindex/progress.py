@@ -36,3 +36,18 @@ def update_checklist(project_root, task_id, result):
         rows = [line for line in rows if not re.match(rf"^- \[[ x]\] {re.escape(task_id)} —", line)]
         rows.append(row)
         atomic_bytes(path, (before + begin + "\n" + "\n".join(rows) + "\n" + end + after).encode())
+
+
+def remove_checklist(project_root, task_id):
+    """Remove a transient running row without reporting a failed experiment."""
+    path = Path(project_root) / "checklist.md"
+    with file_lock(path.with_suffix(".lock")):
+        text = path.read_text()
+        begin, end = "<!-- progress:begin -->", "<!-- progress:end -->"
+        before, rest = text.split(begin, 1)
+        block, after = rest.split(end, 1)
+        rows = [line for line in block.splitlines()
+                if not re.match(rf"^- \[[ x]\] {re.escape(task_id)} —", line)]
+        payload = "\n".join(rows).strip("\n")
+        replacement = before + begin + ("\n" + payload if payload else "") + "\n" + end + after
+        atomic_bytes(path, replacement.encode())
