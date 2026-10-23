@@ -99,6 +99,9 @@ def _iter_aol_recovered_documents(path):
                 if not all(isinstance(record.get(key), str) for key in
                            ("doc_id", "title", "text", "url", "wb_url")):
                     raise ValueError(f"AOL_RECOVERY_INVALID: malformed document in {file.name}")
+                expected_id = hashlib.md5(record["url"].encode()).hexdigest()[:12]
+                if record["doc_id"] != expected_id:
+                    raise ValueError(f"AOL_RECOVERY_INVALID: document ID/URL mismatch in {file.name}")
                 yield record
 
 
