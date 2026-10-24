@@ -4,12 +4,12 @@ The upstream downloader intentionally rewrites Wayback URLs to HTTPS.  This
 wrapper changes only the transport at the requests boundary; document IDs,
 capture timestamps, source mapping and parser remain those of aolia-tools.
 The caller must use a separate output directory from any other downloader.
-The validated conservative recovery profile is one worker with a 0.5-second
-inter-request delay (plus the pinned downloader's retry/backoff controls):
-pass ``--parallel 1 --request_delay 0.5``.  A zero delay caused repeated
-Wayback 5xx responses in the bounded canary, so it must not be used for a
-recovery run.  The wrapper consumes the delay option before delegating to the
-pinned tool.
+The current conservative recovery profile is one worker with a 5-second
+inter-request delay and a 180-second backoff after one error:
+pass ``--parallel 1 --request_delay 5.0 --backoff_threshold 1
+--backoff_duration 180``.  Faster profiles produced persistent Wayback 429
+responses, so they are not used for this recovery run.  The wrapper consumes
+the delay option before delegating to the pinned tool.
 """
 
 import re
