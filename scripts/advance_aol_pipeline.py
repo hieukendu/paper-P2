@@ -1,6 +1,7 @@
 """Advance AOL preparation only after the real recovery completion marker."""
 
 from datetime import datetime, timezone
+import fcntl
 import json
 from pathlib import Path
 import subprocess
@@ -12,6 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 STATE = ROOT / "state"
 LOG = STATE / "aol-pipeline.log"
 PROGRESS = STATE / "aol-pipeline-progress.json"
+LOCK = STATE / "aol-pipeline.lock"
 
 
 def _now():
@@ -107,7 +109,7 @@ def _enqueue_and_run_e6():
                and row["handle_alive"] is False for row in records.values())
 
 
-def main():
+def _main_locked():
     _log("AOL gated advance worker started")
     last_report = 0.0
     while True:
@@ -148,6 +150,18 @@ def main():
         return 1
     _log("E6 passed all required task gates; E7 remains intentionally unopened")
     return 0
+
+
+def main():
+    """Allow exactly one recovery-to-E6 worker past the wait stage."""
+    LOCK.parent.mkdir(parents=True, exist_ok=True)
+    with LOCK.open("w") as stream:
+        try:
+            fcntl.flock(stream.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            _log("Another AOL gated advance worker owns the lock; exiting")
+            return 0
+        return _main_locked()
 
 
 if __name__ == "__main__":
