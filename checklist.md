@@ -86,10 +86,12 @@ Tick compute khi mọi required cells/gates đã hoàn tất hợp lệ. Tick sy
 - [x] E5.sync — Toàn bộ 12 required primary states/results đã `sync=VERIFIED` trên HF; chỉ các run pass được report/upload.
 - [ ] E6.compute — `e4e567_scale_v3_50k`: recovered AOL temporal study8 tuần/7 decisions, cap50k documents/50k events mỗi tuần và coverage hợp lệ.
 - [ ] E6.sync — Temporal states/metrics/coverage artifacts đã sync verified.
-- [ ] E7.compute — `e4e567_scale_v3_50k`: 20 representative compact cells; NQ/HotpotQA/FEVER cap50k documents + 500 queries/case và required baselines hoàn tất.
-- [ ] E7.sync — Matrix weights/results/aggregate tables đã sync verified.
+- [x] E7.compute — `e4e567_scale_v3_50k`: 20/20 representative compact cells đã `COMPUTE_DONE`, correctness/provenance gates PASS và đối chiếu `expect.md` là **KHỚP**; các outcome quality vẫn được giữ theo từng case/reduced-coverage scope, không tạo positive performance claim tổng quát.
+- [x] E7.sync — Toàn bộ 20/20 E7 bundles, matrix weights/results và source/config artifacts đã `sync=VERIFIED` trên HF; chỉ các run đã verify được report/upload.
 
 E5 aggregate audit (reduced-scale pilot, traffic seed 101): primary `ARR@10` tại 10% accessed có mean random=`0.26565` (range `0.26536–0.26614`), degree=`0.26469` (`0.26462–0.26482`), read=`0.28833` (`0.28750–0.28946`) và greedy=`0.26351` (`0.26202–0.26556`) trên ba map seeds. Tất cả 12 cells có `completion_full_new_arr=1.0`, nhưng judged metrics là `N/A_REDUCED_COVERAGE` và `performance_claim=false`; vì vậy E5 xác nhận correctness/provenance/operability và comparative pilot behavior, **không** xác nhận claim greedy thắng.
+
+E7 aggregate audit (reduced-scale pilot): 20/20 representative cells đã `COMPUTE_DONE + sync=VERIFIED` trên cùng scale/pipeline contract. Kết quả được giữ theo dataset/model/mapping; các case có qrel coverage thấp được báo là diagnostic, không gộp thành full-BEIR hoặc positive performance claim.
 
 ## Run đang chạy và run đã xong
 
@@ -241,6 +243,8 @@ Agent/runner cập nhật block sau mỗi run hoặc sync transition. Checkbox c
 - [x] E7-nq-bge-residual_mlp-random-m17-t101-be6f76d742d0 — compute=COMPUTE_DONE; sync=VERIFIED; outcome=inconclusive; expect=KHỚP; HF=https://huggingface.co/datasets/deadgod3005/mixindex-runs-005/tree/dbb2345ce76d54937b8cbdbeec37b285e8956604/runs/E7-nq-bge-residual_mlp-random-m17-t101-be6f76d742d0/9ae852d96021ee2f71392d7a4cca931e0fa4585eb997fa6ca1bd1d0fa24391b4
 - [x] E7-nq-bge-residual_mlp-greedy-m17-t101-83a7f24390f5 — compute=COMPUTE_DONE; sync=VERIFIED; outcome=inconclusive; expect=KHỚP; HF=https://huggingface.co/datasets/deadgod3005/mixindex-runs-005/tree/f7c9bee88072906761275f0e363481d937121def/runs/E7-nq-bge-residual_mlp-greedy-m17-t101-83a7f24390f5/10672c9abbc5c68086b99be015b1bb92f279a058557c158e3a17e9c4f1e2b20d
 - [x] E7-fever-bge-residual_mlp-random-m17-t101-ef1d95a51b3e — compute=COMPUTE_DONE; sync=VERIFIED; outcome=inconclusive; expect=KHỚP; HF=https://huggingface.co/datasets/deadgod3005/mixindex-runs-005/tree/fca3fe7599ab54e168bd9047a16f10bd9f6b29d7/runs/E7-fever-bge-residual_mlp-random-m17-t101-ef1d95a51b3e/d432a132480d1783c42d981a900589244833aac9761e78c2d756739a3f1006b2
+- [x] E7-fever-bge-residual_mlp-greedy-m17-t101-dc4a3fc901cf — compute=COMPUTE_DONE; sync=VERIFIED; outcome=inconclusive; expect=KHỚP; HF=https://huggingface.co/datasets/deadgod3005/mixindex-runs-005/tree/a0139c7246bc987f6d5568c089cc366c6e7cedb7/runs/E7-fever-bge-residual_mlp-greedy-m17-t101-dc4a3fc901cf/641396e621d5162d57aab8a4be608ebc3701caf0ab15248b2fb1f9bf40c36413
+- [x] E7-fever-bge-op-greedy-m17-t101-32184a73f105 — compute=COMPUTE_DONE; sync=VERIFIED; outcome=inconclusive; expect=KHỚP; HF=https://huggingface.co/datasets/deadgod3005/mixindex-runs-005/tree/2dcfbc8659c6b85d87e7ac5c2cefae1a18ff3122/runs/E7-fever-bge-op-greedy-m17-t101-32184a73f105/9d73d0d150ca283f7b386cd0588dbc6fab13a9c42edd7fe733c1b2701c15fb7f
 <!-- progress:end -->
 
 <!-- expect-audit-policy:begin -->

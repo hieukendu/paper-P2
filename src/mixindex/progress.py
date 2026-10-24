@@ -20,13 +20,8 @@ def mark_module_complete(project_root, module_id, verification_summary):
 def update_checklist(project_root, task_id, result):
     path = Path(project_root) / "checklist.md"
     compute = result["compute_status"]
-    done = "x" if compute == "COMPUTE_DONE" else " "
     sync = result.get("sync_status", "NOT_READY")
-    url = result.get("hf_url", "pending")
-    expectation = result.get("expect_classification")
-    expectation_text = f"; expect={expectation}" if expectation else ""
-    row = (f"- [{done}] {task_id} — compute={compute}; sync={sync}; "
-           f"outcome={result.get('outcome', 'diagnostic')}{expectation_text}; HF={url}")
+    eligible = compute == "COMPUTE_DONE" and sync == "VERIFIED"
     with file_lock(path.with_suffix(".lock")):
         text = path.read_text()
         begin, end = "<!-- progress:begin -->", "<!-- progress:end -->"
@@ -34,7 +29,13 @@ def update_checklist(project_root, task_id, result):
         block, after = rest.split(end, 1)
         rows = [line for line in block.splitlines() if line.startswith("- [")]
         rows = [line for line in rows if not re.match(rf"^- \[[ x]\] {re.escape(task_id)} —", line)]
-        rows.append(row)
+        if eligible:
+            url = result.get("hf_url", "pending")
+            expectation = result.get("expect_classification")
+            expectation_text = f"; expect={expectation}" if expectation else ""
+            row = (f"- [x] {task_id} — compute={compute}; sync={sync}; "
+                   f"outcome={result.get('outcome', 'diagnostic')}{expectation_text}; HF={url}")
+            rows.append(row)
         atomic_bytes(path, (before + begin + "\n" + "\n".join(rows) + "\n" + end + after).encode())
 
 
