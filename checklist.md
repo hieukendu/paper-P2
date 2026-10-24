@@ -22,10 +22,12 @@ Checklist ở gốc project, bên ngoài `codex/`; dùng `PROJECT_ROOT/checklist
 - [ ] M09 — E0–E7 runner/config matrix và finalize hooks.
 - [ ] M10 — Dynamic queue, tối đa2 compute jobs khi đủ resource, isolated measurement.
 - [x] M11 — HF auto-sync/configured-visibility repo rollover/verify/restore, live tiny round-trip.
-- [ ] M12 — Meaningful tests và acceptance gates.
+- [x] M12 — Meaningful tests và acceptance gates.
 - [ ] M13 — CLI wiring/runbook end-to-end; progress.py cập nhật đúng file này.
 - [ ] M14 — Scoped pre-setup, bounded tuning/forecast, immutable profiles và gate trước official.
 - [x] M15 — `compact_v1` run budget đã được khóa trong `codex/15_run_budget.md`, runner và jobs manifest.
+
+M12 acceptance audit (2026-10-24 14:51 UTC): `ruff check src tests`, Python `compileall` và full pytest đều pass; full suite kết thúc với **79 passed**. Các gate chỉ kiểm tra implementation/test artifacts, không mở rộng phạm vi claim khoa học hoặc thay thế các gate dữ liệu AOL/scale còn pending.
 
 ## Pre-setup và tuning trước nhóm thí nghiệm phụ thuộc
 
