@@ -66,4 +66,26 @@ tool = Path(__file__).resolve().parents[1] / "staging" / "aolia-tools" / "downlo
 if not tool.is_file():
     raise SystemExit(f"Pinned aolia-tools downloader is missing: {tool}")
 sys.argv[0] = str(tool)
-runpy.run_path(str(tool), run_name="__main__")
+
+
+def _run_pinned_downloader():
+    """Resume after the pinned sequential-backoff ``pool`` bug.
+
+    The pinned downloader calls ``pool.terminate()`` after consecutive HTTP
+    failures even when ``--parallel 1`` selected the built-in ``map`` path.
+    Its checkpoint file is append-only, so retrying the top-level invocation
+    is safe and resumes only IDs that are not already recorded.
+    """
+    while True:
+        try:
+            runpy.run_path(str(tool), run_name="__main__")
+            return
+        except UnboundLocalError as error:
+            if "local variable 'pool'" not in str(error):
+                raise
+            print("[WARNING] pinned sequential downloader backoff bug; "
+                  "resuming from done_ids.txt after 30 seconds", flush=True)
+            time.sleep(30.0)
+
+
+_run_pinned_downloader()
