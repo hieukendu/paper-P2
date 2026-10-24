@@ -261,6 +261,116 @@ profiles:
       source_run: T0-case-trec-covid-minilm_mpnet-0b33f894078e
       target_hardware_pass: true
       timing_ref: T0-case-trec-covid-minilm_mpnet-0b33f894078e/timing.json
+  5c9e024875573ce9ae9dc952744b1838a17945a435db41c23687d4666d64ce07:
+    inputs:
+      case_manifest_hash: 048602433f7ea06d995ec3821e133b6344e353561a646cef700665625e91be1a
+      dataset: fiqa
+      hardware:
+        cpu_cores: 16.0
+        devices:
+        - compute_capability:
+          - 9
+          - 0
+          name: NVIDIA H100 80GB HBM3
+          vram_total_bytes: 84929478656
+        hnsw_build:
+          commit: d9b3608c83d83b46c96e25088cb1d729b29dcfe9
+          sha256: adf8c94849c6015ad81ae58e7cddf2c9a99914ebeb60cb03aaf1986d43e762df
+          source: https://github.com/nmslib/hnswlib.git
+        packages:
+          hnswlib: 0.9.0
+          huggingface-hub: 0.34.4
+          numpy: 2.2.6
+          pyarrow: 20.0.0
+          scikit-learn: 1.6.1
+          scipy: 1.15.3
+          sentence-transformers: 4.1.0
+          torch: 2.6.0+cu124
+          transformers: 4.51.3
+        ram_limit_bytes: 268435456000
+        torch_cuda: '12.4'
+      models:
+        new:
+          adapter: sentence_transformer
+          dim: 768
+          document_prefix: ''
+          download_patterns:
+          - '*.json'
+          - '*.safetensors'
+          - '*.txt'
+          - '*.model'
+          - '*.md'
+          dtype: float32
+          max_tokens: 384
+          pooling: mean
+          query_prefix: ''
+          repo_id: sentence-transformers/all-mpnet-base-v2
+          resolved_revision: e8c3b32edf5434bc2275fc9bab85f82640a19130
+          trust_remote_code: false
+        old:
+          adapter: sentence_transformer
+          dim: 384
+          document_prefix: ''
+          download_patterns:
+          - '*.json'
+          - '*.safetensors'
+          - '*.txt'
+          - '*.model'
+          - '*.md'
+          dtype: float32
+          max_tokens: 256
+          pooling: mean
+          query_prefix: ''
+          repo_id: sentence-transformers/all-MiniLM-L6-v2
+          resolved_revision: 1110a243fdf4706b3f48f1d95db1a4f5529b4d41
+          trust_remote_code: false
+      pair: minilm_mpnet
+      release: 584640e32aecdf4ce3517078a50ac7e771025e768c8c21fd3ae824d0699c5058
+      split_hash: 44b9adf3317face605a7d9ce7bd875bfa88142dc4967a1cc2d5c4efbc2d22594
+    policy_hash: 106e032124fe933cd8d64c92e02b7901659ee5dd63f3245f7dc78076f7373053
+    scope: case.fiqa.minilm_mpnet
+    selections:
+      ann_status: N/A_EXACT
+      case_manifest_hash: 048602433f7ea06d995ec3821e133b6344e353561a646cef700665625e91be1a
+      case_manifest_path: data/processed/fiqa/manifests/e7_minilm_mpnet.json
+      correctness_pass: true
+      estimate_ref: T0-case-fiqa.minilm_mpnet-541418396b0f/estimate.json
+      local_restore_pass: true
+      lr_selection: validation_grid_v1
+      map:
+        la:
+          epochs: 50
+          kind: la
+          lr: 0.001
+          status: PASS
+          validation_loss: 0.8485973477363586
+        op:
+          epochs: 0
+          kind: op
+          lr: null
+          status: PASS
+          validation_loss: 0.7397976517677307
+        residual_mlp:
+          epochs: 27
+          kind: residual_mlp
+          lr: 0.001
+          status: PASS
+          validation_loss: 0.601942241191864
+      runtime:
+        batches:
+          new: 16
+          old: 64
+        probe_run: RUNTIME_PROBE-fiqa-minilm_mpnet-de5ba3b4bb6b
+        threads:
+          selected_threads: 1
+      search:
+        backend: exact
+        candidates: null
+        ef_search: null
+        status: N/A_EXACT
+      source_run: T0-case-fiqa.minilm_mpnet-541418396b0f
+      target_hardware_pass: true
+      timing_ref: T0-case-fiqa.minilm_mpnet-541418396b0f/timing.json
   a38d8e8b5b27686edceb4d80ab4822d3164545b1327bc29a35db0f687b87a0e3:
     inputs:
       dataset: fiqa
