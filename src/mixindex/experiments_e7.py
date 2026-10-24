@@ -357,8 +357,12 @@ def run_case_presetup(task, cfg):
         old_store, old_meta = _case_vector_store(
             prepared, rows, manifest, specs["old"], cfg, root, "old", timing)
         old = old_store.get_rows(np.arange(len(rows), dtype=np.int64))
-        pools = sample_document_pools(
-            [(prepared / "doc_ids.txt").read_text().splitlines()[int(row)] for row in rows], cfg)
+        # Materialize the validated corpus IDs once.  Re-reading the complete
+        # multi-million-row doc_ids.txt inside the 50k-row comprehension turns
+        # this setup into an accidental O(subset * corpus) scan.
+        all_doc_ids = (prepared / "doc_ids.txt").read_text().splitlines()
+        case_doc_ids = [all_doc_ids[int(row)] for row in rows]
+        pools = sample_document_pools(case_doc_ids, cfg)
         new_encoder = build_encoder(specs["new"], cfg["execution"]["device"], batches["new"])
 
         def live_source(requested):
@@ -385,8 +389,7 @@ def run_case_presetup(task, cfg):
         candidate["search"]["backend"] = "exact"
         with cost_scope("case_bootstrap_op", timing):
             state = bootstrap_migration(
-                doc_ids=[(prepared / "doc_ids.txt").read_text().splitlines()[int(row)]
-                         for row in rows],
+                doc_ids=case_doc_ids,
                 pools=pools, old_vectors=old, paid_accessor=accessor, cfg=candidate)
         checkpoint = emit_checkpoint(state, run_dir / "checkpoints", "bootstrap-op", digest(locked))
         restored_accessor = PaidEmbeddingAccessor(
