@@ -4,14 +4,15 @@ The upstream downloader intentionally rewrites Wayback URLs to HTTPS.  This
 wrapper changes only the transport at the requests boundary; document IDs,
 capture timestamps, source mapping and parser remain those of aolia-tools.
 The caller must use a separate output directory from any other downloader.
-The current conservative recovery profile is one worker with a 5-second
-inter-request delay and a 60-second pinned-tool backoff after one error; the
-wrapper additionally honors ``Retry-After`` and applies a bounded 180–900
-second 429 cooldown:
+The recovery profile starts with one worker and a 5-second inter-request
+delay, then ramps down by 0.5 seconds after each eight clean responses to a
+1-second floor.  Timeouts increase the delay again; the wrapper also honors
+``Retry-After`` and applies a bounded 180–900 second 429 cooldown:
 pass ``--parallel 1 --request_delay 5.0 --backoff_threshold 1
 --backoff_duration 60``.  Faster profiles produced persistent Wayback 429
-responses, so they are not used for this recovery run.  The wrapper consumes
-the delay option before delegating to the pinned tool.
+responses in earlier fixed-delay tests, so the adaptive controller is bounded
+and starts from the last known safe profile.  The wrapper consumes the delay
+option before delegating to the pinned tool.
 """
 
 from datetime import datetime, timezone
@@ -28,7 +29,11 @@ import requests
 _original_get = requests.Session.get
 _429_cooldown = 180.0
 _429_cooldown_max = 900.0
+_minimum_request_delay = 1.0
+_maximum_request_delay = 30.0
+_successes_per_speedup = 8
 _consecutive_429 = 0
+_success_streak = 0
 
 
 def _take_request_delay(argv):
@@ -73,10 +78,37 @@ def _retry_after_seconds(value):
 
 
 _request_delay, sys.argv = _take_request_delay(sys.argv)
+_current_request_delay = min(max(_request_delay, _minimum_request_delay),
+                             _maximum_request_delay)
+
+
+def _sleep_after_success():
+    """Ramp down cautiously after clean responses, never below one second."""
+    global _current_request_delay, _success_streak
+    _success_streak += 1
+    if _success_streak >= _successes_per_speedup:
+        _success_streak = 0
+        next_delay = max(_minimum_request_delay, _current_request_delay - 0.5)
+        if next_delay < _current_request_delay:
+            _current_request_delay = next_delay
+            print(f"[INFO] adaptive request delay={_current_request_delay:.1f}s "
+                  "after clean responses", flush=True)
+    if _current_request_delay > 0:
+        time.sleep(_current_request_delay)
+
+
+def _sleep_after_error():
+    """Add a small penalty for non-429 failures without entering a retry loop."""
+    global _current_request_delay, _success_streak
+    _success_streak = 0
+    _current_request_delay = min(_maximum_request_delay,
+                                 max(_request_delay, _current_request_delay + 1.0))
+    if _current_request_delay > 0:
+        time.sleep(_current_request_delay)
 
 
 def _http_wayback_get(session, url, *args, **kwargs):
-    global _consecutive_429
+    global _consecutive_429, _current_request_delay, _success_streak
     url = re.sub(r"^https://web\.archive\.org/web",
                  "http://web.archive.org/web", url)
     headers = dict(kwargs.get("headers") or {})
@@ -85,21 +117,22 @@ def _http_wayback_get(session, url, *args, **kwargs):
     try:
         response = _original_get(session, url, *args, **kwargs)
     except Exception:
-        if _request_delay > 0:
-            time.sleep(_request_delay)
+        _sleep_after_error()
         raise
     if response.status_code == 429:
         _consecutive_429 += 1
+        _success_streak = 0
+        _current_request_delay = min(_maximum_request_delay,
+                                     max(_request_delay, _current_request_delay * 2.0))
         retry_after = _retry_after_seconds(response.headers.get("Retry-After"))
         exponential = min(_429_cooldown * 2 ** (_consecutive_429 - 1), _429_cooldown_max)
-        cooldown = max(_request_delay, exponential, retry_after or 0.0)
+        cooldown = max(_current_request_delay, exponential, retry_after or 0.0)
         print(f"[WARNING] Wayback 429; wrapper cooldown={cooldown:.0f}s; "
               "honoring Retry-After when present", flush=True)
         time.sleep(cooldown)
     else:
         _consecutive_429 = 0
-        if _request_delay > 0:
-            time.sleep(_request_delay)
+        _sleep_after_success()
     return response
 
 
