@@ -295,7 +295,10 @@ def build_presetup_tasks(scope, cfg, root):
                         "resources": {"gpu_device": 0, "gpu_memory_gib": 16,
                                       "host_ram_gib": 24, "cpu_cores": 8,
                                       "disk_scratch_gib": 8, "io_heavy": False}}
-        t0_task = {**common, "task_id": f"T0.{scope}", "experiment": "T0",
+        # Keep the terminal T0 gate revisioned as well as its setup children.
+        # A failed model/download prerequisite must be retryable without
+        # mutating the immutable task record from the previous revision.
+        t0_task = {**common, "task_id": prefix, "experiment": "T0",
                    "config_overrides": deepcopy(overrides),
                    "depends_on": [runtime_task["task_id"]],
                    "measurement_mode": "exclusive",

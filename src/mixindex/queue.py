@@ -13,6 +13,7 @@ import psutil
 import yaml
 
 from .config import config_hash, load_config, load_tuning_profiles, validate_tuning_profile
+from .experiments import source_hash
 from .io import digest, file_lock, read_json, write_json
 from .runtime import effective_limits, target_hardware_matches
 
@@ -329,6 +330,7 @@ def run_single(task, root):
 def run_queue(cfg, root, max_compute_jobs=1, once=False, only_task_ids=None):
     state_path = Path(cfg["paths"]["state"]) / "tasks.json"
     processes = {}
+    current_source_hash = source_hash(root)
     # One parent owns admission. enqueue uses a separate short lock and can run concurrently.
     with file_lock(state_path.with_suffix(".queue.lock")):
         while True:
@@ -352,9 +354,18 @@ def run_queue(cfg, root, max_compute_jobs=1, once=False, only_task_ids=None):
                         row.update(status="FAILED", reason="DEPENDENCY_FAILED:" + ",".join(failed_dependencies))
                         continue
                     task_cfg = load_config(task["config"], overrides=task.get("config_overrides"), root=root)
-                    allowed, reason = can_admit(task, active, capacity, records, max_compute_jobs, task_cfg)
+                    # Immutable queue records from an older source/config
+                    # revision must be rejected before admission validation.
+                    # Some legacy official records predate input_refs; asking
+                    # the tuning validator to inspect them first can raise a
+                    # KeyError and stop unrelated current P2 work.
                     if config_hash(task_cfg) != task["config_hash"]:
-                        allowed, reason = False, "CONFIG_CHANGED_AFTER_ENQUEUE"
+                        row["reason"] = "CONFIG_CHANGED_AFTER_ENQUEUE"
+                        continue
+                    if task.get("source_hash") != current_source_hash:
+                        row["reason"] = "SOURCE_CHANGED_AFTER_ENQUEUE"
+                        continue
+                    allowed, reason = can_admit(task, active, capacity, records, max_compute_jobs, task_cfg)
                     if task["experiment"] not in {"DATA_PREP", "MODEL_DOWNLOAD", "MODEL_SMOKE", "E0",
                                                   "E1", "CORE_SMOKE", "RUNTIME_PROBE", "T0", "E2_PREFLIGHT",
                                                   "E2", "E3", "E4", "E5", "E6", "E7"}:

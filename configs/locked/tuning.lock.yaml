@@ -261,6 +261,579 @@ profiles:
       source_run: T0-case-trec-covid-minilm_mpnet-0b33f894078e
       target_hardware_pass: true
       timing_ref: T0-case-trec-covid-minilm_mpnet-0b33f894078e/timing.json
+  2742a810698ebcc574b4000783d58a5016bd4f00acb03c235c9884ed65fd3fb3:
+    inputs:
+      case_manifest_hash: ef26de3f1c6d9a8bc0e7c64045cc69e1ec22a1fa9181545d4f9d909a34f5612b
+      dataset: trec-covid
+      hardware:
+        cpu_cores: 16.0
+        devices:
+        - compute_capability:
+          - 9
+          - 0
+          name: NVIDIA H100 80GB HBM3
+          vram_total_bytes: 84929478656
+        hnsw_build:
+          commit: d9b3608c83d83b46c96e25088cb1d729b29dcfe9
+          sha256: adf8c94849c6015ad81ae58e7cddf2c9a99914ebeb60cb03aaf1986d43e762df
+          source: https://github.com/nmslib/hnswlib.git
+        packages:
+          hnswlib: 0.9.0
+          huggingface-hub: 0.34.4
+          numpy: 2.2.6
+          pyarrow: 20.0.0
+          scikit-learn: 1.6.1
+          scipy: 1.15.3
+          sentence-transformers: 4.1.0
+          torch: 2.6.0+cu124
+          transformers: 4.51.3
+        ram_limit_bytes: 268435456000
+        torch_cuda: '12.4'
+      models:
+        new:
+          adapter: sentence_transformer
+          dim: 768
+          document_prefix: ''
+          download_patterns:
+          - '*.json'
+          - '*.safetensors'
+          - '*.txt'
+          - '*.model'
+          - '*.md'
+          dtype: float32
+          max_tokens: 384
+          pooling: mean
+          query_prefix: ''
+          repo_id: sentence-transformers/all-mpnet-base-v2
+          resolved_revision: e8c3b32edf5434bc2275fc9bab85f82640a19130
+          trust_remote_code: false
+        old:
+          adapter: sentence_transformer
+          dim: 384
+          document_prefix: ''
+          download_patterns:
+          - '*.json'
+          - '*.safetensors'
+          - '*.txt'
+          - '*.model'
+          - '*.md'
+          dtype: float32
+          max_tokens: 256
+          pooling: mean
+          query_prefix: ''
+          repo_id: sentence-transformers/all-MiniLM-L6-v2
+          resolved_revision: 1110a243fdf4706b3f48f1d95db1a4f5529b4d41
+          trust_remote_code: false
+      pair: minilm_mpnet
+      release: 40f5aed7c5d1f9af84ba4fa000b545ff7097621a6397a87293cda76940a644ed
+      split_hash: 52e3b118acb270825db215f1d918d6613734eb5fbe0f812190079e81e5270755
+    policy_hash: 106e032124fe933cd8d64c92e02b7901659ee5dd63f3245f7dc78076f7373053
+    scope: case.trec-covid.minilm_mpnet
+    selections:
+      ann_status: UNTUNED_TRANSFER
+      case_calibration: N/A_NO_DEVELOPMENT_QUERY_POPULATION
+      correctness_pass: true
+      estimate_ref: T0-case-trec-covid-minilm_mpnet-0b33f894078e/estimate.json
+      local_restore_pass: true
+      lr_selection: validation_grid_v1
+      map:
+        la:
+          epochs: 50
+          kind: la
+          lr: 0.001
+          status: PASS
+          validation_loss: 0.49837419390678406
+        op:
+          epochs: 0
+          kind: op
+          lr: null
+          status: PASS
+          validation_loss: 0.5058067440986633
+        residual_mlp:
+          epochs: 39
+          kind: residual_mlp
+          lr: 0.001
+          status: PASS
+          validation_loss: 0.35187017917633057
+      runtime:
+        batches:
+          new: 64
+          old: 64
+        threads:
+          cpu_limit: 15
+          selected_threads: 8
+          table:
+          - median_seconds: 0.7663908675312996
+            repeats_seconds:
+            - 0.49923523515462875
+            - 0.7663908675312996
+            - 0.7989071141928434
+            threads: 1
+          - median_seconds: 0.40337333362549543
+            repeats_seconds:
+            - 0.40337333362549543
+            - 0.31886018346995115
+            - 0.5681004384532571
+            threads: 2
+          - median_seconds: 0.36697895266115665
+            repeats_seconds:
+            - 0.20388101320713758
+            - 0.41944347508251667
+            - 0.36697895266115665
+            threads: 4
+          - median_seconds: 0.30439105071127415
+            repeats_seconds:
+            - 0.38194875698536634
+            - 0.1956695457920432
+            - 0.30439105071127415
+            threads: 8
+      runtime_transfer_profile: a38d8e8b5b27686edceb4d80ab4822d3164545b1327bc29a35db0f687b87a0e3
+      search:
+        candidates: 50
+        ef_search: 200
+        status: PASS
+        table:
+        - candidate_recall_at_11: 0.9974545454545455
+          candidates: 50
+          ef_search: 200
+          raw_recall_at_10: 0.997
+          serving_recall_at_10: 0.9976
+          status: PASS
+          variant: op
+        - candidate_recall_at_11: 0.9974545454545455
+          candidates: 100
+          ef_search: 200
+          raw_recall_at_10: 0.997
+          serving_recall_at_10: 0.9976
+          status: PASS
+          variant: op
+        - candidate_recall_at_11: 1.0
+          candidates: 500
+          ef_search: 1000
+          raw_recall_at_10: 1.0
+          serving_recall_at_10: 1.0
+          status: PASS
+          variant: op
+        - candidate_recall_at_11: 1.0
+          candidates: 1000
+          ef_search: 2000
+          raw_recall_at_10: 1.0
+          serving_recall_at_10: 1.0
+          status: PASS
+          variant: op
+        - candidate_recall_at_11: 0.9965454545454545
+          candidates: 50
+          ef_search: 200
+          raw_recall_at_10: 0.9884000000000001
+          serving_recall_at_10: 0.997
+          status: PASS
+          variant: la
+        - candidate_recall_at_11: 0.9965454545454545
+          candidates: 100
+          ef_search: 200
+          raw_recall_at_10: 0.9884000000000001
+          serving_recall_at_10: 0.997
+          status: PASS
+          variant: la
+        - candidate_recall_at_11: 0.9998181818181817
+          candidates: 500
+          ef_search: 1000
+          raw_recall_at_10: 0.9986
+          serving_recall_at_10: 0.9997999999999999
+          status: PASS
+          variant: la
+        - candidate_recall_at_11: 1.0
+          candidates: 1000
+          ef_search: 2000
+          raw_recall_at_10: 0.9996
+          serving_recall_at_10: 1.0
+          status: PASS
+          variant: la
+        - candidate_recall_at_11: 0.997090909090909
+          candidates: 50
+          ef_search: 200
+          raw_recall_at_10: 0.997
+          serving_recall_at_10: 0.997
+          status: PASS
+          variant: residual_mlp
+        - candidate_recall_at_11: 0.997090909090909
+          candidates: 100
+          ef_search: 200
+          raw_recall_at_10: 0.997
+          serving_recall_at_10: 0.997
+          status: PASS
+          variant: residual_mlp
+        - candidate_recall_at_11: 1.0
+          candidates: 500
+          ef_search: 1000
+          raw_recall_at_10: 1.0
+          serving_recall_at_10: 1.0
+          status: PASS
+          variant: residual_mlp
+        - candidate_recall_at_11: 1.0
+          candidates: 1000
+          ef_search: 2000
+          raw_recall_at_10: 1.0
+          serving_recall_at_10: 1.0
+          status: PASS
+          variant: residual_mlp
+      source_run: T0-case-trec-covid-minilm_mpnet-0b33f894078e
+      target_hardware_pass: true
+      timing_ref: T0-case-trec-covid-minilm_mpnet-0b33f894078e/timing.json
+  2f2d39ba0146c520375769fc8898508ab8def80153736549a833ea4cadafcecd:
+    inputs:
+      case_manifest_hash: b1001deb71dfd1106c32cc58a5febf4408abbc3fb13f992a41ac87d45615f014
+      dataset: fever
+      hardware:
+        cpu_cores: 16.0
+        devices:
+        - compute_capability:
+          - 9
+          - 0
+          name: NVIDIA H100 80GB HBM3
+          vram_total_bytes: 84929478656
+        hnsw_build:
+          commit: d9b3608c83d83b46c96e25088cb1d729b29dcfe9
+          sha256: adf8c94849c6015ad81ae58e7cddf2c9a99914ebeb60cb03aaf1986d43e762df
+          source: https://github.com/nmslib/hnswlib.git
+        packages:
+          hnswlib: 0.9.0
+          huggingface-hub: 0.34.4
+          numpy: 2.2.6
+          pyarrow: 20.0.0
+          scikit-learn: 1.6.1
+          scipy: 1.15.3
+          sentence-transformers: 4.1.0
+          torch: 2.6.0+cu124
+          transformers: 4.51.3
+        ram_limit_bytes: 268435456000
+        torch_cuda: '12.4'
+      models:
+        new:
+          adapter: nomic_pinned
+          code_files:
+            configuration_hf_nomic_bert.py: f7871694b8de3d3df4ac6640313d5799ce323261a0fb90c5cc567ecc34a0039e
+            modeling_hf_nomic_bert.py: 3b24a366c4cc31b869466ccfb7bbb8879e138c97f8de06c83d4fa1e31a21f149
+          code_repo_id: nomic-ai/nomic-bert-2048
+          code_revision: 7710840340a098cfb869c4f65e87cf2b1b70caca
+          code_snapshot: /root/paper-P2/cache/models/hub/models--nomic-ai--nomic-bert-2048/snapshots/7710840340a098cfb869c4f65e87cf2b1b70caca
+          dim: 768
+          document_prefix: 'search_document: '
+          download_patterns:
+          - '*.json'
+          - '*.safetensors'
+          - '*.txt'
+          - '*.model'
+          - '*.md'
+          dtype: float32
+          max_tokens: 8192
+          pooling: masked_mean_layernorm
+          query_prefix: 'search_query: '
+          repo_id: nomic-ai/nomic-embed-text-v1.5
+          resolved_revision: e9b6763023c676ca8431644204f50c2b100d9aab
+          trust_remote_code: false
+        old:
+          adapter: nomic_pinned
+          code_files:
+            configuration_hf_nomic_bert.py: f7871694b8de3d3df4ac6640313d5799ce323261a0fb90c5cc567ecc34a0039e
+            modeling_hf_nomic_bert.py: 3b24a366c4cc31b869466ccfb7bbb8879e138c97f8de06c83d4fa1e31a21f149
+          code_repo_id: nomic-ai/nomic-bert-2048
+          code_revision: 7710840340a098cfb869c4f65e87cf2b1b70caca
+          code_snapshot: /root/paper-P2/cache/models/hub/models--nomic-ai--nomic-bert-2048/snapshots/7710840340a098cfb869c4f65e87cf2b1b70caca
+          dim: 768
+          document_prefix: 'search_document: '
+          download_patterns:
+          - '*.json'
+          - '*.safetensors'
+          - '*.txt'
+          - '*.model'
+          - '*.md'
+          dtype: float32
+          max_tokens: 8192
+          pooling: masked_mean
+          query_prefix: 'search_query: '
+          repo_id: nomic-ai/nomic-embed-text-v1
+          resolved_revision: 3ac47f125a41961d13b397d0332866be2f9152e1
+          trust_remote_code: false
+      pair: nomic
+      release: 36e787667533843237fb713b8afbe7ec05406f184f4c195c203ae69b7c7e8cde
+      split_hash: ee63c018b2ab1b03b4e2bf0f78774107dcc809b447a4cb96cc8f4e60b6b50168
+    policy_hash: 106e032124fe933cd8d64c92e02b7901659ee5dd63f3245f7dc78076f7373053
+    scope: case.fever.nomic
+    selections:
+      ann_status: N/A_EXACT
+      case_manifest_hash: b1001deb71dfd1106c32cc58a5febf4408abbc3fb13f992a41ac87d45615f014
+      case_manifest_path: data/processed/fever/manifests/e7_nomic.json
+      correctness_pass: true
+      estimate_ref: T0-case-fever.nomic-2c29350c14bc/estimate.json
+      local_restore_pass: true
+      lr_selection: validation_grid_v1
+      map:
+        la:
+          epochs: 50
+          kind: la
+          lr: 0.001
+          status: PASS
+          validation_loss: 0.07434467226266861
+        op:
+          epochs: 0
+          kind: op
+          lr: null
+          status: PASS
+          validation_loss: 0.09991861134767532
+        residual_mlp:
+          epochs: 39
+          kind: residual_mlp
+          lr: 0.001
+          status: PASS
+          validation_loss: 0.08027589321136475
+      runtime:
+        batches:
+          new: 16
+          old: 8
+        probe_run: RUNTIME_PROBE-fever-nomic-e43d724dac96
+        threads:
+          selected_threads: 1
+      search:
+        backend: exact
+        candidates: null
+        ef_search: null
+        status: N/A_EXACT
+      source_run: T0-case-fever.nomic-2c29350c14bc
+      target_hardware_pass: true
+      timing_ref: T0-case-fever.nomic-2c29350c14bc/timing.json
+  40c1603174da15b43942791d5c9f2d2968e1a4680a6f8b95ccf8c7857fcbd79c:
+    inputs:
+      case_manifest_hash: 42051fbd4965751acb64a433b3f8cac93eb73f224dae5c7ffe28a6cec71c3250
+      dataset: fiqa
+      hardware:
+        cpu_cores: 16.0
+        devices:
+        - compute_capability:
+          - 9
+          - 0
+          name: NVIDIA H100 80GB HBM3
+          vram_total_bytes: 84929478656
+        hnsw_build:
+          commit: d9b3608c83d83b46c96e25088cb1d729b29dcfe9
+          sha256: adf8c94849c6015ad81ae58e7cddf2c9a99914ebeb60cb03aaf1986d43e762df
+          source: https://github.com/nmslib/hnswlib.git
+        packages:
+          hnswlib: 0.9.0
+          huggingface-hub: 0.34.4
+          numpy: 2.2.6
+          pyarrow: 20.0.0
+          scikit-learn: 1.6.1
+          scipy: 1.15.3
+          sentence-transformers: 4.1.0
+          torch: 2.6.0+cu124
+          transformers: 4.51.3
+        ram_limit_bytes: 268435456000
+        torch_cuda: '12.4'
+      models:
+        new:
+          adapter: nomic_pinned
+          code_files:
+            configuration_hf_nomic_bert.py: f7871694b8de3d3df4ac6640313d5799ce323261a0fb90c5cc567ecc34a0039e
+            modeling_hf_nomic_bert.py: 3b24a366c4cc31b869466ccfb7bbb8879e138c97f8de06c83d4fa1e31a21f149
+          code_repo_id: nomic-ai/nomic-bert-2048
+          code_revision: 7710840340a098cfb869c4f65e87cf2b1b70caca
+          code_snapshot: /root/paper-P2/cache/models/hub/models--nomic-ai--nomic-bert-2048/snapshots/7710840340a098cfb869c4f65e87cf2b1b70caca
+          dim: 768
+          document_prefix: 'search_document: '
+          download_patterns:
+          - '*.json'
+          - '*.safetensors'
+          - '*.txt'
+          - '*.model'
+          - '*.md'
+          dtype: float32
+          max_tokens: 8192
+          pooling: masked_mean_layernorm
+          query_prefix: 'search_query: '
+          repo_id: nomic-ai/nomic-embed-text-v1.5
+          resolved_revision: e9b6763023c676ca8431644204f50c2b100d9aab
+          trust_remote_code: false
+        old:
+          adapter: nomic_pinned
+          code_files:
+            configuration_hf_nomic_bert.py: f7871694b8de3d3df4ac6640313d5799ce323261a0fb90c5cc567ecc34a0039e
+            modeling_hf_nomic_bert.py: 3b24a366c4cc31b869466ccfb7bbb8879e138c97f8de06c83d4fa1e31a21f149
+          code_repo_id: nomic-ai/nomic-bert-2048
+          code_revision: 7710840340a098cfb869c4f65e87cf2b1b70caca
+          code_snapshot: /root/paper-P2/cache/models/hub/models--nomic-ai--nomic-bert-2048/snapshots/7710840340a098cfb869c4f65e87cf2b1b70caca
+          dim: 768
+          document_prefix: 'search_document: '
+          download_patterns:
+          - '*.json'
+          - '*.safetensors'
+          - '*.txt'
+          - '*.model'
+          - '*.md'
+          dtype: float32
+          max_tokens: 8192
+          pooling: masked_mean
+          query_prefix: 'search_query: '
+          repo_id: nomic-ai/nomic-embed-text-v1
+          resolved_revision: 3ac47f125a41961d13b397d0332866be2f9152e1
+          trust_remote_code: false
+      pair: nomic
+      release: 584640e32aecdf4ce3517078a50ac7e771025e768c8c21fd3ae824d0699c5058
+      split_hash: 44b9adf3317face605a7d9ce7bd875bfa88142dc4967a1cc2d5c4efbc2d22594
+    policy_hash: 106e032124fe933cd8d64c92e02b7901659ee5dd63f3245f7dc78076f7373053
+    scope: case.fiqa.nomic
+    selections:
+      ann_status: N/A_EXACT
+      case_manifest_hash: 42051fbd4965751acb64a433b3f8cac93eb73f224dae5c7ffe28a6cec71c3250
+      case_manifest_path: data/processed/fiqa/manifests/e7_nomic.json
+      correctness_pass: true
+      estimate_ref: T0-case-fiqa.nomic-8915fd52e76a/estimate.json
+      local_restore_pass: true
+      lr_selection: validation_grid_v1
+      map:
+        la:
+          epochs: 50
+          kind: la
+          lr: 0.001
+          status: PASS
+          validation_loss: 0.0503397099673748
+        op:
+          epochs: 0
+          kind: op
+          lr: null
+          status: PASS
+          validation_loss: 0.06484623998403549
+        residual_mlp:
+          epochs: 50
+          kind: residual_mlp
+          lr: 0.001
+          status: PASS
+          validation_loss: 0.048859853297472
+      runtime:
+        batches:
+          new: 8
+          old: 16
+        probe_run: RUNTIME_PROBE-fiqa-nomic-0629746003d1
+        threads:
+          selected_threads: 1
+      search:
+        backend: exact
+        candidates: null
+        ef_search: null
+        status: N/A_EXACT
+      source_run: T0-case-fiqa.nomic-8915fd52e76a
+      target_hardware_pass: true
+      timing_ref: T0-case-fiqa.nomic-8915fd52e76a/timing.json
+  428d62abc0909f32ed4c46f58c9c70df2f20cbf375f5694eb1cf8bc071f8c279:
+    inputs:
+      case_manifest_hash: 69e753adbf69f2a910e96d07ac63034cab8414c4bd165e67bf77b8dd24aa9e2e
+      dataset: hotpotqa
+      hardware:
+        cpu_cores: 16.0
+        devices:
+        - compute_capability:
+          - 9
+          - 0
+          name: NVIDIA H100 80GB HBM3
+          vram_total_bytes: 84929478656
+        hnsw_build:
+          commit: d9b3608c83d83b46c96e25088cb1d729b29dcfe9
+          sha256: adf8c94849c6015ad81ae58e7cddf2c9a99914ebeb60cb03aaf1986d43e762df
+          source: https://github.com/nmslib/hnswlib.git
+        packages:
+          hnswlib: 0.9.0
+          huggingface-hub: 0.34.4
+          numpy: 2.2.6
+          pyarrow: 20.0.0
+          scikit-learn: 1.6.1
+          scipy: 1.15.3
+          sentence-transformers: 4.1.0
+          torch: 2.6.0+cu124
+          transformers: 4.51.3
+        ram_limit_bytes: 268435456000
+        torch_cuda: '12.4'
+      models:
+        new:
+          adapter: sentence_transformer
+          dim: 1024
+          document_prefix: ''
+          download_patterns:
+          - '*.json'
+          - '*.safetensors'
+          - '*.txt'
+          - '*.model'
+          - '*.md'
+          dtype: float32
+          max_tokens: 8192
+          pooling: cls
+          query_prefix: 'query: '
+          repo_id: Snowflake/snowflake-arctic-embed-l-v2.0
+          resolved_revision: ac6544c8a46e00af67e330e85a9028c66b8cfd9a
+          trust_remote_code: false
+        old:
+          adapter: sentence_transformer
+          dim: 1024
+          document_prefix: ''
+          download_patterns:
+          - '*.json'
+          - '*.safetensors'
+          - '*.txt'
+          - '*.model'
+          - '*.md'
+          dtype: float32
+          max_tokens: 512
+          pooling: cls
+          query_prefix: 'Represent this sentence for searching relevant passages: '
+          repo_id: Snowflake/snowflake-arctic-embed-l
+          resolved_revision: d8fb21ca8d905d2832ee8b96c894d3298964346b
+          trust_remote_code: false
+      pair: arctic
+      release: 6c30fc0ee0f114df38898df00640b76d88cc5b58222da28bae8cc2dc1b6f8d1d
+      split_hash: 2fa0984411673f3dacd60cc3211ba64d84d510408bf8719d14e796adf0f339cf
+    policy_hash: 106e032124fe933cd8d64c92e02b7901659ee5dd63f3245f7dc78076f7373053
+    scope: case.hotpotqa.arctic
+    selections:
+      ann_status: N/A_EXACT
+      case_manifest_hash: 69e753adbf69f2a910e96d07ac63034cab8414c4bd165e67bf77b8dd24aa9e2e
+      case_manifest_path: data/processed/hotpotqa/manifests/e7_arctic.json
+      correctness_pass: true
+      estimate_ref: T0-case-hotpotqa.arctic-32846d363eaf/estimate.json
+      local_restore_pass: true
+      lr_selection: validation_grid_v1
+      map:
+        la:
+          epochs: 50
+          kind: la
+          lr: 0.001
+          status: PASS
+          validation_loss: 1.0536960363388062
+        op:
+          epochs: 0
+          kind: op
+          lr: null
+          status: PASS
+          validation_loss: 0.9625898003578186
+        residual_mlp:
+          epochs: 19
+          kind: residual_mlp
+          lr: 0.001
+          status: PASS
+          validation_loss: 0.7839649319648743
+      runtime:
+        batches:
+          new: 16
+          old: 64
+        probe_run: RUNTIME_PROBE-hotpotqa-arctic-1131c69762bb
+        threads:
+          selected_threads: 1
+      search:
+        backend: exact
+        candidates: null
+        ef_search: null
+        status: N/A_EXACT
+      source_run: T0-case-hotpotqa.arctic-32846d363eaf
+      target_hardware_pass: true
+      timing_ref: T0-case-hotpotqa.arctic-32846d363eaf/timing.json
   5c9e024875573ce9ae9dc952744b1838a17945a435db41c23687d4666d64ce07:
     inputs:
       case_manifest_hash: 048602433f7ea06d995ec3821e133b6344e353561a646cef700665625e91be1a
@@ -371,6 +944,139 @@ profiles:
       source_run: T0-case-fiqa.minilm_mpnet-541418396b0f
       target_hardware_pass: true
       timing_ref: T0-case-fiqa.minilm_mpnet-541418396b0f/timing.json
+  8a1c20c9496c75a68a5791116ae7b861dbee40dc7354ec08e15768d7fffb35ee:
+    inputs:
+      case_manifest_hash: 10c39a3c269619f51bc03e087aa03d15c5e7e2b82459d60df7a4e41ee2fd5be1
+      dataset: fever
+      hardware:
+        cpu_cores: 16.0
+        devices:
+        - compute_capability:
+          - 9
+          - 0
+          name: NVIDIA H100 80GB HBM3
+          vram_total_bytes: 84929478656
+        hnsw_build:
+          commit: d9b3608c83d83b46c96e25088cb1d729b29dcfe9
+          sha256: adf8c94849c6015ad81ae58e7cddf2c9a99914ebeb60cb03aaf1986d43e762df
+          source: https://github.com/nmslib/hnswlib.git
+        packages:
+          hnswlib: 0.9.0
+          huggingface-hub: 0.34.4
+          numpy: 2.2.6
+          pyarrow: 20.0.0
+          scikit-learn: 1.6.1
+          scipy: 1.15.3
+          sentence-transformers: 4.1.0
+          torch: 2.6.0+cu124
+          transformers: 4.51.3
+        ram_limit_bytes: 268435456000
+        torch_cuda: '12.4'
+      models:
+        new:
+          adapter: sentence_transformer
+          dim: 1024
+          document_prefix: ''
+          download_patterns:
+          - '*.json'
+          - '*.safetensors'
+          - '*.txt'
+          - '*.model'
+          - '*.md'
+          - pytorch_model.bin
+          dtype: float32
+          format_conversion:
+            files:
+              1_Pooling/config.json: e54c164a07274f2eb45bb724f54a79d1efcc90c41573887cd9a29aeee0597352
+              README.md: 0b81ccf9134e5874d620a86e6905062ea999e779c34eb1a7e65eaeb7fe00e450
+              config.json: 26159e7ad065073448460117eb24b7a4572f6f4e78eadff65dc0a11c052449fa
+              config_sentence_transformers.json: 1eef72430e7194a1e59680e635aed81ffa083f05668dbc5bb1c56c04c0999c38
+              model.safetensors: 993b2248881724788dcab8c644a91dfd63584b6e5604ff2037cb5541e1e38e7e
+              modules.json: 84e40c8e006c9b1d6c122e02cba9b02458120b5fb0c87b746c41e0207cf642cf
+              sentence_bert_config.json: eb9b44b13c0f52a3b3685c3b1cbdea1ba8b04bea123b98f61610048940776eb1
+              sentencepiece.bpe.model: cfc8146abe2a0488e9e2a0c56de7952f7c11ab059eca145a0a727afce0db2865
+              special_tokens_map.json: 8c785abebea9ae3257b61681b4e6fd8365ceafde980c21970d001e834cf10835
+              tokenizer.json: 21106b6d7dab2952c1d496fb21d5dc9db75c28ed361a05f5020bbba27810dd08
+              tokenizer_config.json: a62b2b6784f990259fddef5f16388693a8043be4f69179e6a5257eeb3f9abac4
+            recipe:
+              repo_id: BAAI/bge-m3
+              revision: 5617a9f61b028005a4858fdac845db406aefb181
+              source_sha256: b5e0ce3470abf5ef3831aa1bd5553b486803e83251590ab7ff35a117cf6aad38
+              version: weights-only-safetensors-v1
+            tensor_count: 391
+            tensor_equality: PASS
+            torch_version: 2.6.0+cu124
+            unsafe_globals: []
+          max_tokens: 8192
+          pooling: cls
+          query_prefix: ''
+          repo_id: BAAI/bge-m3
+          resolved_revision: 5617a9f61b028005a4858fdac845db406aefb181
+          trust_remote_code: false
+        old:
+          adapter: sentence_transformer
+          dim: 768
+          document_prefix: ''
+          download_patterns:
+          - '*.json'
+          - '*.safetensors'
+          - '*.txt'
+          - '*.model'
+          - '*.md'
+          dtype: float32
+          max_tokens: 512
+          pooling: cls
+          query_prefix: 'Represent this sentence for searching relevant passages: '
+          repo_id: BAAI/bge-base-en-v1.5
+          resolved_revision: a5beb1e3e68b9ab74eb54cfd186867f64f240e1a
+          trust_remote_code: false
+      pair: bge
+      release: 36e787667533843237fb713b8afbe7ec05406f184f4c195c203ae69b7c7e8cde
+      split_hash: ee63c018b2ab1b03b4e2bf0f78774107dcc809b447a4cb96cc8f4e60b6b50168
+    policy_hash: 106e032124fe933cd8d64c92e02b7901659ee5dd63f3245f7dc78076f7373053
+    scope: case.fever.bge
+    selections:
+      ann_status: N/A_EXACT
+      case_manifest_hash: 10c39a3c269619f51bc03e087aa03d15c5e7e2b82459d60df7a4e41ee2fd5be1
+      case_manifest_path: data/processed/fever/manifests/e7_bge.json
+      correctness_pass: true
+      estimate_ref: T0-case-fever.bge-197871a92024/estimate.json
+      local_restore_pass: true
+      lr_selection: validation_grid_v1
+      map:
+        la:
+          epochs: 50
+          kind: la
+          lr: 0.001
+          status: PASS
+          validation_loss: 0.8766060471534729
+        op:
+          epochs: 0
+          kind: op
+          lr: null
+          status: PASS
+          validation_loss: 0.8041462302207947
+        residual_mlp:
+          epochs: 25
+          kind: residual_mlp
+          lr: 0.001
+          status: PASS
+          validation_loss: 0.663855791091919
+      runtime:
+        batches:
+          new: 16
+          old: 32
+        probe_run: RUNTIME_PROBE-fever-bge-9dcb1528d669
+        threads:
+          selected_threads: 1
+      search:
+        backend: exact
+        candidates: null
+        ef_search: null
+        status: N/A_EXACT
+      source_run: T0-case-fever.bge-197871a92024
+      target_hardware_pass: true
+      timing_ref: T0-case-fever.bge-197871a92024/timing.json
   a38d8e8b5b27686edceb4d80ab4822d3164545b1327bc29a35db0f687b87a0e3:
     inputs:
       dataset: fiqa
@@ -587,6 +1293,249 @@ profiles:
       source_run: T0-core-fiqa-b9698dc39c17
       target_hardware_pass: true
       timing_ref: T0-core-fiqa-b9698dc39c17/timing.json
+  c8cdf10995b9e003914fbdaccba0d0c31f594b8e846f04d03afdcd5ed07ec68a:
+    inputs:
+      case_manifest_hash: d65efd78dcf49e87188b0f96eaba940b909203027a4d954b06b09931949fab94
+      dataset: nq
+      hardware:
+        cpu_cores: 16.0
+        devices:
+        - compute_capability:
+          - 9
+          - 0
+          name: NVIDIA H100 80GB HBM3
+          vram_total_bytes: 84929478656
+        hnsw_build:
+          commit: d9b3608c83d83b46c96e25088cb1d729b29dcfe9
+          sha256: adf8c94849c6015ad81ae58e7cddf2c9a99914ebeb60cb03aaf1986d43e762df
+          source: https://github.com/nmslib/hnswlib.git
+        packages:
+          hnswlib: 0.9.0
+          huggingface-hub: 0.34.4
+          numpy: 2.2.6
+          pyarrow: 20.0.0
+          scikit-learn: 1.6.1
+          scipy: 1.15.3
+          sentence-transformers: 4.1.0
+          torch: 2.6.0+cu124
+          transformers: 4.51.3
+        ram_limit_bytes: 268435456000
+        torch_cuda: '12.4'
+      models:
+        new:
+          adapter: sentence_transformer
+          dim: 1024
+          document_prefix: ''
+          download_patterns:
+          - '*.json'
+          - '*.safetensors'
+          - '*.txt'
+          - '*.model'
+          - '*.md'
+          dtype: float32
+          max_tokens: 8192
+          pooling: cls
+          query_prefix: 'query: '
+          repo_id: Snowflake/snowflake-arctic-embed-l-v2.0
+          resolved_revision: ac6544c8a46e00af67e330e85a9028c66b8cfd9a
+          trust_remote_code: false
+        old:
+          adapter: sentence_transformer
+          dim: 1024
+          document_prefix: ''
+          download_patterns:
+          - '*.json'
+          - '*.safetensors'
+          - '*.txt'
+          - '*.model'
+          - '*.md'
+          dtype: float32
+          max_tokens: 512
+          pooling: cls
+          query_prefix: 'Represent this sentence for searching relevant passages: '
+          repo_id: Snowflake/snowflake-arctic-embed-l
+          resolved_revision: d8fb21ca8d905d2832ee8b96c894d3298964346b
+          trust_remote_code: false
+      pair: arctic
+      release: 7d93e804cfd1ea372e97a0f74cd04f50a2af64f5a0ae93aaffede19f8515480b
+      split_hash: 9282484cf4b1daad26298a2f7f488daa6c2ca1a6b1779c4d6efabd63458430db
+    policy_hash: 106e032124fe933cd8d64c92e02b7901659ee5dd63f3245f7dc78076f7373053
+    scope: case.nq.arctic
+    selections:
+      ann_status: N/A_EXACT
+      case_manifest_hash: d65efd78dcf49e87188b0f96eaba940b909203027a4d954b06b09931949fab94
+      case_manifest_path: data/processed/nq/manifests/e7_arctic.json
+      correctness_pass: true
+      estimate_ref: T0-case-nq.arctic-38a7a64b2035/estimate.json
+      local_restore_pass: true
+      lr_selection: validation_grid_v1
+      map:
+        la:
+          epochs: 50
+          kind: la
+          lr: 0.001
+          status: PASS
+          validation_loss: 1.00202476978302
+        op:
+          epochs: 0
+          kind: op
+          lr: null
+          status: PASS
+          validation_loss: 0.9307493567466736
+        residual_mlp:
+          epochs: 19
+          kind: residual_mlp
+          lr: 0.001
+          status: PASS
+          validation_loss: 0.7359164953231812
+      runtime:
+        batches:
+          new: 16
+          old: 16
+        probe_run: RUNTIME_PROBE-nq-arctic-e9bb6cc93c4b
+        threads:
+          selected_threads: 1
+      search:
+        backend: exact
+        candidates: null
+        ef_search: null
+        status: N/A_EXACT
+      source_run: T0-case-nq.arctic-38a7a64b2035
+      target_hardware_pass: true
+      timing_ref: T0-case-nq.arctic-38a7a64b2035/timing.json
+  f7c06ce24bd2e5f66eff5a3b88996775417117c0bd4388e3a21caee7d17d3592:
+    inputs:
+      case_manifest_hash: b6e9c37b1e4108efc4212a36bd87cd546469392226710e59c51a20d804c4c76c
+      dataset: nq
+      hardware:
+        cpu_cores: 16.0
+        devices:
+        - compute_capability:
+          - 9
+          - 0
+          name: NVIDIA H100 80GB HBM3
+          vram_total_bytes: 84929478656
+        hnsw_build:
+          commit: d9b3608c83d83b46c96e25088cb1d729b29dcfe9
+          sha256: adf8c94849c6015ad81ae58e7cddf2c9a99914ebeb60cb03aaf1986d43e762df
+          source: https://github.com/nmslib/hnswlib.git
+        packages:
+          hnswlib: 0.9.0
+          huggingface-hub: 0.34.4
+          numpy: 2.2.6
+          pyarrow: 20.0.0
+          scikit-learn: 1.6.1
+          scipy: 1.15.3
+          sentence-transformers: 4.1.0
+          torch: 2.6.0+cu124
+          transformers: 4.51.3
+        ram_limit_bytes: 268435456000
+        torch_cuda: '12.4'
+      models:
+        new:
+          adapter: sentence_transformer
+          dim: 1024
+          document_prefix: ''
+          download_patterns:
+          - '*.json'
+          - '*.safetensors'
+          - '*.txt'
+          - '*.model'
+          - '*.md'
+          - pytorch_model.bin
+          dtype: float32
+          format_conversion:
+            files:
+              1_Pooling/config.json: e54c164a07274f2eb45bb724f54a79d1efcc90c41573887cd9a29aeee0597352
+              README.md: 0b81ccf9134e5874d620a86e6905062ea999e779c34eb1a7e65eaeb7fe00e450
+              config.json: 26159e7ad065073448460117eb24b7a4572f6f4e78eadff65dc0a11c052449fa
+              config_sentence_transformers.json: 1eef72430e7194a1e59680e635aed81ffa083f05668dbc5bb1c56c04c0999c38
+              model.safetensors: 993b2248881724788dcab8c644a91dfd63584b6e5604ff2037cb5541e1e38e7e
+              modules.json: 84e40c8e006c9b1d6c122e02cba9b02458120b5fb0c87b746c41e0207cf642cf
+              sentence_bert_config.json: eb9b44b13c0f52a3b3685c3b1cbdea1ba8b04bea123b98f61610048940776eb1
+              sentencepiece.bpe.model: cfc8146abe2a0488e9e2a0c56de7952f7c11ab059eca145a0a727afce0db2865
+              special_tokens_map.json: 8c785abebea9ae3257b61681b4e6fd8365ceafde980c21970d001e834cf10835
+              tokenizer.json: 21106b6d7dab2952c1d496fb21d5dc9db75c28ed361a05f5020bbba27810dd08
+              tokenizer_config.json: a62b2b6784f990259fddef5f16388693a8043be4f69179e6a5257eeb3f9abac4
+            recipe:
+              repo_id: BAAI/bge-m3
+              revision: 5617a9f61b028005a4858fdac845db406aefb181
+              source_sha256: b5e0ce3470abf5ef3831aa1bd5553b486803e83251590ab7ff35a117cf6aad38
+              version: weights-only-safetensors-v1
+            tensor_count: 391
+            tensor_equality: PASS
+            torch_version: 2.6.0+cu124
+            unsafe_globals: []
+          max_tokens: 8192
+          pooling: cls
+          query_prefix: ''
+          repo_id: BAAI/bge-m3
+          resolved_revision: 5617a9f61b028005a4858fdac845db406aefb181
+          trust_remote_code: false
+        old:
+          adapter: sentence_transformer
+          dim: 768
+          document_prefix: ''
+          download_patterns:
+          - '*.json'
+          - '*.safetensors'
+          - '*.txt'
+          - '*.model'
+          - '*.md'
+          dtype: float32
+          max_tokens: 512
+          pooling: cls
+          query_prefix: 'Represent this sentence for searching relevant passages: '
+          repo_id: BAAI/bge-base-en-v1.5
+          resolved_revision: a5beb1e3e68b9ab74eb54cfd186867f64f240e1a
+          trust_remote_code: false
+      pair: bge
+      release: 7d93e804cfd1ea372e97a0f74cd04f50a2af64f5a0ae93aaffede19f8515480b
+      split_hash: 9282484cf4b1daad26298a2f7f488daa6c2ca1a6b1779c4d6efabd63458430db
+    policy_hash: 106e032124fe933cd8d64c92e02b7901659ee5dd63f3245f7dc78076f7373053
+    scope: case.nq.bge
+    selections:
+      ann_status: N/A_EXACT
+      case_manifest_hash: b6e9c37b1e4108efc4212a36bd87cd546469392226710e59c51a20d804c4c76c
+      case_manifest_path: data/processed/nq/manifests/e7_bge.json
+      correctness_pass: true
+      estimate_ref: T0-case-nq.bge-b133550f5a16/estimate.json
+      local_restore_pass: true
+      lr_selection: validation_grid_v1
+      map:
+        la:
+          epochs: 50
+          kind: la
+          lr: 0.001
+          status: PASS
+          validation_loss: 0.7926298975944519
+        op:
+          epochs: 0
+          kind: op
+          lr: null
+          status: PASS
+          validation_loss: 0.6770633459091187
+        residual_mlp:
+          epochs: 25
+          kind: residual_mlp
+          lr: 0.001
+          status: PASS
+          validation_loss: 0.5826640725135803
+      runtime:
+        batches:
+          new: 16
+          old: 32
+        probe_run: RUNTIME_PROBE-nq-bge-6bdf92df61d5
+        threads:
+          selected_threads: 1
+      search:
+        backend: exact
+        candidates: null
+        ef_search: null
+        status: N/A_EXACT
+      source_run: T0-case-nq.bge-b133550f5a16
+      target_hardware_pass: true
+      timing_ref: T0-case-nq.bge-b133550f5a16/timing.json
   fa9ee3637ed8ce717ada91150b73e260f5d7fa66cfc1e45fd9de3406aa64d5b6:
     inputs:
       dataset: msmarco-docs-v1

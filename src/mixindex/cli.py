@@ -70,7 +70,8 @@ def main(argv=None):
             try:
                 result = run_single(task, root)
             except Exception as exc:
-                result = {"compute_status": "FAILED", "error_type": type(exc).__name__}
+                result = {"compute_status": "FAILED", "error_type": type(exc).__name__,
+                          "reason": str(exc)}
             write_json(args.task_file.parent / "result.json", result)
             return 0 if result["compute_status"] == "COMPUTE_DONE" else 1
         if args.command == "plan":

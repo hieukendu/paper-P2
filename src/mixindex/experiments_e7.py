@@ -357,8 +357,12 @@ def run_case_presetup(task, cfg):
         old_store, old_meta = _case_vector_store(
             prepared, rows, manifest, specs["old"], cfg, root, "old", timing)
         old = old_store.get_rows(np.arange(len(rows), dtype=np.int64))
-        pools = sample_document_pools(
-            [(prepared / "doc_ids.txt").read_text().splitlines()[int(row)] for row in rows], cfg)
+        # Materialize the validated corpus IDs once.  Re-reading the complete
+        # multi-million-row doc_ids.txt inside the 50k-row comprehension turns
+        # this setup into an accidental O(subset * corpus) scan.
+        all_doc_ids = (prepared / "doc_ids.txt").read_text().splitlines()
+        case_doc_ids = [all_doc_ids[int(row)] for row in rows]
+        pools = sample_document_pools(case_doc_ids, cfg)
         new_encoder = build_encoder(specs["new"], cfg["execution"]["device"], batches["new"])
 
         def live_source(requested):
@@ -385,8 +389,7 @@ def run_case_presetup(task, cfg):
         candidate["search"]["backend"] = "exact"
         with cost_scope("case_bootstrap_op", timing):
             state = bootstrap_migration(
-                doc_ids=[(prepared / "doc_ids.txt").read_text().splitlines()[int(row)]
-                         for row in rows],
+                doc_ids=case_doc_ids,
                 pools=pools, old_vectors=old, paid_accessor=accessor, cfg=candidate)
         checkpoint = emit_checkpoint(state, run_dir / "checkpoints", "bootstrap-op", digest(locked))
         restored_accessor = PaidEmbeddingAccessor(
@@ -473,6 +476,27 @@ def _load_profile(cfg, root):
                              "tuning_scope": profile["scope"], "input_refs": profile["inputs"],
                              "variant_id": "primary", "overrides": {}}, cfg, profiles)
     return profile_hash, profile
+
+
+def _verified_case_t0_task(root, cfg, scope):
+    """Resolve the immutable, verified T0 revision for an E7 case scope."""
+    state_path = Path(root) / cfg["paths"]["state"] / "tasks.json"
+    if not state_path.exists():
+        raise ValueError(f"E7_T0_REQUIRED: task state is missing for {scope}")
+    tasks = read_json(state_path).get("tasks", {})
+    matches = []
+    for identifier, record in tasks.items():
+        spec = record.get("spec", {})
+        overrides = spec.get("config_overrides", {})
+        if (spec.get("experiment") == "T0"
+                and overrides.get("tuning", {}).get("scope") == scope
+                and record.get("status") == "COMPUTE_DONE"
+                and record.get("sync_status") == "VERIFIED"
+                and record.get("handle_alive") is False):
+            matches.append(identifier)
+    if len(matches) != 1:
+        raise ValueError(f"E7_T0_REQUIRED: exactly one verified T0 revision required for {scope}")
+    return matches[0]
 
 
 def _run_id(cfg, locked):
@@ -700,7 +724,10 @@ def build_e7_tasks(cfg, root):
         "config": "configs/experiments/e7.yaml", "phase": "official",
         "measurement_mode": "exclusive", "development_hardware": False,
         "run_budget_policy": RUN_BUDGET_POLICY,
-        "resources": {"gpu_device": 0, "gpu_memory_gib": 20, "host_ram_gib": 64,
+        # E7 is a reduced 50k case and remains strictly serial.  Use a 12 GiB
+        # admission reservation so it can coexist with the P2 downloader's
+        # reclaimable file cache inside the 250 GiB cgroup.
+        "resources": {"gpu_device": 0, "gpu_memory_gib": 20, "host_ram_gib": 12,
                        "cpu_cores": 8, "disk_scratch_gib": 32, "io_heavy": True},
         "allow_ann_from_verified_parent": True,
     }
@@ -711,7 +738,7 @@ def build_e7_tasks(cfg, root):
     for dataset, pair in E7_CASES:
         manifest, profile_hash, profile = profile_entries[(dataset, pair)]
         scope = case_scope(dataset, pair)
-        case_dependency = f"T0.{scope}"
+        case_dependency = _verified_case_t0_task(root, cfg, scope)
         for mapping, scheduler, role in (("residual_mlp", "random", "primary"),
                                           ("residual_mlp", "greedy", "primary")):
             task_id = (f"E7.{dataset}.{pair}.{mapping}.{scheduler}.m{E7_MAP_SEED}.t{E7_TRAFFIC_SEED}.{revision}")
