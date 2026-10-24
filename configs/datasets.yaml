@@ -1,0 +1,64 @@
+fiqa:
+  parser: beir
+  md5: 17918ed23cd04fb15047f73e6c3bd9d9
+  url: https://public.ukp.informatik.tu-darmstadt.de/thakur/BEIR/datasets/fiqa.zip
+  documents: 57638
+  test_queries: 648
+  source: https://github.com/beir-cellar/beir
+  license: https://huggingface.co/datasets/BeIR/fiqa
+trec-covid:
+  parser: beir
+  md5: ce62140cb23feb9becf6270d0d1fe6d1
+  url: https://public.ukp.informatik.tu-darmstadt.de/thakur/BEIR/datasets/trec-covid.zip
+  documents: 171332
+  test_queries: 50
+  source: https://github.com/beir-cellar/beir
+  license: https://huggingface.co/datasets/BeIR/trec-covid
+nq:
+  parser: beir
+  url: https://public.ukp.informatik.tu-darmstadt.de/thakur/BEIR/datasets/nq.zip
+  documents: 2681468
+  test_queries: 3452
+  source: https://github.com/beir-cellar/beir
+  license: https://huggingface.co/datasets/BeIR/nq
+hotpotqa:
+  parser: beir
+  url: https://public.ukp.informatik.tu-darmstadt.de/thakur/BEIR/datasets/hotpotqa.zip
+  documents: 5233329
+  test_queries: 7405
+  source: https://github.com/beir-cellar/beir
+  license: https://huggingface.co/datasets/BeIR/hotpotqa
+fever:
+  parser: beir
+  url: https://public.ukp.informatik.tu-darmstadt.de/thakur/BEIR/datasets/fever.zip
+  documents: 5416568
+  test_queries: 6666
+  test_qrels: 7937
+  source: https://github.com/beir-cellar/beir
+  license: https://huggingface.co/datasets/BeIR/fever
+msmarco-docs-v1:
+  parser: msmarco_documents
+  base_url: https://msmarco.z22.web.core.windows.net/msmarcoranking/
+  files: [msmarco-docs.tsv.gz, msmarco-docdev-queries.tsv.gz, msmarco-docdev-qrels.tsv.gz]
+  documents: 3213835
+  test_queries: 5193
+  # The current Azure qrels artifact (SHA256 recorded in state/scale-download.json)
+  # contains 5,193 unique qid/doc rows. The upstream catalog still lists the
+  # historical 5,478-row count, so validation follows the downloaded bytes.
+  test_qrels: 5193
+  source: https://microsoft.github.io/msmarco/Datasets.html
+  license: https://microsoft.github.io/msmarco/Datasets.html
+orcas:
+  parser: orcas
+  url: https://msmarco.z22.web.core.windows.net/msmarcoranking/orcas.tsv.gz
+  md5: 4b9350bf997c5c0eaa562be81c796981
+  records: 18823602
+  source_queries: 10405342
+  source: https://github.com/microsoft/msmarco/blob/master/ORCAS.md
+  license: https://microsoft.github.io/msmarco/Datasets.html
+aol-ia:
+  parser: aol_recovery
+  documents: 1525586
+  source: https://ir-datasets.com/aol-ia.html
+  recovery_tool: https://github.com/terrierteam/aolia-tools
+  license: https://ir-datasets.com/aol-ia.html

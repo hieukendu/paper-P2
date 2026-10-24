@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools==80.9.0", "wheel==0.45.1"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mixindex"
+version = "0.1.0"
+description = "Budgeted, reproducible embedding model migration experiments"
+requires-python = ">=3.11,<3.12"
+dependencies = [
+  "numpy==2.2.6", "scipy==1.15.3", "torch==2.6.0",
+  "transformers==4.51.3", "sentence-transformers==4.1.0",
+  "huggingface-hub==0.34.4", "safetensors==0.5.3", "einops==0.8.1",
+  "scikit-learn==1.6.1", "pyarrow==20.0.0", "PyYAML==6.0.2",
+  "python-dotenv==1.1.0", "psutil==7.0.0", "nvidia-ml-py==12.575.51",
+  "hnswlib @ git+https://github.com/nmslib/hnswlib.git@d9b3608c83d83b46c96e25088cb1d729b29dcfe9",
+  "pytrec-eval-terrier==0.5.7",
+]
+
+[project.optional-dependencies]
+test = ["pytest==8.3.5", "ruff==0.11.13"]
+
+[project.scripts]
+mixindex = "mixindex.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F"]

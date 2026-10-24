@@ -1,0 +1,119 @@
+paths:
+  data: data
+  cache: cache
+  runs: runs
+  state: state
+  staging: staging
+dataset:
+  name: fiqa
+  subset_size: null
+models:
+  pair: minilm_mpnet
+  dtype: float32
+  batch_size: 8
+splits:
+  master_seed: 20261020
+  schedule_fraction: 0.8
+  cal_fit_fraction: 0.1
+  cal_check_fraction: 0.1
+mapping:
+  kind: residual_mlp
+  hidden: 256
+  rank: 64
+  lr: 0.001
+  batch_size: 256
+  max_epochs: 50
+  patience: 5
+  min_delta: 0.00001
+  region_target_pairs: 100
+  region_max: 256
+  regional: full
+  ridge: 10.0
+  min_region_pairs: 20
+calibration:
+  enabled: true
+  quantile: 0.95
+  min_pairs: 200
+  min_queries: 50
+  max_pairs: 1000
+  max_pairs_per_query: 4
+  min_slope: 0.000001
+search:
+  backend: exact
+  k: 10
+  candidates: 100
+  ef_search: 200
+  M: 16
+  ef_construction: 200
+  chunk_rows: 16384
+  threads: 1
+scheduler:
+  kind: random
+  batch_fraction: 0.01
+  refit_fraction: 0.05
+  fallback: random
+budget:
+  train_fraction: 0.02
+  train_cap: 10000
+  val_fraction: 0.005
+  val_cap: 2000
+  cal_fraction: 0.005
+  cal_cap: 1000
+  checkpoints: [0.05, 0.10, 0.25, 0.50, 1.0]
+evaluation:
+  primary_static_fraction: 0.10
+  map_seeds: [17, 29, 43]
+  traffic_seeds: [101, 103, 107, 109, 113]
+  bootstrap_draws: 10000
+experiment:
+  map_seed: 17
+  traffic_seed: 101
+  variant: primary
+  profile_hash: null
+  run_budget_policy: compact_v1
+  cell_role: mapping
+  preflight_run: null
+  tuning_scope: null
+  system_task: null
+  snapshot_run: null
+  q_tune_cache: null
+  systems_horizon_fraction: 1.0
+  systems_validation_stride: 10
+  scale_task: null
+  scale_variant: null
+  scale_manifest_hash: null
+  scale_manifest_path: null
+  case_manifest_hash: null
+  case_manifest_path: null
+  case_scope: null
+  source_run: null
+  full_bootstrap_task_id: null
+execution:
+  phase: development
+  mode: cached_access
+  target_gpu: H100
+  target_vram_gib: 80
+  require_target: true
+  device: cuda
+  max_compute_jobs: 1
+  gpu_headroom_gib: 4
+  ram_headroom_gib: 8
+  cpu_headroom: 1
+tuning:
+  scope: core
+  policy_version: validation_grid_v1
+  lr_grid: [0.0001, 0.001]
+  search_grid: [[50, 200], [100, 200], [500, 1000], [1000, 2000]]
+  batch_grid: [1, 2, 4, 8, 16, 32, 64]
+  thread_grid: [1, 2, 4, 8]
+  repeats: 3
+  fidelity_gate: 0.99
+  lock_path: configs/locked/tuning.lock.yaml
+sync:
+  enabled: true
+  private: false
+  repo_prefix: mixindex-runs
+  repo_target_gib: 50
+  repo_target_files: 5000
+  artifact_shard_gib: 2
+  retries: 3

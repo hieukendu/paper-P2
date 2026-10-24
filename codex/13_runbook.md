@@ -1,6 +1,6 @@
 # M13 — CLI runbook và wiring cuối
 
-Các lệnh dưới là **giao diện phải implement**, chưa chạy được trong repo hiện tại. Agent phải nối `cli.py` với các module tương ứng rồi mới dùng. Chạy tại project root trên Linux server A10080, dùng `.venv`; không chạy training trên Windows.
+Các lệnh dưới là **giao diện phải implement**, chưa chạy được trong repo hiện tại. Agent phải nối `cli.py` với các module tương ứng rồi mới dùng. Chạy tại project root trên Linux server H10080, dùng `.venv`; không chạy training trên Windows.
 
 ## Command surface tối thiểu
 
@@ -61,9 +61,15 @@ mixindex run --experiment E4 --config configs/experiments/e4.yaml
 mixindex enqueue --experiment E5 --config configs/experiments/e5.yaml
 ```
 
-Registry key `msmarco-docs-v1` phải ánh xạ document v1, `orcas` join đúng corpus đó; không BEIR passage msmarco. E4 gồm subset probes và full-bootstrap stored graph gate; enqueue E5 chưa execute cho tới gate đầy đủ. Sync worker upload từng completed checkpoint ngoài measurement window.
+Registry key `msmarco-docs-v1` phải ánh xạ document v1, `orcas` join đúng corpus đó; không BEIR passage msmarco. Base `compact_v1` dùng E4 subset probes và bootstrap stored graph gate; scale override `e4e567_scale_v3_50k` dùng common 50k/5k manifest và tạo parent E4 artifact mới. Sync worker upload từng completed checkpoint ngoài measurement window.
 
-E4 admission kiểm T0.scale inputs/lr/runtime/subset profile; E4 tạo full-corpus search profile bằng readiness measurements. E5 mới yêu cầu full profile PASS. Mỗi comparison preflight các bootstrap seeds/variants trước khi mở test, không tune lại riêng một cell sau khi thấy kết quả.
+E4 admission kiểm T0.scale inputs/lr/runtime/subset profile và common v3 manifest hash; reduced E4 tạo reduced-pool search/restore evidence bằng readiness measurements. Với `e4e567_scale_v3_50k`, E5-E7 admission kiểm parent E4 profile/hash và cùng manifest hash. Mỗi comparison preflight các bootstrap seeds/variants trước khi mở test, không tune lại riêng một cell sau khi thấy kết quả.
+
+### Đường chạy downscale E5-E7 đang hoạt động
+
+Theo [16_e567_downscale.md](16_e567_downscale.md), freeze common v3 manifests trước official result, chạy E4 trên reduced pool, rồi chỉ mở E5-E7 sau khi run/profile/hash và sync được verified. Cấu hình `scale_variant: e4e567_scale_v3_50k` phải xuất hiện trong mọi summary; không trộn artifact v2/full-scale.
+
+E5 dùng MS MARCO child manifest 50k và ORCAS manifest tối đa 5k groups; E6 dùng document cap 50k/event cap 50k mỗi tuần nếu AOL-IA recovered; E7 dùng cap 50k documents và 500 queries cho case lớn. Runner phải load subset view trước khi cấp resource, ghi manifest hash vào summary, và không trộn aggregate variant với full-scale output.
 
 Ví dụ thêm case E7 sau khi đã có shared E3/resource gates:
 

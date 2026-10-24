@@ -1,25 +1,25 @@
 # Plan triển khai và nối toàn bộ thí nghiệm MixIndex
 
-Trạng thái: **đặc tả đã viết; implementation và thí nghiệm chưa chạy**. Target **server A100 80GB**. Agent làm lần lượt các phần dưới, giữ cập nhật [checklist gốc](../checklist.md); không tạo một plan khác thay cho plan này.
+Trạng thái: **đặc tả đã viết; E4 đang chạy và E5-E7 chưa mở**. Target **server H100 80GB**. Agent làm lần lượt các phần dưới, giữ cập nhật [checklist gốc](../checklist.md); không tạo một plan khác thay cho plan này.
 
-Điểm vào của agent là [codex/README.md](README.md). Luồng thực thi đã rà lại: **tải/validate inputs → E0/E1 correctness → code đầy đủ core → T0.core → freeze → E2/E3 → tải/validate scale inputs → T0.scale → E4 full-size gate → E5**. E6/E7 mở từng case sau T0 tương thích; không chờ tải hết mọi dữ liệu mới bắt đầu smoke.
+Điểm vào của agent là [codex/README.md](README.md). Luồng thực thi đã rà lại: **tải/validate inputs → E0/E1 correctness → code đầy đủ core → T0.core → freeze → E2/E3 → tải/validate scale inputs → T0.scale → freeze common v3 50k/5k manifest → E4 artifact/profile/hash verified → E5-E7 với `e4e567_scale_v3_50k`**. E6/E7 mở từng case sau T0 tương thích; không chờ tải hết mọi dữ liệu mới bắt đầu smoke.
 
 ## P0 — Bắt buộc hiểu paper và expected outputs trước khi code
 
 1. **Đọc đầy đủ [report.md](../report.md)** để hiểu bài toán migration embedding, phạm vi paper, các kết quả placeholder, dữ liệu, pipeline, baseline và các quyết định đã khóa. Đặc biệt protocol chính là mục8.3 và15; mục9/10 định nghĩa so sánh/metric; mục11 định nghĩa E0–E7.
 2. **Đọc đầy đủ [expect.md](../expect.md)** để biết mỗi E nhằm trả lời câu hỏi nào, so với ai, metric/endpoint nào quan trọng, artifact nào cần xuất, và cách đọc positive/negative/inconclusive results. Không thay việc đọc bằng bảng tóm tắt stage trong file này.
-3. Đọc [constraints.md](constraints.md), [structure.md](structure.md), [contracts.md](contracts.md), rồi kiểm file/code/checklist thực tế. Chưa có code thì bắt đầu M01; đã có code thì kiểm contract và kết quả test trước khi tiếp tục, không viết lại toàn bộ.
+3. Đọc [constraints.md](constraints.md), [structure.md](structure.md), [contracts.md](contracts.md), [14_presetup_tuning.md](14_presetup_tuning.md) và [15_run_budget.md](15_run_budget.md), rồi kiểm file/code/checklist thực tế. Chưa có code thì bắt đầu M01; đã có code thì kiểm contract và kết quả test trước khi tiếp tục, không viết lại toàn bộ.
 4. Trước khi code, agent phải diễn đạt ngắn được: map là regression không phải RL; `true` là h(d) trực tiếp; ORCAS là static graph không có event frequency; evaluator tách khỏi scheduler; primary static ở10% **accessed**, temporal tuần8 ở7% **scheduled**; E0–E7 có8 milestone.
 5. Đọc và hiểu xong mới tick `READ` trong root checklist. Không cần tạo một Markdown “đã đọc”/Material Passport/evidence report riêng.
 
-Nếu có mâu thuẫn: user correction hiện hành ưu tiên (A10080/server-only, tuning trước official). [M14](14_presetup_tuning.md) cụ thể hóa T0 và việc chọn lr từ grid validation đã có ở report15.3; report8.3/15 tiếp tục định nghĩa khoa học, budget/splits/metric. Không đổi primary để khớp illustrative curves hoặc vì ablation thắng trên test.
+Nếu có mâu thuẫn: user correction hiện hành ưu tiên (H10080/server-only, tuning trước official). [M14](14_presetup_tuning.md) cụ thể hóa T0 và việc chọn lr từ grid validation đã có ở report15.3; report8.3/15 tiếp tục định nghĩa khoa học, budget/splits/metric. Không đổi primary để khớp illustrative curves hoặc vì ablation thắng trên test.
 
 ## P1 — Khung project, environment và đường sync trước run dài
 
 Đọc M01, M10, M11, M12. Triển khai:
 
 1. `pyproject.toml`, config registry/base, CLI skeleton, resolve paths/env và ignore caches/secrets.
-2. `probe_hardware/effective_limits/probe_storage`, cost scopes; smoke torch trên chính A10080, pin dependency versions và hnswlib commit.
+2. `probe_hardware/effective_limits/probe_storage`, cost scopes; smoke torch trên chính H10080, pin dependency versions và hnswlib commit.
 3. `progress.py` với root checklist atomic update, status schema và summary/config artifact writers tối thiểu.
 4. Thin `run_single/finalize_run` và HF pipeline `collect_run_artifacts -> choose_upload_repo -> ensure_repo -> upload_bundle -> verify_remote_bundle -> auto_sync_experiment`. Làm một tiny safetensors/npz fixture và restore round-trip trước run thật.
 5. Single-host queue tối thiểu1 slot lúc đầu, persistence/PID checks và `enqueue/status`; mở2 slots sau resource probes. Không cần code mọi E trước khi smoke.
@@ -82,7 +82,7 @@ T0.core mở E2/E3; `T0.scale` được chạy tại P6 sau khi tải Arctic/MS 
 
 1. Chỉ chạy official sau T0.core/case compute và profile đã local-verified. Download/validate TREC, chạy `T0.case.trec-covid.minilm_mpnet` với đúng document pools; calibration/greedy N/A, search kế thừa có nhãn.
 2. Dùng implementation P3b và selected hyperparameters; mỗi seed fit M0/regions/weights riêng rồi freeze M0/assignment sau bootstrap. Không dùng weights FiQA làm weights chung cho TREC.
-3. Chạy full FiQA/TREC E2: mở đủ map seeds17/29/43 và eligible scheduler grid3×5 sau diagnostic; variants theo M09. Native-limit vs matched-limit256 là sensitivity riêng, không lựa bằng test.
+3. Chạy E2 theo M15: FiQA mapping OP/LA/MLP × 3 map seeds với random (9), FiQA scheduler MLP × 4 schedulers × 3 map seeds với traffic101 (12), TREC mapping OP/LA/MLP tại map seed17 (3). Tổng 24 required cells; không mở traffic grid3×5 hoặc nhân toàn bộ mapping×scheduler. Native-limit vs matched-limit256 là sensitivity riêng, không lựa bằng test.
 4. Regional refit mỗi5% N mới backfill; refresh toàn Q_schedule cho adaptive greedy, giữ bootstrap/budget/evaluation IDs chung giữa schedulers và lưu cả kết quả âm.
 
 Dữ liệu/số học không đủ calibration thì dùng fallback đã khóa; quality test thấp **không** là trigger tự đổi primary. Giữ cả negative outputs. P4 correctness qua thì có thể đi E3 dù greedy chưa thắng có ý nghĩa.
@@ -91,7 +91,7 @@ Dữ liệu/số học không đủ calibration thì dùng fallback đã khóa; 
 
 1. Xác minh implementation M06 đã qua T0; query và commit cùng index phải nhất quán epoch.
 2. Dùng `(L,ef)` đã chọn trên Q_tune của case, kiểm lại fidelity bằng exact stored snapshot; gate ≥0.99 khác ARR-to-full-new. Giữ profile trong comparison; E3 là measurement/control, không mở vòng tuning theo test.
-3. E3 controls fresh graph/same vectors, cadence1/5/10%, sequential/synchronized serving; measure peak/RAM/bytes/stalls.
+3. E3 controls fresh graph/same vectors, cadence1/5/10%, synchronized serving và failed-update save/load; tổng 6 tasks theo M15. Measure peak/RAM/bytes/stalls, không mở thêm seed matrix.
 4. M10 hoàn thiện admission/reservations/exclusive mode. Systems workload16 clients, measured capacity và Poisson load theo M08; primary measurements **không chạy song song hoặc upload nặng**.
 
 ANN gate không đạt: giữ exact result và diagnostic, chưa claim ANN full-scale. HNSW lock có stall thì đo, không sửa số thành0. Failed partial commit phải recover checkpoint nguyên vẹn.
@@ -104,11 +104,13 @@ ANN gate không đạt: giữ exact result và diagnostic, chưa claim ANN full-
 4. Đo encoder batch/length, peak VRAM/RSS, refresh/gain memory, CPU throttling và I/O; scale query-count probe tới100k scheduling groups khi có. Sau subset feasible, encode old vectors/build **actual full bootstrap stored graph**, kiểm full-corpus Q_tune ANN fidelity và peak footprint trước E5. Reference ở gate dùng stored vectors, không unpaid targets. Cập nhật profile search chung và forecast bằng full-bootstrap measurements trước khi nhìn official test.
 5. Config `live_encode` cost probes exclusive; `cached_access` quality pilots có thể co-schedule sau probes nhưng labels/cost modes tách rõ.
 
-E4 gate đúng thì mở E5; đây là controlled full-size bootstrap readiness, chưa phải full quality matrix. Nếu resource không đủ, shard/stream hoặc giảm concurrency; không cleanup local trong phase này. Đổi primary semantics/token budget phải tạo variant, không lặng lẽ sửa. Mức128GiB RAM/16 CPU/1TB NVMe là recommendation/gate hoạch định trong report, không thay phép đo thực. Full-new evaluator cache được chuẩn bị trong task riêng, tính research cost và giữ cách ly.
+E4 gate đúng thì base policy mở E5 full-scale. Với `e4e567_scale_v3_50k`, E4 chạy lại trên common manifest 50k/5k; chỉ sau khi artifact/profile/hash + sync verified mới mở E5-E7. Nếu resource không đủ, shard/stream hoặc giảm concurrency; không cleanup local trong phase này. Đổi primary semantics/token budget phải tạo variant, không lặng lẽ sửa. Mức128GiB RAM/16 CPU/1TB NVMe là recommendation/gate hoạch định trong report, không thay phép đo thực. Full-new evaluator cache được chuẩn bị trong task riêng, tính research cost và giữ cách ly.
 
 ## P7 — E5 primary static và extensions
 
-Full MS MARCO/Arctic, sampled ORCAS graph. Expand4 primary schedulers×3 map seeds×5 traffic seeds (60 cells) với bootstrap IDs/state/search settings chung. Primary ARR@10 ở10% total accessed; judged-dev nDCG là secondary, cost measured/estimated phải có nhãn.
+Server execution áp dụng [16_e567_downscale.md](16_e567_downscale.md): giữ nguyên 12 cells và checkpoint semantics nhưng dùng MS MARCO child manifest 50k/ORCAS tối đa 5k groups. E4 không chạy lại; xác minh parent artifact/profile/hash rồi tạo reduced manifests trước E5. Primary ARR@10 vẫn ở 10% accessed; judged metrics có thể là `N/A_REDUCED_COVERAGE` nếu manifest không đủ coverage.
+
+Đọc [15_run_budget.md](15_run_budget.md) trước khi expand task. Bản chạy mặc định là **12 primary cells**, gồm 4 scheduler × 3 map seed `{17,29,43}` × traffic seed `101`; không mở full 3×5 traffic grid. Mỗi cell chạy tiếp đến checkpoint bootstrap/5/10/25/50% accessed và 100% true trong cùng run ID. Có tối đa 4 E5 traffic-sensitivity cells (`random`, `greedy` × map seed17 × traffic `{103,109}`) nếu primary đã hợp lệ; chúng không chặn E5 và không được dùng để tune lại profile. Primary ARR@10 ở10% total accessed; judged-dev nDCG là secondary, cost measured/estimated phải có nhãn.
 
 1. Chạy1 cell end-to-end kỹ thuật trước full matrix; không chọn scheduler dựa trên test để bỏ cells còn lại.
 2. Queue tối đa2 compute jobs khi đủ memory/CPU/disk; đo live performance riêng exclusive. Co-scheduled timings không trở thành isolated performance claim.
@@ -118,10 +120,12 @@ Full MS MARCO/Arctic, sampled ORCAS graph. Expand4 primary schedulers×3 map see
 
 ## P8 — E6 temporal và E7 generalization
 
+E6/E7 cũng dùng `e4e567_scale_v3_50k` nhưng không đổi số cell: E6 cap 50k recovered documents và 50k events/tuần trên chronology thật; E7 cap 50k documents và 500 queries cho NQ/HotpotQA/FEVER, còn FiQA/TREC-COVID chỉ reuse exact validated scope. Tất cả reduced manifests phải freeze/hash trước quality run; aggregate không được trộn với full-scale hoặc v2 output.
+
 Hai nhánh có thể chuẩn bị/chạy xen với E5 theo DAG và resource, không phải đợi E5 thắng:
 
 - **E6:** recovery/validate AOL, pin Arctic; chạy T0.case trên document pools và query/history chỉ tuần1, freeze trước future evaluation. Rolling7 decisions→tuần8 at7% scheduled. Không available data ghi BLOCKED_DATA, root checkbox chưa xong; không synthetic replacement.
-- **E7:** tải/validate ba BEIR lớn còn lại và Nomic/BGE pairs theo case; chạy T0.case gồm map/index/resource probes trên **đúng dataset/model** trước official cells.20 mapping cases×3 map seeds, eligible scheduler cases3×5; thiếu independent queries thì scheduler N/A/transfer có nhãn. Forecast bằng profile từng case, không lấy timing Arctic đại diện mọi model.
+- **E7:** dùng ma trận compact tám case đại diện theo M15: MiniLM/MPNet trên FiQA và TREC-COVID; Arctic trên NQ và HotpotQA; Nomic trên FEVER và FiQA; BGE trên NQ và FEVER. Mỗi case chạy MLP với random/greedy ở map seed17 và traffic seed101 (16 cells), cộng OP+greedy trên bốn case cross-check (4 cells). Reuse FiQA/TREC outputs của E2 chỉ khi toàn bộ hash khớp. Đây là representative generalization pilot, không phải đủ20 dataset×model cases hoặc đủ3×5 seed grid; thiếu independent queries thì scheduler N/A/transfer có nhãn. Forecast bằng profile từng case, không lấy timing Arctic đại diện mọi model.
 - Hoàn thiện published baselines M08: read source recipe, match paid budget hoặc tách published-protocol table, implement query-side/anchor/unpaired transforms đúng. Recipe thiếu thì explicit incomplete-baselines, không fake baseline.
 - Matrix reuse chỉ khi exact config/data/model/split hashes khớp; mọi case âm giữ. Aggregate từng model/dataset, không chỉ grand mean.
 
@@ -142,11 +146,11 @@ flowchart TD
     E3 --> SCALE[Tai va validate Arctic MS MARCO ORCAS]
     SCALE --> T0S[T0.scale va SMOKE-TIME]
     T0S --> E4[E4 subset va full-bootstrap gate]
-    E4 --> E5[E5 static full corpus]
+    E4 --> E5[E5 static e567 reduced]
     E4 --> AOL[AOL recovery validate va T0.case]
     AOL --> E6[E6 temporal neu du data]
     E3 --> CASE[Data model validation va T0.case BEIR]
-    CASE --> E7[E7 matrix; large jobs can scale gate]
+    CASE --> E7[E7 matrix; e567 reduced cases]
     E5 --> DONE[Finalize từng run/checkpoint]
     E6 --> DONE
     E7 --> DONE

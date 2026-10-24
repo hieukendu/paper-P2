@@ -1,0 +1,4137 @@
+jobs:
+- config: configs/experiments/e2.yaml
+  measurement_mode: quality
+  resources: &id001
+    gpu_device: 0
+    gpu_memory_gib: 2
+    host_ram_gib: 8
+    cpu_cores: 8
+    disk_scratch_gib: 4
+    io_heavy: false
+  development_hardware: false
+  task_id: E2.exact.preflight.cd958cf482e3
+  experiment: E2_PREFLIGHT
+  phase: development
+  config_overrides:
+    paths:
+      data: /root/paper-P2/data
+      cache: /root/paper-P2/cache
+      runs: /root/paper-P2/runs
+      state: /root/paper-P2/state
+      staging: /root/paper-P2/staging
+    dataset:
+      name: fiqa
+      subset_size: null
+    models:
+      pair: minilm_mpnet
+      dtype: float32
+      batch_size: 64
+    splits:
+      master_seed: 20261020
+      schedule_fraction: 0.8
+      cal_fit_fraction: 0.1
+      cal_check_fraction: 0.1
+    mapping:
+      kind: residual_mlp
+      hidden: 256
+      rank: 64
+      lr: 0.001
+      batch_size: 256
+      max_epochs: 50
+      patience: 5
+      min_delta: 1.0e-05
+      region_target_pairs: 100
+      region_max: 256
+      regional: full
+      ridge: 10.0
+      min_region_pairs: 20
+    calibration:
+      enabled: true
+      quantile: 0.95
+      min_pairs: 200
+      min_queries: 50
+      max_pairs: 1000
+      max_pairs_per_query: 4
+      min_slope: 1.0e-06
+    search:
+      backend: exact
+      k: 10
+      candidates: 50
+      ef_search: 200
+      M: 16
+      ef_construction: 200
+      chunk_rows: 16384
+      threads: 8
+    scheduler:
+      kind: greedy
+      batch_fraction: 0.01
+      refit_fraction: 0.05
+      fallback: random
+    budget:
+      train_fraction: 0.02
+      train_cap: 10000
+      val_fraction: 0.005
+      val_cap: 2000
+      cal_fraction: 0.005
+      cal_cap: 1000
+      checkpoints:
+      - 0.05
+      - 0.1
+      - 0.25
+      - 0.5
+      - 1.0
+    evaluation:
+      primary_static_fraction: 0.1
+      map_seeds:
+      - 17
+      - 29
+      - 43
+      traffic_seeds:
+      - 101
+      - 103
+      - 107
+      - 109
+      - 113
+      bootstrap_draws: 10000
+    experiment:
+      map_seed: 17
+      traffic_seed: 101
+      variant: primary
+      profile_hash: a38d8e8b5b27686edceb4d80ab4822d3164545b1327bc29a35db0f687b87a0e3
+      run_budget_policy: compact_v1
+      cell_role: mapping
+      preflight_run: null
+    execution:
+      phase: development
+      mode: cached_access
+      target_gpu: H100
+      target_vram_gib: 80
+      require_target: true
+      device: cuda
+      max_compute_jobs: 1
+      gpu_headroom_gib: 4
+      ram_headroom_gib: 8
+      cpu_headroom: 1
+    tuning:
+      scope: core
+      policy_version: validation_grid_v1
+      lr_grid:
+      - 0.0001
+      - 0.001
+      search_grid:
+      - - 50
+        - 200
+      - - 100
+        - 200
+      - - 500
+        - 1000
+      - - 1000
+        - 2000
+      batch_grid:
+      - 1
+      - 2
+      - 4
+      - 8
+      - 16
+      - 32
+      - 64
+      thread_grid:
+      - 1
+      - 2
+      - 4
+      - 8
+      repeats: 3
+      fidelity_gate: 0.99
+      lock_path: configs/locked/tuning.lock.yaml
+    sync:
+      enabled: true
+      private: false
+      repo_prefix: mixindex-runs
+      repo_target_gib: 50
+      repo_target_files: 5000
+      artifact_shard_gib: 2
+      retries: 3
+  depends_on:
+  - T0.core.51c554987c48.freeze
+  priority: 100
+- config: configs/experiments/e2.yaml
+  measurement_mode: quality
+  resources: *id001
+  development_hardware: false
+  task_id: E2.fiqa.mapping.op.primary.random.m17.t101.cd958cf482e3
+  experiment: E2
+  phase: official
+  config_overrides:
+    paths:
+      data: /root/paper-P2/data
+      cache: /root/paper-P2/cache
+      runs: /root/paper-P2/runs
+      state: /root/paper-P2/state
+      staging: /root/paper-P2/staging
+    dataset:
+      name: fiqa
+      subset_size: null
+    models:
+      pair: minilm_mpnet
+      dtype: float32
+      batch_size: 64
+    splits:
+      master_seed: 20261020
+      schedule_fraction: 0.8
+      cal_fit_fraction: 0.1
+      cal_check_fraction: 0.1
+    mapping:
+      kind: op
+      hidden: 256
+      rank: 64
+      lr: 0.001
+      batch_size: 256
+      max_epochs: 50
+      patience: 5
+      min_delta: 1.0e-05
+      region_target_pairs: 100
+      region_max: 256
+      regional: full
+      ridge: 10.0
+      min_region_pairs: 20
+    calibration:
+      enabled: true
+      quantile: 0.95
+      min_pairs: 200
+      min_queries: 50
+      max_pairs: 1000
+      max_pairs_per_query: 4
+      min_slope: 1.0e-06
+    search:
+      backend: exact
+      k: 10
+      candidates: 50
+      ef_search: 200
+      M: 16
+      ef_construction: 200
+      chunk_rows: 16384
+      threads: 8
+    scheduler:
+      kind: random
+      batch_fraction: 0.01
+      refit_fraction: 0.05
+      fallback: random
+    budget:
+      train_fraction: 0.02
+      train_cap: 10000
+      val_fraction: 0.005
+      val_cap: 2000
+      cal_fraction: 0.005
+      cal_cap: 1000
+      checkpoints:
+      - 0.05
+      - 0.1
+      - 0.25
+      - 0.5
+      - 1.0
+    evaluation:
+      primary_static_fraction: 0.1
+      map_seeds:
+      - 17
+      - 29
+      - 43
+      traffic_seeds:
+      - 101
+      - 103
+      - 107
+      - 109
+      - 113
+      bootstrap_draws: 10000
+    experiment:
+      map_seed: 17
+      traffic_seed: 101
+      variant: primary
+      profile_hash: a38d8e8b5b27686edceb4d80ab4822d3164545b1327bc29a35db0f687b87a0e3
+      run_budget_policy: compact_v1
+      cell_role: mapping
+      preflight_run: E2_PREFLIGHT-fiqa-432ae8896c49
+    execution:
+      phase: official
+      mode: cached_access
+      target_gpu: H100
+      target_vram_gib: 80
+      require_target: true
+      device: cuda
+      max_compute_jobs: 1
+      gpu_headroom_gib: 4
+      ram_headroom_gib: 8
+      cpu_headroom: 1
+    tuning:
+      scope: core
+      policy_version: validation_grid_v1
+      lr_grid:
+      - 0.0001
+      - 0.001
+      search_grid:
+      - - 50
+        - 200
+      - - 100
+        - 200
+      - - 500
+        - 1000
+      - - 1000
+        - 2000
+      batch_grid:
+      - 1
+      - 2
+      - 4
+      - 8
+      - 16
+      - 32
+      - 64
+      thread_grid:
+      - 1
+      - 2
+      - 4
+      - 8
+      repeats: 3
+      fidelity_gate: 0.99
+      lock_path: configs/locked/tuning.lock.yaml
+    sync:
+      enabled: true
+      private: false
+      repo_prefix: mixindex-runs
+      repo_target_gib: 50
+      repo_target_files: 5000
+      artifact_shard_gib: 2
+      retries: 3
+  profile_hash: a38d8e8b5b27686edceb4d80ab4822d3164545b1327bc29a35db0f687b87a0e3
+  tuning_scope: core
+  input_refs: &id002
+    dataset: fiqa
+    hardware:
+      cpu_cores: 16.0
+      devices:
+      - compute_capability:
+        - 9
+        - 0
+        name: NVIDIA H100 80GB HBM3
+        vram_total_bytes: 84929478656
+      hnsw_build:
+        commit: d9b3608c83d83b46c96e25088cb1d729b29dcfe9
+        sha256: adf8c94849c6015ad81ae58e7cddf2c9a99914ebeb60cb03aaf1986d43e762df
+        source: https://github.com/nmslib/hnswlib.git
+      packages:
+        hnswlib: 0.9.0
+        huggingface-hub: 0.34.4
+        numpy: 2.2.6
+        pyarrow: 20.0.0
+        scikit-learn: 1.6.1
+        scipy: 1.15.3
+        sentence-transformers: 4.1.0
+        torch: 2.6.0+cu124
+        transformers: 4.51.3
+      ram_limit_bytes: 268435456000
+      torch_cuda: '12.4'
+    models:
+      new:
+        adapter: sentence_transformer
+        dim: 768
+        document_prefix: ''
+        download_patterns:
+        - '*.json'
+        - '*.safetensors'
+        - '*.txt'
+        - '*.model'
+        - '*.md'
+        dtype: float32
+        max_tokens: 384
+        pooling: mean
+        query_prefix: ''
+        repo_id: sentence-transformers/all-mpnet-base-v2
+        resolved_revision: e8c3b32edf5434bc2275fc9bab85f82640a19130
+        trust_remote_code: false
+      old:
+        adapter: sentence_transformer
+        dim: 384
+        document_prefix: ''
+        download_patterns:
+        - '*.json'
+        - '*.safetensors'
+        - '*.txt'
+        - '*.model'
+        - '*.md'
+        dtype: float32
+        max_tokens: 256
+        pooling: mean
+        query_prefix: ''
+        repo_id: sentence-transformers/all-MiniLM-L6-v2
+        resolved_revision: 1110a243fdf4706b3f48f1d95db1a4f5529b4d41
+        trust_remote_code: false
+    pair: minilm_mpnet
+    release: 584640e32aecdf4ce3517078a50ac7e771025e768c8c21fd3ae824d0699c5058
+    split_hash: 44b9adf3317face605a7d9ce7bd875bfa88142dc4967a1cc2d5c4efbc2d22594
+  variant_id: primary
+  overrides: {}
+  run_budget_policy: compact_v1
+  cell_role: mapping
+  dataset_case: fiqa
+  depends_on:
+  - E2.exact.preflight.cd958cf482e3
+  priority: 80
+- config: configs/experiments/e2.yaml
+  measurement_mode: quality
+  resources: *id001
+  development_hardware: false
+  task_id: E2.fiqa.mapping.op.primary.random.m29.t101.cd958cf482e3
+  experiment: E2
+  phase: official
+  config_overrides:
+    paths:
+      data: /root/paper-P2/data
+      cache: /root/paper-P2/cache
+      runs: /root/paper-P2/runs
+      state: /root/paper-P2/state
+      staging: /root/paper-P2/staging
+    dataset:
+      name: fiqa
+      subset_size: null
+    models:
+      pair: minilm_mpnet
+      dtype: float32
+      batch_size: 64
+    splits:
+      master_seed: 20261020
+      schedule_fraction: 0.8
+      cal_fit_fraction: 0.1
+      cal_check_fraction: 0.1
+    mapping:
+      kind: op
+      hidden: 256
+      rank: 64
+      lr: 0.001
+      batch_size: 256
+      max_epochs: 50
+      patience: 5
+      min_delta: 1.0e-05
+      region_target_pairs: 100
+      region_max: 256
+      regional: full
+      ridge: 10.0
+      min_region_pairs: 20
+    calibration:
+      enabled: true
+      quantile: 0.95
+      min_pairs: 200
+      min_queries: 50
+      max_pairs: 1000
+      max_pairs_per_query: 4
+      min_slope: 1.0e-06
+    search:
+      backend: exact
+      k: 10
+      candidates: 50
+      ef_search: 200
+      M: 16
+      ef_construction: 200
+      chunk_rows: 16384
+      threads: 8
+    scheduler:
+      kind: random
+      batch_fraction: 0.01
+      refit_fraction: 0.05
+      fallback: random
+    budget:
+      train_fraction: 0.02
+      train_cap: 10000
+      val_fraction: 0.005
+      val_cap: 2000
+      cal_fraction: 0.005
+      cal_cap: 1000
+      checkpoints:
+      - 0.05
+      - 0.1
+      - 0.25
+      - 0.5
+      - 1.0
+    evaluation:
+      primary_static_fraction: 0.1
+      map_seeds:
+      - 17
+      - 29
+      - 43
+      traffic_seeds:
+      - 101
+      - 103
+      - 107
+      - 109
+      - 113
+      bootstrap_draws: 10000
+    experiment:
+      map_seed: 29
+      traffic_seed: 101
+      variant: primary
+      profile_hash: a38d8e8b5b27686edceb4d80ab4822d3164545b1327bc29a35db0f687b87a0e3
+      run_budget_policy: compact_v1
+      cell_role: mapping
+      preflight_run: E2_PREFLIGHT-fiqa-432ae8896c49
+    execution:
+      phase: official
+      mode: cached_access
+      target_gpu: H100
+      target_vram_gib: 80
+      require_target: true
+      device: cuda
+      max_compute_jobs: 1
+      gpu_headroom_gib: 4
+      ram_headroom_gib: 8
+      cpu_headroom: 1
+    tuning:
+      scope: core
+      policy_version: validation_grid_v1
+      lr_grid:
+      - 0.0001
+      - 0.001
+      search_grid:
+      - - 50
+        - 200
+      - - 100
+        - 200
+      - - 500
+        - 1000
+      - - 1000
+        - 2000
+      batch_grid:
+      - 1
+      - 2
+      - 4
+      - 8
+      - 16
+      - 32
+      - 64
+      thread_grid:
+      - 1
+      - 2
+      - 4
+      - 8
+      repeats: 3
+      fidelity_gate: 0.99
+      lock_path: configs/locked/tuning.lock.yaml
+    sync:
+      enabled: true
+      private: false
+      repo_prefix: mixindex-runs
+      repo_target_gib: 50
+      repo_target_files: 5000
+      artifact_shard_gib: 2
+      retries: 3
+  profile_hash: a38d8e8b5b27686edceb4d80ab4822d3164545b1327bc29a35db0f687b87a0e3
+  tuning_scope: core
+  input_refs: *id002
+  variant_id: primary
+  overrides: {}
+  run_budget_policy: compact_v1
+  cell_role: mapping
+  dataset_case: fiqa
+  depends_on:
+  - E2.exact.preflight.cd958cf482e3
+  priority: 80
+- config: configs/experiments/e2.yaml
+  measurement_mode: quality
+  resources: *id001
+  development_hardware: false
+  task_id: E2.fiqa.mapping.op.primary.random.m43.t101.cd958cf482e3
+  experiment: E2
+  phase: official
+  config_overrides:
+    paths:
+      data: /root/paper-P2/data
+      cache: /root/paper-P2/cache
+      runs: /root/paper-P2/runs
+      state: /root/paper-P2/state
+      staging: /root/paper-P2/staging
+    dataset:
+      name: fiqa
+      subset_size: null
+    models:
+      pair: minilm_mpnet
+      dtype: float32
+      batch_size: 64
+    splits:
+      master_seed: 20261020
+      schedule_fraction: 0.8
+      cal_fit_fraction: 0.1
+      cal_check_fraction: 0.1
+    mapping:
+      kind: op
+      hidden: 256
+      rank: 64
+      lr: 0.001
+      batch_size: 256
+      max_epochs: 50
+      patience: 5
+      min_delta: 1.0e-05
+      region_target_pairs: 100
+      region_max: 256
+      regional: full
+      ridge: 10.0
+      min_region_pairs: 20
+    calibration:
+      enabled: true
+      quantile: 0.95
+      min_pairs: 200
+      min_queries: 50
+      max_pairs: 1000
+      max_pairs_per_query: 4
+      min_slope: 1.0e-06
+    search:
+      backend: exact
+      k: 10
+      candidates: 50
+      ef_search: 200
+      M: 16
+      ef_construction: 200
+      chunk_rows: 16384
+      threads: 8
+    scheduler:
+      kind: random
+      batch_fraction: 0.01
+      refit_fraction: 0.05
+      fallback: random
+    budget:
+      train_fraction: 0.02
+      train_cap: 10000
+      val_fraction: 0.005
+      val_cap: 2000
+      cal_fraction: 0.005
+      cal_cap: 1000
+      checkpoints:
+      - 0.05
+      - 0.1
+      - 0.25
+      - 0.5
+      - 1.0
+    evaluation:
+      primary_static_fraction: 0.1
+      map_seeds:
+      - 17
+      - 29
+      - 43
+      traffic_seeds:
+      - 101
+      - 103
+      - 107
+      - 109
+      - 113
+      bootstrap_draws: 10000
+    experiment:
+      map_seed: 43
+      traffic_seed: 101
+      variant: primary
+      profile_hash: a38d8e8b5b27686edceb4d80ab4822d3164545b1327bc29a35db0f687b87a0e3
+      run_budget_policy: compact_v1
+      cell_role: mapping
+      preflight_run: E2_PREFLIGHT-fiqa-432ae8896c49
+    execution:
+      phase: official
+      mode: cached_access
+      target_gpu: H100
+      target_vram_gib: 80
+      require_target: true
+      device: cuda
+      max_compute_jobs: 1
+      gpu_headroom_gib: 4
+      ram_headroom_gib: 8
+      cpu_headroom: 1
+    tuning:
+      scope: core
+      policy_version: validation_grid_v1
+      lr_grid:
+      - 0.0001
+      - 0.001
+      search_grid:
+      - - 50
+        - 200
+      - - 100
+        - 200
+      - - 500
+        - 1000
+      - - 1000
+        - 2000
+      batch_grid:
+      - 1
+      - 2
+      - 4
+      - 8
+      - 16
+      - 32
+      - 64
+      thread_grid:
+      - 1
+      - 2
+      - 4
+      - 8
+      repeats: 3
+      fidelity_gate: 0.99
+      lock_path: configs/locked/tuning.lock.yaml
+    sync:
+      enabled: true
+      private: false
+      repo_prefix: mixindex-runs
+      repo_target_gib: 50
+      repo_target_files: 5000
+      artifact_shard_gib: 2
+      retries: 3
+  profile_hash: a38d8e8b5b27686edceb4d80ab4822d3164545b1327bc29a35db0f687b87a0e3
+  tuning_scope: core
+  input_refs: *id002
+  variant_id: primary
+  overrides: {}
+  run_budget_policy: compact_v1
+  cell_role: mapping
+  dataset_case: fiqa
+  depends_on:
+  - E2.exact.preflight.cd958cf482e3
+  priority: 80
+- config: configs/experiments/e2.yaml
+  measurement_mode: quality
+  resources: *id001
+  development_hardware: false
+  task_id: E2.fiqa.mapping.la.primary.random.m17.t101.cd958cf482e3
+  experiment: E2
+  phase: official
+  config_overrides:
+    paths:
+      data: /root/paper-P2/data
+      cache: /root/paper-P2/cache
+      runs: /root/paper-P2/runs
+      state: /root/paper-P2/state
+      staging: /root/paper-P2/staging
+    dataset:
+      name: fiqa
+      subset_size: null
+    models:
+      pair: minilm_mpnet
+      dtype: float32
+      batch_size: 64
+    splits:
+      master_seed: 20261020
+      schedule_fraction: 0.8
+      cal_fit_fraction: 0.1
+      cal_check_fraction: 0.1
+    mapping:
+      kind: la
+      hidden: 256
+      rank: 64
+      lr: 0.001
+      batch_size: 256
+      max_epochs: 50
+      patience: 5
+      min_delta: 1.0e-05
+      region_target_pairs: 100
+      region_max: 256
+      regional: full
+      ridge: 10.0
+      min_region_pairs: 20
+    calibration:
+      enabled: true
+      quantile: 0.95
+      min_pairs: 200
+      min_queries: 50
+      max_pairs: 1000
+      max_pairs_per_query: 4
+      min_slope: 1.0e-06
+    search:
+      backend: exact
+      k: 10
+      candidates: 50
+      ef_search: 200
+      M: 16
+      ef_construction: 200
+      chunk_rows: 16384
+      threads: 8
+    scheduler:
+      kind: random
+      batch_fraction: 0.01
+      refit_fraction: 0.05
+      fallback: random
+    budget:
+      train_fraction: 0.02
+      train_cap: 10000
+      val_fraction: 0.005
+      val_cap: 2000
+      cal_fraction: 0.005
+      cal_cap: 1000
+      checkpoints:
+      - 0.05
+      - 0.1
+      - 0.25
+      - 0.5
+      - 1.0
+    evaluation:
+      primary_static_fraction: 0.1
+      map_seeds:
+      - 17
+      - 29
+      - 43
+      traffic_seeds:
+      - 101
+      - 103
+      - 107
+      - 109
+      - 113
+      bootstrap_draws: 10000
+    experiment:
+      map_seed: 17
+      traffic_seed: 101
+      variant: primary
+      profile_hash: a38d8e8b5b27686edceb4d80ab4822d3164545b1327bc29a35db0f687b87a0e3
+      run_budget_policy: compact_v1
+      cell_role: mapping
+      preflight_run: E2_PREFLIGHT-fiqa-432ae8896c49
+    execution:
+      phase: official
+      mode: cached_access
+      target_gpu: H100
+      target_vram_gib: 80
+      require_target: true
+      device: cuda
+      max_compute_jobs: 1
+      gpu_headroom_gib: 4
+      ram_headroom_gib: 8
+      cpu_headroom: 1
+    tuning:
+      scope: core
+      policy_version: validation_grid_v1
+      lr_grid:
+      - 0.0001
+      - 0.001
+      search_grid:
+      - - 50
+        - 200
+      - - 100
+        - 200
+      - - 500
+        - 1000
+      - - 1000
+        - 2000
+      batch_grid:
+      - 1
+      - 2
+      - 4
+      - 8
+      - 16
+      - 32
+      - 64
+      thread_grid:
+      - 1
+      - 2
+      - 4
+      - 8
+      repeats: 3
+      fidelity_gate: 0.99
+      lock_path: configs/locked/tuning.lock.yaml
+    sync:
+      enabled: true
+      private: false
+      repo_prefix: mixindex-runs
+      repo_target_gib: 50
+      repo_target_files: 5000
+      artifact_shard_gib: 2
+      retries: 3
+  profile_hash: a38d8e8b5b27686edceb4d80ab4822d3164545b1327bc29a35db0f687b87a0e3
+  tuning_scope: core
+  input_refs: *id002
+  variant_id: primary
+  overrides: {}
+  run_budget_policy: compact_v1
+  cell_role: mapping
+  dataset_case: fiqa
+  depends_on:
+  - E2.exact.preflight.cd958cf482e3
+  priority: 80
+- config: configs/experiments/e2.yaml
+  measurement_mode: quality
+  resources: *id001
+  development_hardware: false
+  task_id: E2.fiqa.mapping.la.primary.random.m29.t101.cd958cf482e3
+  experiment: E2
+  phase: official
+  config_overrides:
+    paths:
+      data: /root/paper-P2/data
+      cache: /root/paper-P2/cache
+      runs: /root/paper-P2/runs
+      state: /root/paper-P2/state
+      staging: /root/paper-P2/staging
+    dataset:
+      name: fiqa
+      subset_size: null
+    models:
+      pair: minilm_mpnet
+      dtype: float32
+      batch_size: 64
+    splits:
+      master_seed: 20261020
+      schedule_fraction: 0.8
+      cal_fit_fraction: 0.1
+      cal_check_fraction: 0.1
+    mapping:
+      kind: la
+      hidden: 256
+      rank: 64
+      lr: 0.001
+      batch_size: 256
+      max_epochs: 50
+      patience: 5
+      min_delta: 1.0e-05
+      region_target_pairs: 100
+      region_max: 256
+      regional: full
+      ridge: 10.0
+      min_region_pairs: 20
+    calibration:
+      enabled: true
+      quantile: 0.95
+      min_pairs: 200
+      min_queries: 50
+      max_pairs: 1000
+      max_pairs_per_query: 4
+      min_slope: 1.0e-06
+    search:
+      backend: exact
+      k: 10
+      candidates: 50
+      ef_search: 200
+      M: 16
+      ef_construction: 200
+      chunk_rows: 16384
+      threads: 8
+    scheduler:
+      kind: random
+      batch_fraction: 0.01
+      refit_fraction: 0.05
+      fallback: random
+    budget:
+      train_fraction: 0.02
+      train_cap: 10000
+      val_fraction: 0.005
+      val_cap: 2000
+      cal_fraction: 0.005
+      cal_cap: 1000
+      checkpoints:
+      - 0.05
+      - 0.1
+      - 0.25
+      - 0.5
+      - 1.0
+    evaluation:
+      primary_static_fraction: 0.1
+      map_seeds:
+      - 17
+      - 29
+      - 43
+      traffic_seeds:
+      - 101
+      - 103
+      - 107
+      - 109
+      - 113
+      bootstrap_draws: 10000
+    experiment:
+      map_seed: 29
+      traffic_seed: 101
+      variant: primary
+      profile_hash: a38d8e8b5b27686edceb4d80ab4822d3164545b1327bc29a35db0f687b87a0e3
+      run_budget_policy: compact_v1
+      cell_role: mapping
+      preflight_run: E2_PREFLIGHT-fiqa-432ae8896c49
+    execution:
+      phase: official
+      mode: cached_access
+      target_gpu: H100
+      target_vram_gib: 80
+      require_target: true
+      device: cuda
+      max_compute_jobs: 1
+      gpu_headroom_gib: 4
+      ram_headroom_gib: 8
+      cpu_headroom: 1
+    tuning:
+      scope: core
+      policy_version: validation_grid_v1
+      lr_grid:
+      - 0.0001
+      - 0.001
+      search_grid:
+      - - 50
+        - 200
+      - - 100
+        - 200
+      - - 500
+        - 1000
+      - - 1000
+        - 2000
+      batch_grid:
+      - 1
+      - 2
+      - 4
+      - 8
+      - 16
+      - 32
+      - 64
+      thread_grid:
+      - 1
+      - 2
+      - 4
+      - 8
+      repeats: 3
+      fidelity_gate: 0.99
+      lock_path: configs/locked/tuning.lock.yaml
+    sync:
+      enabled: true
+      private: false
+      repo_prefix: mixindex-runs
+      repo_target_gib: 50
+      repo_target_files: 5000
+      artifact_shard_gib: 2
+      retries: 3
+  profile_hash: a38d8e8b5b27686edceb4d80ab4822d3164545b1327bc29a35db0f687b87a0e3
+  tuning_scope: core
+  input_refs: *id002
+  variant_id: primary
+  overrides: {}
+  run_budget_policy: compact_v1
+  cell_role: mapping
+  dataset_case: fiqa
+  depends_on:
+  - E2.exact.preflight.cd958cf482e3
+  priority: 80
+- config: configs/experiments/e2.yaml
+  measurement_mode: quality
+  resources: *id001
+  development_hardware: false
+  task_id: E2.fiqa.mapping.la.primary.random.m43.t101.cd958cf482e3
+  experiment: E2
+  phase: official
+  config_overrides:
+    paths:
+      data: /root/paper-P2/data
+      cache: /root/paper-P2/cache
+      runs: /root/paper-P2/runs
+      state: /root/paper-P2/state
+      staging: /root/paper-P2/staging
+    dataset:
+      name: fiqa
+      subset_size: null
+    models:
+      pair: minilm_mpnet
+      dtype: float32
+      batch_size: 64
+    splits:
+      master_seed: 20261020
+      schedule_fraction: 0.8
+      cal_fit_fraction: 0.1
+      cal_check_fraction: 0.1
+    mapping:
+      kind: la
+      hidden: 256
+      rank: 64
+      lr: 0.001
+      batch_size: 256
+      max_epochs: 50
+      patience: 5
+      min_delta: 1.0e-05
+      region_target_pairs: 100
+      region_max: 256
+      regional: full
+      ridge: 10.0
+      min_region_pairs: 20
+    calibration:
+      enabled: true
+      quantile: 0.95
+      min_pairs: 200
+      min_queries: 50
+      max_pairs: 1000
+      max_pairs_per_query: 4
+      min_slope: 1.0e-06
+    search:
+      backend: exact
+      k: 10
+      candidates: 50
+      ef_search: 200
+      M: 16
+      ef_construction: 200
+      chunk_rows: 16384
+      threads: 8
+    scheduler:
+      kind: random
+      batch_fraction: 0.01
+      refit_fraction: 0.05
+      fallback: random
+    budget:
+      train_fraction: 0.02
+      train_cap: 10000
+      val_fraction: 0.005
+      val_cap: 2000
+      cal_fraction: 0.005
+      cal_cap: 1000
+      checkpoints:
+      - 0.05
+      - 0.1
+      - 0.25
+      - 0.5
+      - 1.0
+    evaluation:
+      primary_static_fraction: 0.1
+      map_seeds:
+      - 17
+      - 29
+      - 43
+      traffic_seeds:
+      - 101
+      - 103
+      - 107
+      - 109
+      - 113
+      bootstrap_draws: 10000
+    experiment:
+      map_seed: 43
+      traffic_seed: 101
+      variant: primary
+      profile_hash: a38d8e8b5b27686edceb4d80ab4822d3164545b1327bc29a35db0f687b87a0e3
+      run_budget_policy: compact_v1
+      cell_role: mapping
+      preflight_run: E2_PREFLIGHT-fiqa-432ae8896c49
+    execution:
+      phase: official
+      mode: cached_access
+      target_gpu: H100
+      target_vram_gib: 80
+      require_target: true
+      device: cuda
+      max_compute_jobs: 1
+      gpu_headroom_gib: 4
+      ram_headroom_gib: 8
+      cpu_headroom: 1
+    tuning:
+      scope: core
+      policy_version: validation_grid_v1
+      lr_grid:
+      - 0.0001
+      - 0.001
+      search_grid:
+      - - 50
+        - 200
+      - - 100
+        - 200
+      - - 500
+        - 1000
+      - - 1000
+        - 2000
+      batch_grid:
+      - 1
+      - 2
+      - 4
+      - 8
+      - 16
+      - 32
+      - 64
+      thread_grid:
+      - 1
+      - 2
+      - 4
+      - 8
+      repeats: 3
+      fidelity_gate: 0.99
+      lock_path: configs/locked/tuning.lock.yaml
+    sync:
+      enabled: true
+      private: false
+      repo_prefix: mixindex-runs
+      repo_target_gib: 50
+      repo_target_files: 5000
+      artifact_shard_gib: 2
+      retries: 3
+  profile_hash: a38d8e8b5b27686edceb4d80ab4822d3164545b1327bc29a35db0f687b87a0e3
+  tuning_scope: core
+  input_refs: *id002
+  variant_id: primary
+  overrides: {}
+  run_budget_policy: compact_v1
+  cell_role: mapping
+  dataset_case: fiqa
+  depends_on:
+  - E2.exact.preflight.cd958cf482e3
+  priority: 80
+- config: configs/experiments/e2.yaml
+  measurement_mode: quality
+  resources: *id001
+  development_hardware: false
+  task_id: E2.fiqa.mapping.residual_mlp.primary.random.m17.t101.cd958cf482e3
+  experiment: E2
+  phase: official
+  config_overrides:
+    paths:
+      data: /root/paper-P2/data
+      cache: /root/paper-P2/cache
+      runs: /root/paper-P2/runs
+      state: /root/paper-P2/state
+      staging: /root/paper-P2/staging
+    dataset:
+      name: fiqa
+      subset_size: null
+    models:
+      pair: minilm_mpnet
+      dtype: float32
+      batch_size: 64
+    splits:
+      master_seed: 20261020
+      schedule_fraction: 0.8
+      cal_fit_fraction: 0.1
+      cal_check_fraction: 0.1
+    mapping:
+      kind: residual_mlp
+      hidden: 256
+      rank: 64
+      lr: 0.001
+      batch_size: 256
+      max_epochs: 50
+      patience: 5
+      min_delta: 1.0e-05
+      region_target_pairs: 100
+      region_max: 256
+      regional: full
+      ridge: 10.0
+      min_region_pairs: 20
+    calibration:
+      enabled: true
+      quantile: 0.95
+      min_pairs: 200
+      min_queries: 50
+      max_pairs: 1000
+      max_pairs_per_query: 4
+      min_slope: 1.0e-06
+    search:
+      backend: exact
+      k: 10
+      candidates: 50
+      ef_search: 200
+      M: 16
+      ef_construction: 200
+      chunk_rows: 16384
+      threads: 8
+    scheduler:
+      kind: random
+      batch_fraction: 0.01
+      refit_fraction: 0.05
+      fallback: random
+    budget:
+      train_fraction: 0.02
+      train_cap: 10000
+      val_fraction: 0.005
+      val_cap: 2000
+      cal_fraction: 0.005
+      cal_cap: 1000
+      checkpoints:
+      - 0.05
+      - 0.1
+      - 0.25
+      - 0.5
+      - 1.0
+    evaluation:
+      primary_static_fraction: 0.1
+      map_seeds:
+      - 17
+      - 29
+      - 43
+      traffic_seeds:
+      - 101
+      - 103
+      - 107
+      - 109
+      - 113
+      bootstrap_draws: 10000
+    experiment:
+      map_seed: 17
+      traffic_seed: 101
+      variant: primary
+      profile_hash: a38d8e8b5b27686edceb4d80ab4822d3164545b1327bc29a35db0f687b87a0e3
+      run_budget_policy: compact_v1
+      cell_role: mapping
+      preflight_run: E2_PREFLIGHT-fiqa-432ae8896c49
+    execution:
+      phase: official
+      mode: cached_access
+      target_gpu: H100
+      target_vram_gib: 80
+      require_target: true
+      device: cuda
+      max_compute_jobs: 1
+      gpu_headroom_gib: 4
+      ram_headroom_gib: 8
+      cpu_headroom: 1
+    tuning:
+      scope: core
+      policy_version: validation_grid_v1
+      lr_grid:
+      - 0.0001
+      - 0.001
+      search_grid:
+      - - 50
+        - 200
+      - - 100
+        - 200
+      - - 500
+        - 1000
+      - - 1000
+        - 2000
+      batch_grid:
+      - 1
+      - 2
+      - 4
+      - 8
+      - 16
+      - 32
+      - 64
+      thread_grid:
+      - 1
+      - 2
+      - 4
+      - 8
+      repeats: 3
+      fidelity_gate: 0.99
+      lock_path: configs/locked/tuning.lock.yaml
+    sync:
+      enabled: true
+      private: false
+      repo_prefix: mixindex-runs
+      repo_target_gib: 50
+      repo_target_files: 5000
+      artifact_shard_gib: 2
+      retries: 3
+  profile_hash: a38d8e8b5b27686edceb4d80ab4822d3164545b1327bc29a35db0f687b87a0e3
+  tuning_scope: core
+  input_refs: *id002
+  variant_id: primary
+  overrides: {}
+  run_budget_policy: compact_v1
+  cell_role: mapping
+  dataset_case: fiqa
+  depends_on:
+  - E2.exact.preflight.cd958cf482e3
+  priority: 80
+- config: configs/experiments/e2.yaml
+  measurement_mode: quality
+  resources: *id001
+  development_hardware: false
+  task_id: E2.fiqa.mapping.residual_mlp.primary.random.m29.t101.cd958cf482e3
+  experiment: E2
+  phase: official
+  config_overrides:
+    paths:
+      data: /root/paper-P2/data
+      cache: /root/paper-P2/cache
+      runs: /root/paper-P2/runs
+      state: /root/paper-P2/state
+      staging: /root/paper-P2/staging
+    dataset:
+      name: fiqa
+      subset_size: null
+    models:
+      pair: minilm_mpnet
+      dtype: float32
+      batch_size: 64
+    splits:
+      master_seed: 20261020
+      schedule_fraction: 0.8
+      cal_fit_fraction: 0.1
+      cal_check_fraction: 0.1
+    mapping:
+      kind: residual_mlp
+      hidden: 256
+      rank: 64
+      lr: 0.001
+      batch_size: 256
+      max_epochs: 50
+      patience: 5
+      min_delta: 1.0e-05
+      region_target_pairs: 100
+      region_max: 256
+      regional: full
+      ridge: 10.0
+      min_region_pairs: 20
+    calibration:
+      enabled: true
+      quantile: 0.95
+      min_pairs: 200
+      min_queries: 50
+      max_pairs: 1000
+      max_pairs_per_query: 4
+      min_slope: 1.0e-06
+    search:
+      backend: exact
+      k: 10
+      candidates: 50
+      ef_search: 200
+      M: 16
+      ef_construction: 200
+      chunk_rows: 16384
+      threads: 8
+    scheduler:
+      kind: random
+      batch_fraction: 0.01
+      refit_fraction: 0.05
+      fallback: random
+    budget:
+      train_fraction: 0.02
+      train_cap: 10000
+      val_fraction: 0.005
+      val_cap: 2000
+      cal_fraction: 0.005
+      cal_cap: 1000
+      checkpoints:
+      - 0.05
+      - 0.1
+      - 0.25
+      - 0.5
+      - 1.0
+    evaluation:
+      primary_static_fraction: 0.1
+      map_seeds:
+      - 17
+      - 29
+      - 43
+      traffic_seeds:
+      - 101
+      - 103
+      - 107
+      - 109
+      - 113
+      bootstrap_draws: 10000
+    experiment:
+      map_seed: 29
+      traffic_seed: 101
+      variant: primary
+      profile_hash: a38d8e8b5b27686edceb4d80ab4822d3164545b1327bc29a35db0f687b87a0e3
+      run_budget_policy: compact_v1
+      cell_role: mapping
+      preflight_run: E2_PREFLIGHT-fiqa-432ae8896c49
+    execution:
+      phase: official
+      mode: cached_access
+      target_gpu: H100
+      target_vram_gib: 80
+      require_target: true
+      device: cuda
+      max_compute_jobs: 1
+      gpu_headroom_gib: 4
+      ram_headroom_gib: 8
+      cpu_headroom: 1
+    tuning:
+      scope: core
+      policy_version: validation_grid_v1
+      lr_grid:
+      - 0.0001
+      - 0.001
+      search_grid:
+      - - 50
+        - 200
+      - - 100
+        - 200
+      - - 500
+        - 1000
+      - - 1000
+        - 2000
+      batch_grid:
+      - 1
+      - 2
+      - 4
+      - 8
+      - 16
+      - 32
+      - 64
+      thread_grid:
+      - 1
+      - 2
+      - 4
+      - 8
+      repeats: 3
+      fidelity_gate: 0.99
+      lock_path: configs/locked/tuning.lock.yaml
+    sync:
+      enabled: true
+      private: false
+      repo_prefix: mixindex-runs
+      repo_target_gib: 50
+      repo_target_files: 5000
+      artifact_shard_gib: 2
+      retries: 3
+  profile_hash: a38d8e8b5b27686edceb4d80ab4822d3164545b1327bc29a35db0f687b87a0e3
+  tuning_scope: core
+  input_refs: *id002
+  variant_id: primary
+  overrides: {}
+  run_budget_policy: compact_v1
+  cell_role: mapping
+  dataset_case: fiqa
+  depends_on:
+  - E2.exact.preflight.cd958cf482e3
+  priority: 80
+- config: configs/experiments/e2.yaml
+  measurement_mode: quality
+  resources: *id001
+  development_hardware: false
+  task_id: E2.fiqa.mapping.residual_mlp.primary.random.m43.t101.cd958cf482e3
+  experiment: E2
+  phase: official
+  config_overrides:
+    paths:
+      data: /root/paper-P2/data
+      cache: /root/paper-P2/cache
+      runs: /root/paper-P2/runs
+      state: /root/paper-P2/state
+      staging: /root/paper-P2/staging
+    dataset:
+      name: fiqa
+      subset_size: null
+    models:
+      pair: minilm_mpnet
+      dtype: float32
+      batch_size: 64
+    splits:
+      master_seed: 20261020
+      schedule_fraction: 0.8
+      cal_fit_fraction: 0.1
+      cal_check_fraction: 0.1
+    mapping:
+      kind: residual_mlp
+      hidden: 256
+      rank: 64
+      lr: 0.001
+      batch_size: 256
+      max_epochs: 50
+      patience: 5
+      min_delta: 1.0e-05
+      region_target_pairs: 100
+      region_max: 256
+      regional: full
+      ridge: 10.0
+      min_region_pairs: 20
+    calibration:
+      enabled: true
+      quantile: 0.95
+      min_pairs: 200
+      min_queries: 50
+      max_pairs: 1000
+      max_pairs_per_query: 4
+      min_slope: 1.0e-06
+    search:
+      backend: exact
+      k: 10
+      candidates: 50
+      ef_search: 200
+      M: 16
+      ef_construction: 200
+      chunk_rows: 16384
+      threads: 8
+    scheduler:
+      kind: random
+      batch_fraction: 0.01
+      refit_fraction: 0.05
+      fallback: random
+    budget:
+      train_fraction: 0.02
+      train_cap: 10000
+      val_fraction: 0.005
+      val_cap: 2000
+      cal_fraction: 0.005
+      cal_cap: 1000
+      checkpoints:
+      - 0.05
+      - 0.1
+      - 0.25
+      - 0.5
+      - 1.0
+    evaluation:
+      primary_static_fraction: 0.1
+      map_seeds:
+      - 17
+      - 29
+      - 43
+      traffic_seeds:
+      - 101
+      - 103
+      - 107
+      - 109
+      - 113
+      bootstrap_draws: 10000
+    experiment:
+      map_seed: 43
+      traffic_seed: 101
+      variant: primary
+      profile_hash: a38d8e8b5b27686edceb4d80ab4822d3164545b1327bc29a35db0f687b87a0e3
+      run_budget_policy: compact_v1
+      cell_role: mapping
+      preflight_run: E2_PREFLIGHT-fiqa-432ae8896c49
+    execution:
+      phase: official
+      mode: cached_access
+      target_gpu: H100
+      target_vram_gib: 80
+      require_target: true
+      device: cuda
+      max_compute_jobs: 1
+      gpu_headroom_gib: 4
+      ram_headroom_gib: 8
+      cpu_headroom: 1
+    tuning:
+      scope: core
+      policy_version: validation_grid_v1
+      lr_grid:
+      - 0.0001
+      - 0.001
+      search_grid:
+      - - 50
+        - 200
+      - - 100
+        - 200
+      - - 500
+        - 1000
+      - - 1000
+        - 2000
+      batch_grid:
+      - 1
+      - 2
+      - 4
+      - 8
+      - 16
+      - 32
+      - 64
+      thread_grid:
+      - 1
+      - 2
+      - 4
+      - 8
+      repeats: 3
+      fidelity_gate: 0.99
+      lock_path: configs/locked/tuning.lock.yaml
+    sync:
+      enabled: true
+      private: false
+      repo_prefix: mixindex-runs
+      repo_target_gib: 50
+      repo_target_files: 5000
+      artifact_shard_gib: 2
+      retries: 3
+  profile_hash: a38d8e8b5b27686edceb4d80ab4822d3164545b1327bc29a35db0f687b87a0e3
+  tuning_scope: core
+  input_refs: *id002
+  variant_id: primary
+  overrides: {}
+  run_budget_policy: compact_v1
+  cell_role: mapping
+  dataset_case: fiqa
+  depends_on:
+  - E2.exact.preflight.cd958cf482e3
+  priority: 80
+- config: configs/experiments/e2.yaml
+  measurement_mode: quality
+  resources: *id001
+  development_hardware: false
+  task_id: E2.fiqa.scheduler.residual_mlp.primary.random.m17.t101.cd958cf482e3
+  experiment: E2
+  phase: official
+  config_overrides:
+    paths:
+      data: /root/paper-P2/data
+      cache: /root/paper-P2/cache
+      runs: /root/paper-P2/runs
+      state: /root/paper-P2/state
+      staging: /root/paper-P2/staging
+    dataset:
+      name: fiqa
+      subset_size: null
+    models:
+      pair: minilm_mpnet
+      dtype: float32
+      batch_size: 64
+    splits:
+      master_seed: 20261020
+      schedule_fraction: 0.8
+      cal_fit_fraction: 0.1
+      cal_check_fraction: 0.1
+    mapping:
+      kind: residual_mlp
+      hidden: 256
+      rank: 64
+      lr: 0.001
+      batch_size: 256
+      max_epochs: 50
+      patience: 5
+      min_delta: 1.0e-05
+      region_target_pairs: 100
+      region_max: 256
+      regional: full
+      ridge: 10.0
+      min_region_pairs: 20
+    calibration:
+      enabled: true
+      quantile: 0.95
+      min_pairs: 200
+      min_queries: 50
+      max_pairs: 1000
+      max_pairs_per_query: 4
+      min_slope: 1.0e-06
+    search:
+      backend: exact
+      k: 10
+      candidates: 50
+      ef_search: 200
+      M: 16
+      ef_construction: 200
+      chunk_rows: 16384
+      threads: 8
+    scheduler:
+      kind: random
+      batch_fraction: 0.01
+      refit_fraction: 0.05
+      fallback: random
+    budget:
+      train_fraction: 0.02
+      train_cap: 10000
+      val_fraction: 0.005
+      val_cap: 2000
+      cal_fraction: 0.005
+      cal_cap: 1000
+      checkpoints:
+      - 0.05
+      - 0.1
+      - 0.25
+      - 0.5
+      - 1.0
+    evaluation:
+      primary_static_fraction: 0.1
+      map_seeds:
+      - 17
+      - 29
+      - 43
+      traffic_seeds:
+      - 101
+      - 103
+      - 107
+      - 109
+      - 113
+      bootstrap_draws: 10000
+    experiment:
+      map_seed: 17
+      traffic_seed: 101
+      variant: primary
+      profile_hash: a38d8e8b5b27686edceb4d80ab4822d3164545b1327bc29a35db0f687b87a0e3
+      run_budget_policy: compact_v1
+      cell_role: scheduler
+      preflight_run: E2_PREFLIGHT-fiqa-432ae8896c49
+    execution:
+      phase: official
+      mode: cached_access
+      target_gpu: H100
+      target_vram_gib: 80
+      require_target: true
+      device: cuda
+      max_compute_jobs: 1
+      gpu_headroom_gib: 4
+      ram_headroom_gib: 8
+      cpu_headroom: 1
+    tuning:
+      scope: core
+      policy_version: validation_grid_v1
+      lr_grid:
+      - 0.0001
+      - 0.001
+      search_grid:
+      - - 50
+        - 200
+      - - 100
+        - 200
+      - - 500
+        - 1000
+      - - 1000
+        - 2000
+      batch_grid:
+      - 1
+      - 2
+      - 4
+      - 8
+      - 16
+      - 32
+      - 64
+      thread_grid:
+      - 1
+      - 2
+      - 4
+      - 8
+      repeats: 3
+      fidelity_gate: 0.99
+      lock_path: configs/locked/tuning.lock.yaml
+    sync:
+      enabled: true
+      private: false
+      repo_prefix: mixindex-runs
+      repo_target_gib: 50
+      repo_target_files: 5000
+      artifact_shard_gib: 2
+      retries: 3
+  profile_hash: a38d8e8b5b27686edceb4d80ab4822d3164545b1327bc29a35db0f687b87a0e3
+  tuning_scope: core
+  input_refs: *id002
+  variant_id: primary
+  overrides: {}
+  run_budget_policy: compact_v1
+  cell_role: scheduler
+  dataset_case: fiqa
+  depends_on:
+  - E2.exact.preflight.cd958cf482e3
+  - E2.fiqa.mapping.op.primary.random.m17.t101.cd958cf482e3
+  - E2.fiqa.mapping.op.primary.random.m29.t101.cd958cf482e3
+  - E2.fiqa.mapping.op.primary.random.m43.t101.cd958cf482e3
+  - E2.fiqa.mapping.la.primary.random.m17.t101.cd958cf482e3
+  - E2.fiqa.mapping.la.primary.random.m29.t101.cd958cf482e3
+  - E2.fiqa.mapping.la.primary.random.m43.t101.cd958cf482e3
+  - E2.fiqa.mapping.residual_mlp.primary.random.m17.t101.cd958cf482e3
+  - E2.fiqa.mapping.residual_mlp.primary.random.m29.t101.cd958cf482e3
+  - E2.fiqa.mapping.residual_mlp.primary.random.m43.t101.cd958cf482e3
+  priority: 80
+- config: configs/experiments/e2.yaml
+  measurement_mode: quality
+  resources: *id001
+  development_hardware: false
+  task_id: E2.fiqa.scheduler.residual_mlp.primary.random.m29.t101.cd958cf482e3
+  experiment: E2
+  phase: official
+  config_overrides:
+    paths:
+      data: /root/paper-P2/data
+      cache: /root/paper-P2/cache
+      runs: /root/paper-P2/runs
+      state: /root/paper-P2/state
+      staging: /root/paper-P2/staging
+    dataset:
+      name: fiqa
+      subset_size: null
+    models:
+      pair: minilm_mpnet
+      dtype: float32
+      batch_size: 64
+    splits:
+      master_seed: 20261020
+      schedule_fraction: 0.8
+      cal_fit_fraction: 0.1
+      cal_check_fraction: 0.1
+    mapping:
+      kind: residual_mlp
+      hidden: 256
+      rank: 64
+      lr: 0.001
+      batch_size: 256
+      max_epochs: 50
+      patience: 5
+      min_delta: 1.0e-05
+      region_target_pairs: 100
+      region_max: 256
+      regional: full
+      ridge: 10.0
+      min_region_pairs: 20
+    calibration:
+      enabled: true
+      quantile: 0.95
+      min_pairs: 200
+      min_queries: 50
+      max_pairs: 1000
+      max_pairs_per_query: 4
+      min_slope: 1.0e-06
+    search:
+      backend: exact
+      k: 10
+      candidates: 50
+      ef_search: 200
+      M: 16
+      ef_construction: 200
+      chunk_rows: 16384
+      threads: 8
+    scheduler:
+      kind: random
+      batch_fraction: 0.01
+      refit_fraction: 0.05
+      fallback: random
+    budget:
+      train_fraction: 0.02
+      train_cap: 10000
+      val_fraction: 0.005
+      val_cap: 2000
+      cal_fraction: 0.005
+      cal_cap: 1000
+      checkpoints:
+      - 0.05
+      - 0.1
+      - 0.25
+      - 0.5
+      - 1.0
+    evaluation:
+      primary_static_fraction: 0.1
+      map_seeds:
+      - 17
+      - 29
+      - 43
+      traffic_seeds:
+      - 101
+      - 103
+      - 107
+      - 109
+      - 113
+      bootstrap_draws: 10000
+    experiment:
+      map_seed: 29
+      traffic_seed: 101
+      variant: primary
+      profile_hash: a38d8e8b5b27686edceb4d80ab4822d3164545b1327bc29a35db0f687b87a0e3
+      run_budget_policy: compact_v1
+      cell_role: scheduler
+      preflight_run: E2_PREFLIGHT-fiqa-432ae8896c49
+    execution:
+      phase: official
+      mode: cached_access
+      target_gpu: H100
+      target_vram_gib: 80
+      require_target: true
+      device: cuda
+      max_compute_jobs: 1
+      gpu_headroom_gib: 4
+      ram_headroom_gib: 8
+      cpu_headroom: 1
+    tuning:
+      scope: core
+      policy_version: validation_grid_v1
+      lr_grid:
+      - 0.0001
+      - 0.001
+      search_grid:
+      - - 50
+        - 200
+      - - 100
+        - 200
+      - - 500
+        - 1000
+      - - 1000
+        - 2000
+      batch_grid:
+      - 1
+      - 2
+      - 4
+      - 8
+      - 16
+      - 32
+      - 64
+      thread_grid:
+      - 1
+      - 2
+      - 4
+      - 8
+      repeats: 3
+      fidelity_gate: 0.99
+      lock_path: configs/locked/tuning.lock.yaml
+    sync:
+      enabled: true
+      private: false
+      repo_prefix: mixindex-runs
+      repo_target_gib: 50
+      repo_target_files: 5000
+      artifact_shard_gib: 2
+      retries: 3
+  profile_hash: a38d8e8b5b27686edceb4d80ab4822d3164545b1327bc29a35db0f687b87a0e3
+  tuning_scope: core
+  input_refs: *id002
+  variant_id: primary
+  overrides: {}
+  run_budget_policy: compact_v1
+  cell_role: scheduler
+  dataset_case: fiqa
+  depends_on:
+  - E2.exact.preflight.cd958cf482e3
+  - E2.fiqa.mapping.op.primary.random.m17.t101.cd958cf482e3
+  - E2.fiqa.mapping.op.primary.random.m29.t101.cd958cf482e3
+  - E2.fiqa.mapping.op.primary.random.m43.t101.cd958cf482e3
+  - E2.fiqa.mapping.la.primary.random.m17.t101.cd958cf482e3
+  - E2.fiqa.mapping.la.primary.random.m29.t101.cd958cf482e3
+  - E2.fiqa.mapping.la.primary.random.m43.t101.cd958cf482e3
+  - E2.fiqa.mapping.residual_mlp.primary.random.m17.t101.cd958cf482e3
+  - E2.fiqa.mapping.residual_mlp.primary.random.m29.t101.cd958cf482e3
+  - E2.fiqa.mapping.residual_mlp.primary.random.m43.t101.cd958cf482e3
+  priority: 80
+- config: configs/experiments/e2.yaml
+  measurement_mode: quality
+  resources: *id001
+  development_hardware: false
+  task_id: E2.fiqa.scheduler.residual_mlp.primary.random.m43.t101.cd958cf482e3
+  experiment: E2
+  phase: official
+  config_overrides:
+    paths:
+      data: /root/paper-P2/data
+      cache: /root/paper-P2/cache
+      runs: /root/paper-P2/runs
+      state: /root/paper-P2/state
+      staging: /root/paper-P2/staging
+    dataset:
+      name: fiqa
+      subset_size: null
+    models:
+      pair: minilm_mpnet
+      dtype: float32
+      batch_size: 64
+    splits:
+      master_seed: 20261020
+      schedule_fraction: 0.8
+      cal_fit_fraction: 0.1
+      cal_check_fraction: 0.1
+    mapping:
+      kind: residual_mlp
+      hidden: 256
+      rank: 64
+      lr: 0.001
+      batch_size: 256
+      max_epochs: 50
+      patience: 5
+      min_delta: 1.0e-05
+      region_target_pairs: 100
+      region_max: 256
+      regional: full
+      ridge: 10.0
+      min_region_pairs: 20
+    calibration:
+      enabled: true
+      quantile: 0.95
+      min_pairs: 200
+      min_queries: 50
+      max_pairs: 1000
+      max_pairs_per_query: 4
+      min_slope: 1.0e-06
+    search:
+      backend: exact
+      k: 10
+      candidates: 50
+      ef_search: 200
+      M: 16
+      ef_construction: 200
+      chunk_rows: 16384
+      threads: 8
+    scheduler:
+      kind: random
+      batch_fraction: 0.01
+      refit_fraction: 0.05
+      fallback: random
+    budget:
+      train_fraction: 0.02
+      train_cap: 10000
+      val_fraction: 0.005
+      val_cap: 2000
+      cal_fraction: 0.005
+      cal_cap: 1000
+      checkpoints:
+      - 0.05
+      - 0.1
+      - 0.25
+      - 0.5
+      - 1.0
+    evaluation:
+      primary_static_fraction: 0.1
+      map_seeds:
+      - 17
+      - 29
+      - 43
+      traffic_seeds:
+      - 101
+      - 103
+      - 107
+      - 109
+      - 113
+      bootstrap_draws: 10000
+    experiment:
+      map_seed: 43
+      traffic_seed: 101
+      variant: primary
+      profile_hash: a38d8e8b5b27686edceb4d80ab4822d3164545b1327bc29a35db0f687b87a0e3
+      run_budget_policy: compact_v1
+      cell_role: scheduler
+      preflight_run: E2_PREFLIGHT-fiqa-432ae8896c49
+    execution:
+      phase: official
+      mode: cached_access
+      target_gpu: H100
+      target_vram_gib: 80
+      require_target: true
+      device: cuda
+      max_compute_jobs: 1
+      gpu_headroom_gib: 4
+      ram_headroom_gib: 8
+      cpu_headroom: 1
+    tuning:
+      scope: core
+      policy_version: validation_grid_v1
+      lr_grid:
+      - 0.0001
+      - 0.001
+      search_grid:
+      - - 50
+        - 200
+      - - 100
+        - 200
+      - - 500
+        - 1000
+      - - 1000
+        - 2000
+      batch_grid:
+      - 1
+      - 2
+      - 4
+      - 8
+      - 16
+      - 32
+      - 64
+      thread_grid:
+      - 1
+      - 2
+      - 4
+      - 8
+      repeats: 3
+      fidelity_gate: 0.99
+      lock_path: configs/locked/tuning.lock.yaml
+    sync:
+      enabled: true
+      private: false
+      repo_prefix: mixindex-runs
+      repo_target_gib: 50
+      repo_target_files: 5000
+      artifact_shard_gib: 2
+      retries: 3
+  profile_hash: a38d8e8b5b27686edceb4d80ab4822d3164545b1327bc29a35db0f687b87a0e3
+  tuning_scope: core
+  input_refs: *id002
+  variant_id: primary
+  overrides: {}
+  run_budget_policy: compact_v1
+  cell_role: scheduler
+  dataset_case: fiqa
+  depends_on:
+  - E2.exact.preflight.cd958cf482e3
+  - E2.fiqa.mapping.op.primary.random.m17.t101.cd958cf482e3
+  - E2.fiqa.mapping.op.primary.random.m29.t101.cd958cf482e3
+  - E2.fiqa.mapping.op.primary.random.m43.t101.cd958cf482e3
+  - E2.fiqa.mapping.la.primary.random.m17.t101.cd958cf482e3
+  - E2.fiqa.mapping.la.primary.random.m29.t101.cd958cf482e3
+  - E2.fiqa.mapping.la.primary.random.m43.t101.cd958cf482e3
+  - E2.fiqa.mapping.residual_mlp.primary.random.m17.t101.cd958cf482e3
+  - E2.fiqa.mapping.residual_mlp.primary.random.m29.t101.cd958cf482e3
+  - E2.fiqa.mapping.residual_mlp.primary.random.m43.t101.cd958cf482e3
+  priority: 80
+- config: configs/experiments/e2.yaml
+  measurement_mode: quality
+  resources: *id001
+  development_hardware: false
+  task_id: E2.fiqa.scheduler.residual_mlp.primary.degree.m17.t101.cd958cf482e3
+  experiment: E2
+  phase: official
+  config_overrides:
+    paths:
+      data: /root/paper-P2/data
+      cache: /root/paper-P2/cache
+      runs: /root/paper-P2/runs
+      state: /root/paper-P2/state
+      staging: /root/paper-P2/staging
+    dataset:
+      name: fiqa
+      subset_size: null
+    models:
+      pair: minilm_mpnet
+      dtype: float32
+      batch_size: 64
+    splits:
+      master_seed: 20261020
+      schedule_fraction: 0.8
+      cal_fit_fraction: 0.1
+      cal_check_fraction: 0.1
+    mapping:
+      kind: residual_mlp
+      hidden: 256
+      rank: 64
+      lr: 0.001
+      batch_size: 256
+      max_epochs: 50
+      patience: 5
+      min_delta: 1.0e-05
+      region_target_pairs: 100
+      region_max: 256
+      regional: full
+      ridge: 10.0
+      min_region_pairs: 20
+    calibration:
+      enabled: true
+      quantile: 0.95
+      min_pairs: 200
+      min_queries: 50
+      max_pairs: 1000
+      max_pairs_per_query: 4
+      min_slope: 1.0e-06
+    search:
+      backend: exact
+      k: 10
+      candidates: 50
+      ef_search: 200
+      M: 16
+      ef_construction: 200
+      chunk_rows: 16384
+      threads: 8
+    scheduler:
+      kind: degree
+      batch_fraction: 0.01
+      refit_fraction: 0.05
+      fallback: random
+    budget:
+      train_fraction: 0.02
+      train_cap: 10000
+      val_fraction: 0.005
+      val_cap: 2000
+      cal_fraction: 0.005
+      cal_cap: 1000
+      checkpoints:
+      - 0.05
+      - 0.1
+      - 0.25
+      - 0.5
+      - 1.0
+    evaluation:
+      primary_static_fraction: 0.1
+      map_seeds:
+      - 17
+      - 29
+      - 43
+      traffic_seeds:
+      - 101
+      - 103
+      - 107
+      - 109
+      - 113
+      bootstrap_draws: 10000
+    experiment:
+      map_seed: 17
+      traffic_seed: 101
+      variant: primary
+      profile_hash: a38d8e8b5b27686edceb4d80ab4822d3164545b1327bc29a35db0f687b87a0e3
+      run_budget_policy: compact_v1
+      cell_role: scheduler
+      preflight_run: E2_PREFLIGHT-fiqa-432ae8896c49
+    execution:
+      phase: official
+      mode: cached_access
+      target_gpu: H100
+      target_vram_gib: 80
+      require_target: true
+      device: cuda
+      max_compute_jobs: 1
+      gpu_headroom_gib: 4
+      ram_headroom_gib: 8
+      cpu_headroom: 1
+    tuning:
+      scope: core
+      policy_version: validation_grid_v1
+      lr_grid:
+      - 0.0001
+      - 0.001
+      search_grid:
+      - - 50
+        - 200
+      - - 100
+        - 200
+      - - 500
+        - 1000
+      - - 1000
+        - 2000
+      batch_grid:
+      - 1
+      - 2
+      - 4
+      - 8
+      - 16
+      - 32
+      - 64
+      thread_grid:
+      - 1
+      - 2
+      - 4
+      - 8
+      repeats: 3
+      fidelity_gate: 0.99
+      lock_path: configs/locked/tuning.lock.yaml
+    sync:
+      enabled: true
+      private: false
+      repo_prefix: mixindex-runs
+      repo_target_gib: 50
+      repo_target_files: 5000
+      artifact_shard_gib: 2
+      retries: 3
+  profile_hash: a38d8e8b5b27686edceb4d80ab4822d3164545b1327bc29a35db0f687b87a0e3
+  tuning_scope: core
+  input_refs: *id002
+  variant_id: primary
+  overrides: {}
+  run_budget_policy: compact_v1
+  cell_role: scheduler
+  dataset_case: fiqa
+  depends_on:
+  - E2.exact.preflight.cd958cf482e3
+  - E2.fiqa.mapping.op.primary.random.m17.t101.cd958cf482e3
+  - E2.fiqa.mapping.op.primary.random.m29.t101.cd958cf482e3
+  - E2.fiqa.mapping.op.primary.random.m43.t101.cd958cf482e3
+  - E2.fiqa.mapping.la.primary.random.m17.t101.cd958cf482e3
+  - E2.fiqa.mapping.la.primary.random.m29.t101.cd958cf482e3
+  - E2.fiqa.mapping.la.primary.random.m43.t101.cd958cf482e3
+  - E2.fiqa.mapping.residual_mlp.primary.random.m17.t101.cd958cf482e3
+  - E2.fiqa.mapping.residual_mlp.primary.random.m29.t101.cd958cf482e3
+  - E2.fiqa.mapping.residual_mlp.primary.random.m43.t101.cd958cf482e3
+  priority: 80
+- config: configs/experiments/e2.yaml
+  measurement_mode: quality
+  resources: *id001
+  development_hardware: false
+  task_id: E2.fiqa.scheduler.residual_mlp.primary.degree.m29.t101.cd958cf482e3
+  experiment: E2
+  phase: official
+  config_overrides:
+    paths:
+      data: /root/paper-P2/data
+      cache: /root/paper-P2/cache
+      runs: /root/paper-P2/runs
+      state: /root/paper-P2/state
+      staging: /root/paper-P2/staging
+    dataset:
+      name: fiqa
+      subset_size: null
+    models:
+      pair: minilm_mpnet
+      dtype: float32
+      batch_size: 64
+    splits:
+      master_seed: 20261020
+      schedule_fraction: 0.8
+      cal_fit_fraction: 0.1
+      cal_check_fraction: 0.1
+    mapping:
+      kind: residual_mlp
+      hidden: 256
+      rank: 64
+      lr: 0.001
+      batch_size: 256
+      max_epochs: 50
+      patience: 5
+      min_delta: 1.0e-05
+      region_target_pairs: 100
+      region_max: 256
+      regional: full
+      ridge: 10.0
+      min_region_pairs: 20
+    calibration:
+      enabled: true
+      quantile: 0.95
+      min_pairs: 200
+      min_queries: 50
+      max_pairs: 1000
+      max_pairs_per_query: 4
+      min_slope: 1.0e-06
+    search:
+      backend: exact
+      k: 10
+      candidates: 50
+      ef_search: 200
+      M: 16
+      ef_construction: 200
+      chunk_rows: 16384
+      threads: 8
+    scheduler:
+      kind: degree
+      batch_fraction: 0.01
+      refit_fraction: 0.05
+      fallback: random
+    budget:
+      train_fraction: 0.02
+      train_cap: 10000
+      val_fraction: 0.005
+      val_cap: 2000
+      cal_fraction: 0.005
+      cal_cap: 1000
+      checkpoints:
+      - 0.05
+      - 0.1
+      - 0.25
+      - 0.5
+      - 1.0
+    evaluation:
+      primary_static_fraction: 0.1
+      map_seeds:
+      - 17
+      - 29
+      - 43
+      traffic_seeds:
+      - 101
+      - 103
+      - 107
+      - 109
+      - 113
+      bootstrap_draws: 10000
+    experiment:
+      map_seed: 29
+      traffic_seed: 101
+      variant: primary
+      profile_hash: a38d8e8b5b27686edceb4d80ab4822d3164545b1327bc29a35db0f687b87a0e3
+      run_budget_policy: compact_v1
+      cell_role: scheduler
+      preflight_run: E2_PREFLIGHT-fiqa-432ae8896c49
+    execution:
+      phase: official
+      mode: cached_access
+      target_gpu: H100
+      target_vram_gib: 80
+      require_target: true
+      device: cuda
+      max_compute_jobs: 1
+      gpu_headroom_gib: 4
+      ram_headroom_gib: 8
+      cpu_headroom: 1
+    tuning:
+      scope: core
+      policy_version: validation_grid_v1
+      lr_grid:
+      - 0.0001
+      - 0.001
+      search_grid:
+      - - 50
+        - 200
+      - - 100
+        - 200
+      - - 500
+        - 1000
+      - - 1000
+        - 2000
+      batch_grid:
+      - 1
+      - 2
+      - 4
+      - 8
+      - 16
+      - 32
+      - 64
+      thread_grid:
+      - 1
+      - 2
+      - 4
+      - 8
+      repeats: 3
+      fidelity_gate: 0.99
+      lock_path: configs/locked/tuning.lock.yaml
+    sync:
+      enabled: true
+      private: false
+      repo_prefix: mixindex-runs
+      repo_target_gib: 50
+      repo_target_files: 5000
+      artifact_shard_gib: 2
+      retries: 3
+  profile_hash: a38d8e8b5b27686edceb4d80ab4822d3164545b1327bc29a35db0f687b87a0e3
+  tuning_scope: core
+  input_refs: *id002
+  variant_id: primary
+  overrides: {}
+  run_budget_policy: compact_v1
+  cell_role: scheduler
+  dataset_case: fiqa
+  depends_on:
+  - E2.exact.preflight.cd958cf482e3
+  - E2.fiqa.mapping.op.primary.random.m17.t101.cd958cf482e3
+  - E2.fiqa.mapping.op.primary.random.m29.t101.cd958cf482e3
+  - E2.fiqa.mapping.op.primary.random.m43.t101.cd958cf482e3
+  - E2.fiqa.mapping.la.primary.random.m17.t101.cd958cf482e3
+  - E2.fiqa.mapping.la.primary.random.m29.t101.cd958cf482e3
+  - E2.fiqa.mapping.la.primary.random.m43.t101.cd958cf482e3
+  - E2.fiqa.mapping.residual_mlp.primary.random.m17.t101.cd958cf482e3
+  - E2.fiqa.mapping.residual_mlp.primary.random.m29.t101.cd958cf482e3
+  - E2.fiqa.mapping.residual_mlp.primary.random.m43.t101.cd958cf482e3
+  priority: 80
+- config: configs/experiments/e2.yaml
+  measurement_mode: quality
+  resources: *id001
+  development_hardware: false
+  task_id: E2.fiqa.scheduler.residual_mlp.primary.degree.m43.t101.cd958cf482e3
+  experiment: E2
+  phase: official
+  config_overrides:
+    paths:
+      data: /root/paper-P2/data
+      cache: /root/paper-P2/cache
+      runs: /root/paper-P2/runs
+      state: /root/paper-P2/state
+      staging: /root/paper-P2/staging
+    dataset:
+      name: fiqa
+      subset_size: null
+    models:
+      pair: minilm_mpnet
+      dtype: float32
+      batch_size: 64
+    splits:
+      master_seed: 20261020
+      schedule_fraction: 0.8
+      cal_fit_fraction: 0.1
+      cal_check_fraction: 0.1
+    mapping:
+      kind: residual_mlp
+      hidden: 256
+      rank: 64
+      lr: 0.001
+      batch_size: 256
+      max_epochs: 50
+      patience: 5
+      min_delta: 1.0e-05
+      region_target_pairs: 100
+      region_max: 256
+      regional: full
+      ridge: 10.0
+      min_region_pairs: 20
+    calibration:
+      enabled: true
+      quantile: 0.95
+      min_pairs: 200
+      min_queries: 50
+      max_pairs: 1000
+      max_pairs_per_query: 4
+      min_slope: 1.0e-06
+    search:
+      backend: exact
+      k: 10
+      candidates: 50
+      ef_search: 200
+      M: 16
+      ef_construction: 200
+      chunk_rows: 16384
+      threads: 8
+    scheduler:
+      kind: degree
+      batch_fraction: 0.01
+      refit_fraction: 0.05
+      fallback: random
+    budget:
+      train_fraction: 0.02
+      train_cap: 10000
+      val_fraction: 0.005
+      val_cap: 2000
+      cal_fraction: 0.005
+      cal_cap: 1000
+      checkpoints:
+      - 0.05
+      - 0.1
+      - 0.25
+      - 0.5
+      - 1.0
+    evaluation:
+      primary_static_fraction: 0.1
+      map_seeds:
+      - 17
+      - 29
+      - 43
+      traffic_seeds:
+      - 101
+      - 103
+      - 107
+      - 109
+      - 113
+      bootstrap_draws: 10000
+    experiment:
+      map_seed: 43
+      traffic_seed: 101
+      variant: primary
+      profile_hash: a38d8e8b5b27686edceb4d80ab4822d3164545b1327bc29a35db0f687b87a0e3
+      run_budget_policy: compact_v1
+      cell_role: scheduler
+      preflight_run: E2_PREFLIGHT-fiqa-432ae8896c49
+    execution:
+      phase: official
+      mode: cached_access
+      target_gpu: H100
+      target_vram_gib: 80
+      require_target: true
+      device: cuda
+      max_compute_jobs: 1
+      gpu_headroom_gib: 4
+      ram_headroom_gib: 8
+      cpu_headroom: 1
+    tuning:
+      scope: core
+      policy_version: validation_grid_v1
+      lr_grid:
+      - 0.0001
+      - 0.001
+      search_grid:
+      - - 50
+        - 200
+      - - 100
+        - 200
+      - - 500
+        - 1000
+      - - 1000
+        - 2000
+      batch_grid:
+      - 1
+      - 2
+      - 4
+      - 8
+      - 16
+      - 32
+      - 64
+      thread_grid:
+      - 1
+      - 2
+      - 4
+      - 8
+      repeats: 3
+      fidelity_gate: 0.99
+      lock_path: configs/locked/tuning.lock.yaml
+    sync:
+      enabled: true
+      private: false
+      repo_prefix: mixindex-runs
+      repo_target_gib: 50
+      repo_target_files: 5000
+      artifact_shard_gib: 2
+      retries: 3
+  profile_hash: a38d8e8b5b27686edceb4d80ab4822d3164545b1327bc29a35db0f687b87a0e3
+  tuning_scope: core
+  input_refs: *id002
+  variant_id: primary
+  overrides: {}
+  run_budget_policy: compact_v1
+  cell_role: scheduler
+  dataset_case: fiqa
+  depends_on:
+  - E2.exact.preflight.cd958cf482e3
+  - E2.fiqa.mapping.op.primary.random.m17.t101.cd958cf482e3
+  - E2.fiqa.mapping.op.primary.random.m29.t101.cd958cf482e3
+  - E2.fiqa.mapping.op.primary.random.m43.t101.cd958cf482e3
+  - E2.fiqa.mapping.la.primary.random.m17.t101.cd958cf482e3
+  - E2.fiqa.mapping.la.primary.random.m29.t101.cd958cf482e3
+  - E2.fiqa.mapping.la.primary.random.m43.t101.cd958cf482e3
+  - E2.fiqa.mapping.residual_mlp.primary.random.m17.t101.cd958cf482e3
+  - E2.fiqa.mapping.residual_mlp.primary.random.m29.t101.cd958cf482e3
+  - E2.fiqa.mapping.residual_mlp.primary.random.m43.t101.cd958cf482e3
+  priority: 80
+- config: configs/experiments/e2.yaml
+  measurement_mode: quality
+  resources: *id001
+  development_hardware: false
+  task_id: E2.fiqa.scheduler.residual_mlp.primary.read.m17.t101.cd958cf482e3
+  experiment: E2
+  phase: official
+  config_overrides:
+    paths:
+      data: /root/paper-P2/data
+      cache: /root/paper-P2/cache
+      runs: /root/paper-P2/runs
+      state: /root/paper-P2/state
+      staging: /root/paper-P2/staging
+    dataset:
+      name: fiqa
+      subset_size: null
+    models:
+      pair: minilm_mpnet
+      dtype: float32
+      batch_size: 64
+    splits:
+      master_seed: 20261020
+      schedule_fraction: 0.8
+      cal_fit_fraction: 0.1
+      cal_check_fraction: 0.1
+    mapping:
+      kind: residual_mlp
+      hidden: 256
+      rank: 64
+      lr: 0.001
+      batch_size: 256
+      max_epochs: 50
+      patience: 5
+      min_delta: 1.0e-05
+      region_target_pairs: 100
+      region_max: 256
+      regional: full
+      ridge: 10.0
+      min_region_pairs: 20
+    calibration:
+      enabled: true
+      quantile: 0.95
+      min_pairs: 200
+      min_queries: 50
+      max_pairs: 1000
+      max_pairs_per_query: 4
+      min_slope: 1.0e-06
+    search:
+      backend: exact
+      k: 10
+      candidates: 50
+      ef_search: 200
+      M: 16
+      ef_construction: 200
+      chunk_rows: 16384
+      threads: 8
+    scheduler:
+      kind: read
+      batch_fraction: 0.01
+      refit_fraction: 0.05
+      fallback: random
+    budget:
+      train_fraction: 0.02
+      train_cap: 10000
+      val_fraction: 0.005
+      val_cap: 2000
+      cal_fraction: 0.005
+      cal_cap: 1000
+      checkpoints:
+      - 0.05
+      - 0.1
+      - 0.25
+      - 0.5
+      - 1.0
+    evaluation:
+      primary_static_fraction: 0.1
+      map_seeds:
+      - 17
+      - 29
+      - 43
+      traffic_seeds:
+      - 101
+      - 103
+      - 107
+      - 109
+      - 113
+      bootstrap_draws: 10000
+    experiment:
+      map_seed: 17
+      traffic_seed: 101
+      variant: primary
+      profile_hash: a38d8e8b5b27686edceb4d80ab4822d3164545b1327bc29a35db0f687b87a0e3
+      run_budget_policy: compact_v1
+      cell_role: scheduler
+      preflight_run: E2_PREFLIGHT-fiqa-432ae8896c49
+    execution:
+      phase: official
+      mode: cached_access
+      target_gpu: H100
+      target_vram_gib: 80
+      require_target: true
+      device: cuda
+      max_compute_jobs: 1
+      gpu_headroom_gib: 4
+      ram_headroom_gib: 8
+      cpu_headroom: 1
+    tuning:
+      scope: core
+      policy_version: validation_grid_v1
+      lr_grid:
+      - 0.0001
+      - 0.001
+      search_grid:
+      - - 50
+        - 200
+      - - 100
+        - 200
+      - - 500
+        - 1000
+      - - 1000
+        - 2000
+      batch_grid:
+      - 1
+      - 2
+      - 4
+      - 8
+      - 16
+      - 32
+      - 64
+      thread_grid:
+      - 1
+      - 2
+      - 4
+      - 8
+      repeats: 3
+      fidelity_gate: 0.99
+      lock_path: configs/locked/tuning.lock.yaml
+    sync:
+      enabled: true
+      private: false
+      repo_prefix: mixindex-runs
+      repo_target_gib: 50
+      repo_target_files: 5000
+      artifact_shard_gib: 2
+      retries: 3
+  profile_hash: a38d8e8b5b27686edceb4d80ab4822d3164545b1327bc29a35db0f687b87a0e3
+  tuning_scope: core
+  input_refs: *id002
+  variant_id: primary
+  overrides: {}
+  run_budget_policy: compact_v1
+  cell_role: scheduler
+  dataset_case: fiqa
+  depends_on:
+  - E2.exact.preflight.cd958cf482e3
+  - E2.fiqa.mapping.op.primary.random.m17.t101.cd958cf482e3
+  - E2.fiqa.mapping.op.primary.random.m29.t101.cd958cf482e3
+  - E2.fiqa.mapping.op.primary.random.m43.t101.cd958cf482e3
+  - E2.fiqa.mapping.la.primary.random.m17.t101.cd958cf482e3
+  - E2.fiqa.mapping.la.primary.random.m29.t101.cd958cf482e3
+  - E2.fiqa.mapping.la.primary.random.m43.t101.cd958cf482e3
+  - E2.fiqa.mapping.residual_mlp.primary.random.m17.t101.cd958cf482e3
+  - E2.fiqa.mapping.residual_mlp.primary.random.m29.t101.cd958cf482e3
+  - E2.fiqa.mapping.residual_mlp.primary.random.m43.t101.cd958cf482e3
+  priority: 80
+- config: configs/experiments/e2.yaml
+  measurement_mode: quality
+  resources: *id001
+  development_hardware: false
+  task_id: E2.fiqa.scheduler.residual_mlp.primary.read.m29.t101.cd958cf482e3
+  experiment: E2
+  phase: official
+  config_overrides:
+    paths:
+      data: /root/paper-P2/data
+      cache: /root/paper-P2/cache
+      runs: /root/paper-P2/runs
+      state: /root/paper-P2/state
+      staging: /root/paper-P2/staging
+    dataset:
+      name: fiqa
+      subset_size: null
+    models:
+      pair: minilm_mpnet
+      dtype: float32
+      batch_size: 64
+    splits:
+      master_seed: 20261020
+      schedule_fraction: 0.8
+      cal_fit_fraction: 0.1
+      cal_check_fraction: 0.1
+    mapping:
+      kind: residual_mlp
+      hidden: 256
+      rank: 64
+      lr: 0.001
+      batch_size: 256
+      max_epochs: 50
+      patience: 5
+      min_delta: 1.0e-05
+      region_target_pairs: 100
+      region_max: 256
+      regional: full
+      ridge: 10.0
+      min_region_pairs: 20
+    calibration:
+      enabled: true
+      quantile: 0.95
+      min_pairs: 200
+      min_queries: 50
+      max_pairs: 1000
+      max_pairs_per_query: 4
+      min_slope: 1.0e-06
+    search:
+      backend: exact
+      k: 10
+      candidates: 50
+      ef_search: 200
+      M: 16
+      ef_construction: 200
+      chunk_rows: 16384
+      threads: 8
+    scheduler:
+      kind: read
+      batch_fraction: 0.01
+      refit_fraction: 0.05
+      fallback: random
+    budget:
+      train_fraction: 0.02
+      train_cap: 10000
+      val_fraction: 0.005
+      val_cap: 2000
+      cal_fraction: 0.005
+      cal_cap: 1000
+      checkpoints:
+      - 0.05
+      - 0.1
+      - 0.25
+      - 0.5
+      - 1.0
+    evaluation:
+      primary_static_fraction: 0.1
+      map_seeds:
+      - 17
+      - 29
+      - 43
+      traffic_seeds:
+      - 101
+      - 103
+      - 107
+      - 109
+      - 113
+      bootstrap_draws: 10000
+    experiment:
+      map_seed: 29
+      traffic_seed: 101
+      variant: primary
+      profile_hash: a38d8e8b5b27686edceb4d80ab4822d3164545b1327bc29a35db0f687b87a0e3
+      run_budget_policy: compact_v1
+      cell_role: scheduler
+      preflight_run: E2_PREFLIGHT-fiqa-432ae8896c49
+    execution:
+      phase: official
+      mode: cached_access
+      target_gpu: H100
+      target_vram_gib: 80
+      require_target: true
+      device: cuda
+      max_compute_jobs: 1
+      gpu_headroom_gib: 4
+      ram_headroom_gib: 8
+      cpu_headroom: 1
+    tuning:
+      scope: core
+      policy_version: validation_grid_v1
+      lr_grid:
+      - 0.0001
+      - 0.001
+      search_grid:
+      - - 50
+        - 200
+      - - 100
+        - 200
+      - - 500
+        - 1000
+      - - 1000
+        - 2000
+      batch_grid:
+      - 1
+      - 2
+      - 4
+      - 8
+      - 16
+      - 32
+      - 64
+      thread_grid:
+      - 1
+      - 2
+      - 4
+      - 8
+      repeats: 3
+      fidelity_gate: 0.99
+      lock_path: configs/locked/tuning.lock.yaml
+    sync:
+      enabled: true
+      private: false
+      repo_prefix: mixindex-runs
+      repo_target_gib: 50
+      repo_target_files: 5000
+      artifact_shard_gib: 2
+      retries: 3
+  profile_hash: a38d8e8b5b27686edceb4d80ab4822d3164545b1327bc29a35db0f687b87a0e3
+  tuning_scope: core
+  input_refs: *id002
+  variant_id: primary
+  overrides: {}
+  run_budget_policy: compact_v1
+  cell_role: scheduler
+  dataset_case: fiqa
+  depends_on:
+  - E2.exact.preflight.cd958cf482e3
+  - E2.fiqa.mapping.op.primary.random.m17.t101.cd958cf482e3
+  - E2.fiqa.mapping.op.primary.random.m29.t101.cd958cf482e3
+  - E2.fiqa.mapping.op.primary.random.m43.t101.cd958cf482e3
+  - E2.fiqa.mapping.la.primary.random.m17.t101.cd958cf482e3
+  - E2.fiqa.mapping.la.primary.random.m29.t101.cd958cf482e3
+  - E2.fiqa.mapping.la.primary.random.m43.t101.cd958cf482e3
+  - E2.fiqa.mapping.residual_mlp.primary.random.m17.t101.cd958cf482e3
+  - E2.fiqa.mapping.residual_mlp.primary.random.m29.t101.cd958cf482e3
+  - E2.fiqa.mapping.residual_mlp.primary.random.m43.t101.cd958cf482e3
+  priority: 80
+- config: configs/experiments/e2.yaml
+  measurement_mode: quality
+  resources: *id001
+  development_hardware: false
+  task_id: E2.fiqa.scheduler.residual_mlp.primary.read.m43.t101.cd958cf482e3
+  experiment: E2
+  phase: official
+  config_overrides:
+    paths:
+      data: /root/paper-P2/data
+      cache: /root/paper-P2/cache
+      runs: /root/paper-P2/runs
+      state: /root/paper-P2/state
+      staging: /root/paper-P2/staging
+    dataset:
+      name: fiqa
+      subset_size: null
+    models:
+      pair: minilm_mpnet
+      dtype: float32
+      batch_size: 64
+    splits:
+      master_seed: 20261020
+      schedule_fraction: 0.8
+      cal_fit_fraction: 0.1
+      cal_check_fraction: 0.1
+    mapping:
+      kind: residual_mlp
+      hidden: 256
+      rank: 64
+      lr: 0.001
+      batch_size: 256
+      max_epochs: 50
+      patience: 5
+      min_delta: 1.0e-05
+      region_target_pairs: 100
+      region_max: 256
+      regional: full
+      ridge: 10.0
+      min_region_pairs: 20
+    calibration:
+      enabled: true
+      quantile: 0.95
+      min_pairs: 200
+      min_queries: 50
+      max_pairs: 1000
+      max_pairs_per_query: 4
+      min_slope: 1.0e-06
+    search:
+      backend: exact
+      k: 10
+      candidates: 50
+      ef_search: 200
+      M: 16
+      ef_construction: 200
+      chunk_rows: 16384
+      threads: 8
+    scheduler:
+      kind: read
+      batch_fraction: 0.01
+      refit_fraction: 0.05
+      fallback: random
+    budget:
+      train_fraction: 0.02
+      train_cap: 10000
+      val_fraction: 0.005
+      val_cap: 2000
+      cal_fraction: 0.005
+      cal_cap: 1000
+      checkpoints:
+      - 0.05
+      - 0.1
+      - 0.25
+      - 0.5
+      - 1.0
+    evaluation:
+      primary_static_fraction: 0.1
+      map_seeds:
+      - 17
+      - 29
+      - 43
+      traffic_seeds:
+      - 101
+      - 103
+      - 107
+      - 109
+      - 113
+      bootstrap_draws: 10000
+    experiment:
+      map_seed: 43
+      traffic_seed: 101
+      variant: primary
+      profile_hash: a38d8e8b5b27686edceb4d80ab4822d3164545b1327bc29a35db0f687b87a0e3
+      run_budget_policy: compact_v1
+      cell_role: scheduler
+      preflight_run: E2_PREFLIGHT-fiqa-432ae8896c49
+    execution:
+      phase: official
+      mode: cached_access
+      target_gpu: H100
+      target_vram_gib: 80
+      require_target: true
+      device: cuda
+      max_compute_jobs: 1
+      gpu_headroom_gib: 4
+      ram_headroom_gib: 8
+      cpu_headroom: 1
+    tuning:
+      scope: core
+      policy_version: validation_grid_v1
+      lr_grid:
+      - 0.0001
+      - 0.001
+      search_grid:
+      - - 50
+        - 200
+      - - 100
+        - 200
+      - - 500
+        - 1000
+      - - 1000
+        - 2000
+      batch_grid:
+      - 1
+      - 2
+      - 4
+      - 8
+      - 16
+      - 32
+      - 64
+      thread_grid:
+      - 1
+      - 2
+      - 4
+      - 8
+      repeats: 3
+      fidelity_gate: 0.99
+      lock_path: configs/locked/tuning.lock.yaml
+    sync:
+      enabled: true
+      private: false
+      repo_prefix: mixindex-runs
+      repo_target_gib: 50
+      repo_target_files: 5000
+      artifact_shard_gib: 2
+      retries: 3
+  profile_hash: a38d8e8b5b27686edceb4d80ab4822d3164545b1327bc29a35db0f687b87a0e3
+  tuning_scope: core
+  input_refs: *id002
+  variant_id: primary
+  overrides: {}
+  run_budget_policy: compact_v1
+  cell_role: scheduler
+  dataset_case: fiqa
+  depends_on:
+  - E2.exact.preflight.cd958cf482e3
+  - E2.fiqa.mapping.op.primary.random.m17.t101.cd958cf482e3
+  - E2.fiqa.mapping.op.primary.random.m29.t101.cd958cf482e3
+  - E2.fiqa.mapping.op.primary.random.m43.t101.cd958cf482e3
+  - E2.fiqa.mapping.la.primary.random.m17.t101.cd958cf482e3
+  - E2.fiqa.mapping.la.primary.random.m29.t101.cd958cf482e3
+  - E2.fiqa.mapping.la.primary.random.m43.t101.cd958cf482e3
+  - E2.fiqa.mapping.residual_mlp.primary.random.m17.t101.cd958cf482e3
+  - E2.fiqa.mapping.residual_mlp.primary.random.m29.t101.cd958cf482e3
+  - E2.fiqa.mapping.residual_mlp.primary.random.m43.t101.cd958cf482e3
+  priority: 80
+- config: configs/experiments/e2.yaml
+  measurement_mode: quality
+  resources: *id001
+  development_hardware: false
+  task_id: E2.fiqa.scheduler.residual_mlp.primary.greedy.m17.t101.cd958cf482e3
+  experiment: E2
+  phase: official
+  config_overrides:
+    paths:
+      data: /root/paper-P2/data
+      cache: /root/paper-P2/cache
+      runs: /root/paper-P2/runs
+      state: /root/paper-P2/state
+      staging: /root/paper-P2/staging
+    dataset:
+      name: fiqa
+      subset_size: null
+    models:
+      pair: minilm_mpnet
+      dtype: float32
+      batch_size: 64
+    splits:
+      master_seed: 20261020
+      schedule_fraction: 0.8
+      cal_fit_fraction: 0.1
+      cal_check_fraction: 0.1
+    mapping:
+      kind: residual_mlp
+      hidden: 256
+      rank: 64
+      lr: 0.001
+      batch_size: 256
+      max_epochs: 50
+      patience: 5
+      min_delta: 1.0e-05
+      region_target_pairs: 100
+      region_max: 256
+      regional: full
+      ridge: 10.0
+      min_region_pairs: 20
+    calibration:
+      enabled: true
+      quantile: 0.95
+      min_pairs: 200
+      min_queries: 50
+      max_pairs: 1000
+      max_pairs_per_query: 4
+      min_slope: 1.0e-06
+    search:
+      backend: exact
+      k: 10
+      candidates: 50
+      ef_search: 200
+      M: 16
+      ef_construction: 200
+      chunk_rows: 16384
+      threads: 8
+    scheduler:
+      kind: greedy
+      batch_fraction: 0.01
+      refit_fraction: 0.05
+      fallback: random
+    budget:
+      train_fraction: 0.02
+      train_cap: 10000
+      val_fraction: 0.005
+      val_cap: 2000
+      cal_fraction: 0.005
+      cal_cap: 1000
+      checkpoints:
+      - 0.05
+      - 0.1
+      - 0.25
+      - 0.5
+      - 1.0
+    evaluation:
+      primary_static_fraction: 0.1
+      map_seeds:
+      - 17
+      - 29
+      - 43
+      traffic_seeds:
+      - 101
+      - 103
+      - 107
+      - 109
+      - 113
+      bootstrap_draws: 10000
+    experiment:
+      map_seed: 17
+      traffic_seed: 101
+      variant: primary
+      profile_hash: a38d8e8b5b27686edceb4d80ab4822d3164545b1327bc29a35db0f687b87a0e3
+      run_budget_policy: compact_v1
+      cell_role: scheduler
+      preflight_run: E2_PREFLIGHT-fiqa-432ae8896c49
+    execution:
+      phase: official
+      mode: cached_access
+      target_gpu: H100
+      target_vram_gib: 80
+      require_target: true
+      device: cuda
+      max_compute_jobs: 1
+      gpu_headroom_gib: 4
+      ram_headroom_gib: 8
+      cpu_headroom: 1
+    tuning:
+      scope: core
+      policy_version: validation_grid_v1
+      lr_grid:
+      - 0.0001
+      - 0.001
+      search_grid:
+      - - 50
+        - 200
+      - - 100
+        - 200
+      - - 500
+        - 1000
+      - - 1000
+        - 2000
+      batch_grid:
+      - 1
+      - 2
+      - 4
+      - 8
+      - 16
+      - 32
+      - 64
+      thread_grid:
+      - 1
+      - 2
+      - 4
+      - 8
+      repeats: 3
+      fidelity_gate: 0.99
+      lock_path: configs/locked/tuning.lock.yaml
+    sync:
+      enabled: true
+      private: false
+      repo_prefix: mixindex-runs
+      repo_target_gib: 50
+      repo_target_files: 5000
+      artifact_shard_gib: 2
+      retries: 3
+  profile_hash: a38d8e8b5b27686edceb4d80ab4822d3164545b1327bc29a35db0f687b87a0e3
+  tuning_scope: core
+  input_refs: *id002
+  variant_id: primary
+  overrides: {}
+  run_budget_policy: compact_v1
+  cell_role: scheduler
+  dataset_case: fiqa
+  depends_on:
+  - E2.exact.preflight.cd958cf482e3
+  - E2.fiqa.mapping.op.primary.random.m17.t101.cd958cf482e3
+  - E2.fiqa.mapping.op.primary.random.m29.t101.cd958cf482e3
+  - E2.fiqa.mapping.op.primary.random.m43.t101.cd958cf482e3
+  - E2.fiqa.mapping.la.primary.random.m17.t101.cd958cf482e3
+  - E2.fiqa.mapping.la.primary.random.m29.t101.cd958cf482e3
+  - E2.fiqa.mapping.la.primary.random.m43.t101.cd958cf482e3
+  - E2.fiqa.mapping.residual_mlp.primary.random.m17.t101.cd958cf482e3
+  - E2.fiqa.mapping.residual_mlp.primary.random.m29.t101.cd958cf482e3
+  - E2.fiqa.mapping.residual_mlp.primary.random.m43.t101.cd958cf482e3
+  priority: 80
+- config: configs/experiments/e2.yaml
+  measurement_mode: quality
+  resources: *id001
+  development_hardware: false
+  task_id: E2.fiqa.scheduler.residual_mlp.primary.greedy.m29.t101.cd958cf482e3
+  experiment: E2
+  phase: official
+  config_overrides:
+    paths:
+      data: /root/paper-P2/data
+      cache: /root/paper-P2/cache
+      runs: /root/paper-P2/runs
+      state: /root/paper-P2/state
+      staging: /root/paper-P2/staging
+    dataset:
+      name: fiqa
+      subset_size: null
+    models:
+      pair: minilm_mpnet
+      dtype: float32
+      batch_size: 64
+    splits:
+      master_seed: 20261020
+      schedule_fraction: 0.8
+      cal_fit_fraction: 0.1
+      cal_check_fraction: 0.1
+    mapping:
+      kind: residual_mlp
+      hidden: 256
+      rank: 64
+      lr: 0.001
+      batch_size: 256
+      max_epochs: 50
+      patience: 5
+      min_delta: 1.0e-05
+      region_target_pairs: 100
+      region_max: 256
+      regional: full
+      ridge: 10.0
+      min_region_pairs: 20
+    calibration:
+      enabled: true
+      quantile: 0.95
+      min_pairs: 200
+      min_queries: 50
+      max_pairs: 1000
+      max_pairs_per_query: 4
+      min_slope: 1.0e-06
+    search:
+      backend: exact
+      k: 10
+      candidates: 50
+      ef_search: 200
+      M: 16
+      ef_construction: 200
+      chunk_rows: 16384
+      threads: 8
+    scheduler:
+      kind: greedy
+      batch_fraction: 0.01
+      refit_fraction: 0.05
+      fallback: random
+    budget:
+      train_fraction: 0.02
+      train_cap: 10000
+      val_fraction: 0.005
+      val_cap: 2000
+      cal_fraction: 0.005
+      cal_cap: 1000
+      checkpoints:
+      - 0.05
+      - 0.1
+      - 0.25
+      - 0.5
+      - 1.0
+    evaluation:
+      primary_static_fraction: 0.1
+      map_seeds:
+      - 17
+      - 29
+      - 43
+      traffic_seeds:
+      - 101
+      - 103
+      - 107
+      - 109
+      - 113
+      bootstrap_draws: 10000
+    experiment:
+      map_seed: 29
+      traffic_seed: 101
+      variant: primary
+      profile_hash: a38d8e8b5b27686edceb4d80ab4822d3164545b1327bc29a35db0f687b87a0e3
+      run_budget_policy: compact_v1
+      cell_role: scheduler
+      preflight_run: E2_PREFLIGHT-fiqa-432ae8896c49
+    execution:
+      phase: official
+      mode: cached_access
+      target_gpu: H100
+      target_vram_gib: 80
+      require_target: true
+      device: cuda
+      max_compute_jobs: 1
+      gpu_headroom_gib: 4
+      ram_headroom_gib: 8
+      cpu_headroom: 1
+    tuning:
+      scope: core
+      policy_version: validation_grid_v1
+      lr_grid:
+      - 0.0001
+      - 0.001
+      search_grid:
+      - - 50
+        - 200
+      - - 100
+        - 200
+      - - 500
+        - 1000
+      - - 1000
+        - 2000
+      batch_grid:
+      - 1
+      - 2
+      - 4
+      - 8
+      - 16
+      - 32
+      - 64
+      thread_grid:
+      - 1
+      - 2
+      - 4
+      - 8
+      repeats: 3
+      fidelity_gate: 0.99
+      lock_path: configs/locked/tuning.lock.yaml
+    sync:
+      enabled: true
+      private: false
+      repo_prefix: mixindex-runs
+      repo_target_gib: 50
+      repo_target_files: 5000
+      artifact_shard_gib: 2
+      retries: 3
+  profile_hash: a38d8e8b5b27686edceb4d80ab4822d3164545b1327bc29a35db0f687b87a0e3
+  tuning_scope: core
+  input_refs: *id002
+  variant_id: primary
+  overrides: {}
+  run_budget_policy: compact_v1
+  cell_role: scheduler
+  dataset_case: fiqa
+  depends_on:
+  - E2.exact.preflight.cd958cf482e3
+  - E2.fiqa.mapping.op.primary.random.m17.t101.cd958cf482e3
+  - E2.fiqa.mapping.op.primary.random.m29.t101.cd958cf482e3
+  - E2.fiqa.mapping.op.primary.random.m43.t101.cd958cf482e3
+  - E2.fiqa.mapping.la.primary.random.m17.t101.cd958cf482e3
+  - E2.fiqa.mapping.la.primary.random.m29.t101.cd958cf482e3
+  - E2.fiqa.mapping.la.primary.random.m43.t101.cd958cf482e3
+  - E2.fiqa.mapping.residual_mlp.primary.random.m17.t101.cd958cf482e3
+  - E2.fiqa.mapping.residual_mlp.primary.random.m29.t101.cd958cf482e3
+  - E2.fiqa.mapping.residual_mlp.primary.random.m43.t101.cd958cf482e3
+  priority: 80
+- config: configs/experiments/e2.yaml
+  measurement_mode: quality
+  resources: *id001
+  development_hardware: false
+  task_id: E2.fiqa.scheduler.residual_mlp.primary.greedy.m43.t101.cd958cf482e3
+  experiment: E2
+  phase: official
+  config_overrides:
+    paths:
+      data: /root/paper-P2/data
+      cache: /root/paper-P2/cache
+      runs: /root/paper-P2/runs
+      state: /root/paper-P2/state
+      staging: /root/paper-P2/staging
+    dataset:
+      name: fiqa
+      subset_size: null
+    models:
+      pair: minilm_mpnet
+      dtype: float32
+      batch_size: 64
+    splits:
+      master_seed: 20261020
+      schedule_fraction: 0.8
+      cal_fit_fraction: 0.1
+      cal_check_fraction: 0.1
+    mapping:
+      kind: residual_mlp
+      hidden: 256
+      rank: 64
+      lr: 0.001
+      batch_size: 256
+      max_epochs: 50
+      patience: 5
+      min_delta: 1.0e-05
+      region_target_pairs: 100
+      region_max: 256
+      regional: full
+      ridge: 10.0
+      min_region_pairs: 20
+    calibration:
+      enabled: true
+      quantile: 0.95
+      min_pairs: 200
+      min_queries: 50
+      max_pairs: 1000
+      max_pairs_per_query: 4
+      min_slope: 1.0e-06
+    search:
+      backend: exact
+      k: 10
+      candidates: 50
+      ef_search: 200
+      M: 16
+      ef_construction: 200
+      chunk_rows: 16384
+      threads: 8
+    scheduler:
+      kind: greedy
+      batch_fraction: 0.01
+      refit_fraction: 0.05
+      fallback: random
+    budget:
+      train_fraction: 0.02
+      train_cap: 10000
+      val_fraction: 0.005
+      val_cap: 2000
+      cal_fraction: 0.005
+      cal_cap: 1000
+      checkpoints:
+      - 0.05
+      - 0.1
+      - 0.25
+      - 0.5
+      - 1.0
+    evaluation:
+      primary_static_fraction: 0.1
+      map_seeds:
+      - 17
+      - 29
+      - 43
+      traffic_seeds:
+      - 101
+      - 103
+      - 107
+      - 109
+      - 113
+      bootstrap_draws: 10000
+    experiment:
+      map_seed: 43
+      traffic_seed: 101
+      variant: primary
+      profile_hash: a38d8e8b5b27686edceb4d80ab4822d3164545b1327bc29a35db0f687b87a0e3
+      run_budget_policy: compact_v1
+      cell_role: scheduler
+      preflight_run: E2_PREFLIGHT-fiqa-432ae8896c49
+    execution:
+      phase: official
+      mode: cached_access
+      target_gpu: H100
+      target_vram_gib: 80
+      require_target: true
+      device: cuda
+      max_compute_jobs: 1
+      gpu_headroom_gib: 4
+      ram_headroom_gib: 8
+      cpu_headroom: 1
+    tuning:
+      scope: core
+      policy_version: validation_grid_v1
+      lr_grid:
+      - 0.0001
+      - 0.001
+      search_grid:
+      - - 50
+        - 200
+      - - 100
+        - 200
+      - - 500
+        - 1000
+      - - 1000
+        - 2000
+      batch_grid:
+      - 1
+      - 2
+      - 4
+      - 8
+      - 16
+      - 32
+      - 64
+      thread_grid:
+      - 1
+      - 2
+      - 4
+      - 8
+      repeats: 3
+      fidelity_gate: 0.99
+      lock_path: configs/locked/tuning.lock.yaml
+    sync:
+      enabled: true
+      private: false
+      repo_prefix: mixindex-runs
+      repo_target_gib: 50
+      repo_target_files: 5000
+      artifact_shard_gib: 2
+      retries: 3
+  profile_hash: a38d8e8b5b27686edceb4d80ab4822d3164545b1327bc29a35db0f687b87a0e3
+  tuning_scope: core
+  input_refs: *id002
+  variant_id: primary
+  overrides: {}
+  run_budget_policy: compact_v1
+  cell_role: scheduler
+  dataset_case: fiqa
+  depends_on:
+  - E2.exact.preflight.cd958cf482e3
+  - E2.fiqa.mapping.op.primary.random.m17.t101.cd958cf482e3
+  - E2.fiqa.mapping.op.primary.random.m29.t101.cd958cf482e3
+  - E2.fiqa.mapping.op.primary.random.m43.t101.cd958cf482e3
+  - E2.fiqa.mapping.la.primary.random.m17.t101.cd958cf482e3
+  - E2.fiqa.mapping.la.primary.random.m29.t101.cd958cf482e3
+  - E2.fiqa.mapping.la.primary.random.m43.t101.cd958cf482e3
+  - E2.fiqa.mapping.residual_mlp.primary.random.m17.t101.cd958cf482e3
+  - E2.fiqa.mapping.residual_mlp.primary.random.m29.t101.cd958cf482e3
+  - E2.fiqa.mapping.residual_mlp.primary.random.m43.t101.cd958cf482e3
+  priority: 80
+- config: configs/experiments/e2.yaml
+  measurement_mode: quality
+  resources: *id001
+  development_hardware: false
+  task_id: E2.trec.mapping.op.primary.random.m17.t101.cd958cf482e3
+  experiment: E2
+  phase: official
+  config_overrides:
+    paths:
+      data: /root/paper-P2/data
+      cache: /root/paper-P2/cache
+      runs: /root/paper-P2/runs
+      state: /root/paper-P2/state
+      staging: /root/paper-P2/staging
+    dataset:
+      name: trec-covid
+      subset_size: null
+    models:
+      pair: minilm_mpnet
+      dtype: float32
+      batch_size: 64
+    splits:
+      master_seed: 20261020
+      schedule_fraction: 0.8
+      cal_fit_fraction: 0.1
+      cal_check_fraction: 0.1
+    mapping:
+      kind: op
+      hidden: 256
+      rank: 64
+      lr: 0.001
+      batch_size: 256
+      max_epochs: 50
+      patience: 5
+      min_delta: 1.0e-05
+      region_target_pairs: 100
+      region_max: 256
+      regional: full
+      ridge: 10.0
+      min_region_pairs: 20
+    calibration:
+      enabled: true
+      quantile: 0.95
+      min_pairs: 200
+      min_queries: 50
+      max_pairs: 1000
+      max_pairs_per_query: 4
+      min_slope: 1.0e-06
+    search:
+      backend: exact
+      k: 10
+      candidates: 50
+      ef_search: 200
+      M: 16
+      ef_construction: 200
+      chunk_rows: 16384
+      threads: 8
+    scheduler:
+      kind: random
+      batch_fraction: 0.01
+      refit_fraction: 0.05
+      fallback: random
+    budget:
+      train_fraction: 0.02
+      train_cap: 10000
+      val_fraction: 0.005
+      val_cap: 2000
+      cal_fraction: 0.005
+      cal_cap: 1000
+      checkpoints:
+      - 0.05
+      - 0.1
+      - 0.25
+      - 0.5
+      - 1.0
+    evaluation:
+      primary_static_fraction: 0.1
+      map_seeds:
+      - 17
+      - 29
+      - 43
+      traffic_seeds:
+      - 101
+      - 103
+      - 107
+      - 109
+      - 113
+      bootstrap_draws: 10000
+    experiment:
+      map_seed: 17
+      traffic_seed: 101
+      variant: primary
+      profile_hash: null
+      run_budget_policy: compact_v1
+      cell_role: mapping
+      preflight_run: E2_PREFLIGHT-fiqa-432ae8896c49
+    execution:
+      phase: official
+      mode: cached_access
+      target_gpu: H100
+      target_vram_gib: 80
+      require_target: true
+      device: cuda
+      max_compute_jobs: 1
+      gpu_headroom_gib: 4
+      ram_headroom_gib: 8
+      cpu_headroom: 1
+    tuning:
+      scope: core
+      policy_version: validation_grid_v1
+      lr_grid:
+      - 0.0001
+      - 0.001
+      search_grid:
+      - - 50
+        - 200
+      - - 100
+        - 200
+      - - 500
+        - 1000
+      - - 1000
+        - 2000
+      batch_grid:
+      - 1
+      - 2
+      - 4
+      - 8
+      - 16
+      - 32
+      - 64
+      thread_grid:
+      - 1
+      - 2
+      - 4
+      - 8
+      repeats: 3
+      fidelity_gate: 0.99
+      lock_path: configs/locked/tuning.lock.yaml
+    sync:
+      enabled: true
+      private: false
+      repo_prefix: mixindex-runs
+      repo_target_gib: 50
+      repo_target_files: 5000
+      artifact_shard_gib: 2
+      retries: 3
+  profile_hash: null
+  tuning_scope: core
+  input_refs:
+    dataset: trec-covid
+  variant_id: primary
+  overrides: {}
+  run_budget_policy: compact_v1
+  cell_role: mapping
+  dataset_case: trec-covid
+  depends_on:
+  - E2.exact.preflight.cd958cf482e3
+  - E2.fiqa.scheduler.residual_mlp.primary.random.m17.t101.cd958cf482e3
+  - E2.fiqa.scheduler.residual_mlp.primary.random.m29.t101.cd958cf482e3
+  - E2.fiqa.scheduler.residual_mlp.primary.random.m43.t101.cd958cf482e3
+  - E2.fiqa.scheduler.residual_mlp.primary.degree.m17.t101.cd958cf482e3
+  - E2.fiqa.scheduler.residual_mlp.primary.degree.m29.t101.cd958cf482e3
+  - E2.fiqa.scheduler.residual_mlp.primary.degree.m43.t101.cd958cf482e3
+  - E2.fiqa.scheduler.residual_mlp.primary.read.m17.t101.cd958cf482e3
+  - E2.fiqa.scheduler.residual_mlp.primary.read.m29.t101.cd958cf482e3
+  - E2.fiqa.scheduler.residual_mlp.primary.read.m43.t101.cd958cf482e3
+  - E2.fiqa.scheduler.residual_mlp.primary.greedy.m17.t101.cd958cf482e3
+  - E2.fiqa.scheduler.residual_mlp.primary.greedy.m29.t101.cd958cf482e3
+  - E2.fiqa.scheduler.residual_mlp.primary.greedy.m43.t101.cd958cf482e3
+  - T0.case.trec-covid.minilm_mpnet
+  priority: 5
+- config: configs/experiments/e2.yaml
+  measurement_mode: quality
+  resources: *id001
+  development_hardware: false
+  task_id: E2.trec.mapping.la.primary.random.m17.t101.cd958cf482e3
+  experiment: E2
+  phase: official
+  config_overrides:
+    paths:
+      data: /root/paper-P2/data
+      cache: /root/paper-P2/cache
+      runs: /root/paper-P2/runs
+      state: /root/paper-P2/state
+      staging: /root/paper-P2/staging
+    dataset:
+      name: trec-covid
+      subset_size: null
+    models:
+      pair: minilm_mpnet
+      dtype: float32
+      batch_size: 64
+    splits:
+      master_seed: 20261020
+      schedule_fraction: 0.8
+      cal_fit_fraction: 0.1
+      cal_check_fraction: 0.1
+    mapping:
+      kind: la
+      hidden: 256
+      rank: 64
+      lr: 0.001
+      batch_size: 256
+      max_epochs: 50
+      patience: 5
+      min_delta: 1.0e-05
+      region_target_pairs: 100
+      region_max: 256
+      regional: full
+      ridge: 10.0
+      min_region_pairs: 20
+    calibration:
+      enabled: true
+      quantile: 0.95
+      min_pairs: 200
+      min_queries: 50
+      max_pairs: 1000
+      max_pairs_per_query: 4
+      min_slope: 1.0e-06
+    search:
+      backend: exact
+      k: 10
+      candidates: 50
+      ef_search: 200
+      M: 16
+      ef_construction: 200
+      chunk_rows: 16384
+      threads: 8
+    scheduler:
+      kind: random
+      batch_fraction: 0.01
+      refit_fraction: 0.05
+      fallback: random
+    budget:
+      train_fraction: 0.02
+      train_cap: 10000
+      val_fraction: 0.005
+      val_cap: 2000
+      cal_fraction: 0.005
+      cal_cap: 1000
+      checkpoints:
+      - 0.05
+      - 0.1
+      - 0.25
+      - 0.5
+      - 1.0
+    evaluation:
+      primary_static_fraction: 0.1
+      map_seeds:
+      - 17
+      - 29
+      - 43
+      traffic_seeds:
+      - 101
+      - 103
+      - 107
+      - 109
+      - 113
+      bootstrap_draws: 10000
+    experiment:
+      map_seed: 17
+      traffic_seed: 101
+      variant: primary
+      profile_hash: null
+      run_budget_policy: compact_v1
+      cell_role: mapping
+      preflight_run: E2_PREFLIGHT-fiqa-432ae8896c49
+    execution:
+      phase: official
+      mode: cached_access
+      target_gpu: H100
+      target_vram_gib: 80
+      require_target: true
+      device: cuda
+      max_compute_jobs: 1
+      gpu_headroom_gib: 4
+      ram_headroom_gib: 8
+      cpu_headroom: 1
+    tuning:
+      scope: core
+      policy_version: validation_grid_v1
+      lr_grid:
+      - 0.0001
+      - 0.001
+      search_grid:
+      - - 50
+        - 200
+      - - 100
+        - 200
+      - - 500
+        - 1000
+      - - 1000
+        - 2000
+      batch_grid:
+      - 1
+      - 2
+      - 4
+      - 8
+      - 16
+      - 32
+      - 64
+      thread_grid:
+      - 1
+      - 2
+      - 4
+      - 8
+      repeats: 3
+      fidelity_gate: 0.99
+      lock_path: configs/locked/tuning.lock.yaml
+    sync:
+      enabled: true
+      private: false
+      repo_prefix: mixindex-runs
+      repo_target_gib: 50
+      repo_target_files: 5000
+      artifact_shard_gib: 2
+      retries: 3
+  profile_hash: null
+  tuning_scope: core
+  input_refs:
+    dataset: trec-covid
+  variant_id: primary
+  overrides: {}
+  run_budget_policy: compact_v1
+  cell_role: mapping
+  dataset_case: trec-covid
+  depends_on:
+  - E2.exact.preflight.cd958cf482e3
+  - E2.fiqa.scheduler.residual_mlp.primary.random.m17.t101.cd958cf482e3
+  - E2.fiqa.scheduler.residual_mlp.primary.random.m29.t101.cd958cf482e3
+  - E2.fiqa.scheduler.residual_mlp.primary.random.m43.t101.cd958cf482e3
+  - E2.fiqa.scheduler.residual_mlp.primary.degree.m17.t101.cd958cf482e3
+  - E2.fiqa.scheduler.residual_mlp.primary.degree.m29.t101.cd958cf482e3
+  - E2.fiqa.scheduler.residual_mlp.primary.degree.m43.t101.cd958cf482e3
+  - E2.fiqa.scheduler.residual_mlp.primary.read.m17.t101.cd958cf482e3
+  - E2.fiqa.scheduler.residual_mlp.primary.read.m29.t101.cd958cf482e3
+  - E2.fiqa.scheduler.residual_mlp.primary.read.m43.t101.cd958cf482e3
+  - E2.fiqa.scheduler.residual_mlp.primary.greedy.m17.t101.cd958cf482e3
+  - E2.fiqa.scheduler.residual_mlp.primary.greedy.m29.t101.cd958cf482e3
+  - E2.fiqa.scheduler.residual_mlp.primary.greedy.m43.t101.cd958cf482e3
+  - T0.case.trec-covid.minilm_mpnet
+  priority: 5
+- config: configs/experiments/e2.yaml
+  measurement_mode: quality
+  resources: *id001
+  development_hardware: false
+  task_id: E2.trec.mapping.residual_mlp.primary.random.m17.t101.cd958cf482e3
+  experiment: E2
+  phase: official
+  config_overrides:
+    paths:
+      data: /root/paper-P2/data
+      cache: /root/paper-P2/cache
+      runs: /root/paper-P2/runs
+      state: /root/paper-P2/state
+      staging: /root/paper-P2/staging
+    dataset:
+      name: trec-covid
+      subset_size: null
+    models:
+      pair: minilm_mpnet
+      dtype: float32
+      batch_size: 64
+    splits:
+      master_seed: 20261020
+      schedule_fraction: 0.8
+      cal_fit_fraction: 0.1
+      cal_check_fraction: 0.1
+    mapping:
+      kind: residual_mlp
+      hidden: 256
+      rank: 64
+      lr: 0.001
+      batch_size: 256
+      max_epochs: 50
+      patience: 5
+      min_delta: 1.0e-05
+      region_target_pairs: 100
+      region_max: 256
+      regional: full
+      ridge: 10.0
+      min_region_pairs: 20
+    calibration:
+      enabled: true
+      quantile: 0.95
+      min_pairs: 200
+      min_queries: 50
+      max_pairs: 1000
+      max_pairs_per_query: 4
+      min_slope: 1.0e-06
+    search:
+      backend: exact
+      k: 10
+      candidates: 50
+      ef_search: 200
+      M: 16
+      ef_construction: 200
+      chunk_rows: 16384
+      threads: 8
+    scheduler:
+      kind: random
+      batch_fraction: 0.01
+      refit_fraction: 0.05
+      fallback: random
+    budget:
+      train_fraction: 0.02
+      train_cap: 10000
+      val_fraction: 0.005
+      val_cap: 2000
+      cal_fraction: 0.005
+      cal_cap: 1000
+      checkpoints:
+      - 0.05
+      - 0.1
+      - 0.25
+      - 0.5
+      - 1.0
+    evaluation:
+      primary_static_fraction: 0.1
+      map_seeds:
+      - 17
+      - 29
+      - 43
+      traffic_seeds:
+      - 101
+      - 103
+      - 107
+      - 109
+      - 113
+      bootstrap_draws: 10000
+    experiment:
+      map_seed: 17
+      traffic_seed: 101
+      variant: primary
+      profile_hash: null
+      run_budget_policy: compact_v1
+      cell_role: mapping
+      preflight_run: E2_PREFLIGHT-fiqa-432ae8896c49
+    execution:
+      phase: official
+      mode: cached_access
+      target_gpu: H100
+      target_vram_gib: 80
+      require_target: true
+      device: cuda
+      max_compute_jobs: 1
+      gpu_headroom_gib: 4
+      ram_headroom_gib: 8
+      cpu_headroom: 1
+    tuning:
+      scope: core
+      policy_version: validation_grid_v1
+      lr_grid:
+      - 0.0001
+      - 0.001
+      search_grid:
+      - - 50
+        - 200
+      - - 100
+        - 200
+      - - 500
+        - 1000
+      - - 1000
+        - 2000
+      batch_grid:
+      - 1
+      - 2
+      - 4
+      - 8
+      - 16
+      - 32
+      - 64
+      thread_grid:
+      - 1
+      - 2
+      - 4
+      - 8
+      repeats: 3
+      fidelity_gate: 0.99
+      lock_path: configs/locked/tuning.lock.yaml
+    sync:
+      enabled: true
+      private: false
+      repo_prefix: mixindex-runs
+      repo_target_gib: 50
+      repo_target_files: 5000
+      artifact_shard_gib: 2
+      retries: 3
+  profile_hash: null
+  tuning_scope: core
+  input_refs:
+    dataset: trec-covid
+  variant_id: primary
+  overrides: {}
+  run_budget_policy: compact_v1
+  cell_role: mapping
+  dataset_case: trec-covid
+  depends_on:
+  - E2.exact.preflight.cd958cf482e3
+  - E2.fiqa.scheduler.residual_mlp.primary.random.m17.t101.cd958cf482e3
+  - E2.fiqa.scheduler.residual_mlp.primary.random.m29.t101.cd958cf482e3
+  - E2.fiqa.scheduler.residual_mlp.primary.random.m43.t101.cd958cf482e3
+  - E2.fiqa.scheduler.residual_mlp.primary.degree.m17.t101.cd958cf482e3
+  - E2.fiqa.scheduler.residual_mlp.primary.degree.m29.t101.cd958cf482e3
+  - E2.fiqa.scheduler.residual_mlp.primary.degree.m43.t101.cd958cf482e3
+  - E2.fiqa.scheduler.residual_mlp.primary.read.m17.t101.cd958cf482e3
+  - E2.fiqa.scheduler.residual_mlp.primary.read.m29.t101.cd958cf482e3
+  - E2.fiqa.scheduler.residual_mlp.primary.read.m43.t101.cd958cf482e3
+  - E2.fiqa.scheduler.residual_mlp.primary.greedy.m17.t101.cd958cf482e3
+  - E2.fiqa.scheduler.residual_mlp.primary.greedy.m29.t101.cd958cf482e3
+  - E2.fiqa.scheduler.residual_mlp.primary.greedy.m43.t101.cd958cf482e3
+  - T0.case.trec-covid.minilm_mpnet
+  priority: 5

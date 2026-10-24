@@ -1,0 +1,72 @@
+minilm_mpnet:
+  old:
+    repo_id: sentence-transformers/all-MiniLM-L6-v2
+    dim: 384
+    adapter: sentence_transformer
+    pooling: mean
+    max_tokens: 256
+    query_prefix: ''
+    document_prefix: ''
+  new:
+    repo_id: sentence-transformers/all-mpnet-base-v2
+    dim: 768
+    adapter: sentence_transformer
+    pooling: mean
+    max_tokens: 384
+    query_prefix: ''
+    document_prefix: ''
+arctic:
+  old:
+    repo_id: Snowflake/snowflake-arctic-embed-l
+    dim: 1024
+    adapter: sentence_transformer
+    pooling: cls
+    max_tokens: 512
+    query_prefix: 'Represent this sentence for searching relevant passages: '
+    document_prefix: ''
+  new:
+    repo_id: Snowflake/snowflake-arctic-embed-l-v2.0
+    dim: 1024
+    adapter: sentence_transformer
+    pooling: cls
+    max_tokens: 8192
+    query_prefix: 'query: '
+    document_prefix: ''
+nomic:
+  old:
+    repo_id: nomic-ai/nomic-embed-text-v1
+    dim: 768
+    adapter: nomic_pinned
+    code_repo_id: nomic-ai/nomic-bert-2048
+    code_revision: 7710840340a098cfb869c4f65e87cf2b1b70caca
+    pooling: masked_mean
+    max_tokens: 8192
+    query_prefix: 'search_query: '
+    document_prefix: 'search_document: '
+  new:
+    repo_id: nomic-ai/nomic-embed-text-v1.5
+    dim: 768
+    adapter: nomic_pinned
+    code_repo_id: nomic-ai/nomic-bert-2048
+    code_revision: 7710840340a098cfb869c4f65e87cf2b1b70caca
+    pooling: masked_mean_layernorm
+    max_tokens: 8192
+    query_prefix: 'search_query: '
+    document_prefix: 'search_document: '
+bge:
+  old:
+    repo_id: BAAI/bge-base-en-v1.5
+    dim: 768
+    adapter: sentence_transformer
+    pooling: cls
+    max_tokens: 512
+    query_prefix: 'Represent this sentence for searching relevant passages: '
+    document_prefix: ''
+  new:
+    repo_id: BAAI/bge-m3
+    dim: 1024
+    adapter: sentence_transformer
+    pooling: cls
+    max_tokens: 8192
+    query_prefix: ''
+    document_prefix: ''

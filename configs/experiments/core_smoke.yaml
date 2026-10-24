@@ -1,0 +1,6 @@
+dataset:
+  subset_size: 2000
+scheduler:
+  kind: greedy
+execution:
+  phase: development

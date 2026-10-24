@@ -1,0 +1,17 @@
+execution:
+  phase: official
+  mode: cached_access
+  device: cpu
+  max_compute_jobs: 1
+search:
+  backend: hnsw
+  candidates: 50
+  ef_search: 200
+  threads: 8
+models:
+  batch_size: 64
+experiment:
+  profile_hash: null
+  tuning_scope: core
+  run_budget_policy: compact_v1
+  cell_role: systems
