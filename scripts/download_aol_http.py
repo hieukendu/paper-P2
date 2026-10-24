@@ -5,7 +5,7 @@ wrapper changes only the transport at the requests boundary; document IDs,
 capture timestamps, source mapping and parser remain those of aolia-tools.
 The caller must use a separate output directory from any other downloader.
 The recovery profile starts with one worker and a 5-second inter-request
-delay, then ramps down by 0.5 seconds after each eight clean responses to a
+delay, then ramps down by 0.5 seconds after each four clean responses to a
 1-second floor.  Timeouts increase the delay again; the wrapper also honors
 ``Retry-After`` and applies a bounded 180–900 second 429 cooldown:
 pass ``--parallel 1 --request_delay 5.0 --backoff_threshold 1
@@ -31,7 +31,7 @@ _429_cooldown = 180.0
 _429_cooldown_max = 900.0
 _minimum_request_delay = 1.0
 _maximum_request_delay = 30.0
-_successes_per_speedup = 8
+_successes_per_speedup = 4
 _consecutive_429 = 0
 _success_streak = 0
 
