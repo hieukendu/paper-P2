@@ -4,11 +4,11 @@ The upstream downloader intentionally rewrites Wayback URLs to HTTPS.  This
 wrapper changes only the transport at the requests boundary; document IDs,
 capture timestamps, source mapping and parser remain those of aolia-tools.
 The caller must use a separate output directory from any other downloader.
-The recovery profile starts with one worker and a 5-second inter-request
+The accelerated recovery profile starts with one worker and a 3.5-second inter-request
 delay, then ramps down by 0.5 seconds after each four clean responses to a
-1-second floor.  Timeouts increase the delay again; the wrapper also honors
+3-second floor.  Timeouts increase the delay again; the wrapper also honors
 ``Retry-After`` and applies a bounded 180–900 second 429 cooldown:
-pass ``--parallel 1 --request_delay 5.0 --backoff_threshold 1
+pass ``--parallel 1 --request_delay 3.5 --backoff_threshold 1
 --backoff_duration 60``.  Faster profiles produced persistent Wayback 429
 responses in earlier fixed-delay tests, so the adaptive controller is bounded
 and starts from the last known safe profile.  The wrapper consumes the delay
@@ -29,7 +29,7 @@ import requests
 _original_get = requests.Session.get
 _429_cooldown = 180.0
 _429_cooldown_max = 900.0
-_minimum_request_delay = 1.0
+_minimum_request_delay = 3.0
 _maximum_request_delay = 30.0
 _successes_per_speedup = 4
 _consecutive_429 = 0
