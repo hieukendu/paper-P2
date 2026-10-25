@@ -1,0 +1,250 @@
+jobs:
+- config: configs/experiments/e6.yaml
+  phase: official
+  experiment: E6
+  measurement_mode: quality
+  priority: 30
+  profile_hash: 42e53855a53453ce192179c276090b136191f71ec9930451c86af6fd1986763d
+  tuning_scope: case.aol-ia.arctic
+  input_refs: &id001
+    case_manifest_hash: 6e8c61a3a8f7015d71c0ae9c275cb4a9ae01d6213ca3707f04049bc646dd8dae
+    dataset: aol-ia
+    hardware:
+      cpu_cores: 16.0
+      devices:
+      - compute_capability:
+        - 9
+        - 0
+        name: NVIDIA H100 80GB HBM3
+        vram_total_bytes: 84929478656
+      hnsw_build:
+        commit: d9b3608c83d83b46c96e25088cb1d729b29dcfe9
+        sha256: adf8c94849c6015ad81ae58e7cddf2c9a99914ebeb60cb03aaf1986d43e762df
+        source: https://github.com/nmslib/hnswlib.git
+      packages:
+        hnswlib: 0.9.0
+        huggingface-hub: 0.34.4
+        numpy: 2.2.6
+        pyarrow: 20.0.0
+        scikit-learn: 1.6.1
+        scipy: 1.15.3
+        sentence-transformers: 4.1.0
+        torch: 2.6.0+cu124
+        transformers: 4.51.3
+      ram_limit_bytes: 268435456000
+      torch_cuda: '12.4'
+    models:
+      new:
+        adapter: sentence_transformer
+        dim: 1024
+        document_prefix: ''
+        download_patterns:
+        - '*.json'
+        - '*.safetensors'
+        - '*.txt'
+        - '*.model'
+        - '*.md'
+        dtype: float32
+        max_tokens: 8192
+        pooling: cls
+        query_prefix: 'query: '
+        repo_id: Snowflake/snowflake-arctic-embed-l-v2.0
+        resolved_revision: ac6544c8a46e00af67e330e85a9028c66b8cfd9a
+        trust_remote_code: false
+      old:
+        adapter: sentence_transformer
+        dim: 1024
+        document_prefix: ''
+        download_patterns:
+        - '*.json'
+        - '*.safetensors'
+        - '*.txt'
+        - '*.model'
+        - '*.md'
+        dtype: float32
+        max_tokens: 512
+        pooling: cls
+        query_prefix: 'Represent this sentence for searching relevant passages: '
+        repo_id: Snowflake/snowflake-arctic-embed-l
+        resolved_revision: d8fb21ca8d905d2832ee8b96c894d3298964346b
+        trust_remote_code: false
+    pair: arctic
+    release: 76cb4e5dc216bc99cd612a193462b8de3fc07f74077044a62a6e5765666123ae
+    split_hash: aa795e4aa0bedec219c0f4ac33ad70a4a3d3832b130a578d443cd84af97cf421
+  case_scope: case.aol-ia.arctic
+  parent_e4_artifact_id: E4-scale-full_bootstrap-057a9480199a
+  parent_e4_artifact_hash: f9e2ac8aa1c6b53ef1085e8c68f4f446792ac4df3332654221b8b3921dc9e4d0
+  resources: &id002
+    gpu_device: 0
+    gpu_memory_gib: 24
+    host_ram_gib: 32
+    cpu_cores: 8
+    disk_scratch_gib: 20
+    io_heavy: false
+  task_id: E6.aol-ia.arctic.random.m17.t101.9851e3e0dcef
+  config_overrides:
+    execution:
+      phase: official
+      mode: cached_access
+    dataset:
+      name: aol-ia
+      subset_size: null
+    models:
+      pair: arctic
+    scheduler:
+      kind: random
+    mapping:
+      kind: residual_mlp
+    search:
+      backend: exact
+    experiment:
+      profile_hash: 42e53855a53453ce192179c276090b136191f71ec9930451c86af6fd1986763d
+      tuning_scope: case.aol-ia.arctic
+      run_budget_policy: compact_v1
+      cell_role: required
+      map_seed: 17
+      traffic_seed: 101
+      scale_variant: e4e567_scale_v3_50k
+      scale_manifest_hash: 28051259f7f779b226836af8fe4886604f05407614bf3613925e56200af3381d
+      scale_manifest_path: data/processed/msmarco-docs-v1/manifests/e4e567_scale_v3_50k.json
+      case_manifest_hash: 6e8c61a3a8f7015d71c0ae9c275cb4a9ae01d6213ca3707f04049bc646dd8dae
+      case_manifest_path: data/processed/aol-ia/manifests/e7_arctic.json
+      case_scope: case.aol-ia.arctic
+  depends_on: []
+  variant_id: primary
+  overrides: {}
+- config: configs/experiments/e6.yaml
+  phase: official
+  experiment: E6
+  measurement_mode: quality
+  priority: 30
+  profile_hash: 42e53855a53453ce192179c276090b136191f71ec9930451c86af6fd1986763d
+  tuning_scope: case.aol-ia.arctic
+  input_refs: *id001
+  case_scope: case.aol-ia.arctic
+  parent_e4_artifact_id: E4-scale-full_bootstrap-057a9480199a
+  parent_e4_artifact_hash: f9e2ac8aa1c6b53ef1085e8c68f4f446792ac4df3332654221b8b3921dc9e4d0
+  resources: *id002
+  task_id: E6.aol-ia.arctic.degree.m17.t101.bae8124f75da
+  config_overrides:
+    execution:
+      phase: official
+      mode: cached_access
+    dataset:
+      name: aol-ia
+      subset_size: null
+    models:
+      pair: arctic
+    scheduler:
+      kind: degree
+    mapping:
+      kind: residual_mlp
+    search:
+      backend: exact
+    experiment:
+      profile_hash: 42e53855a53453ce192179c276090b136191f71ec9930451c86af6fd1986763d
+      tuning_scope: case.aol-ia.arctic
+      run_budget_policy: compact_v1
+      cell_role: required
+      map_seed: 17
+      traffic_seed: 101
+      scale_variant: e4e567_scale_v3_50k
+      scale_manifest_hash: 28051259f7f779b226836af8fe4886604f05407614bf3613925e56200af3381d
+      scale_manifest_path: data/processed/msmarco-docs-v1/manifests/e4e567_scale_v3_50k.json
+      case_manifest_hash: 6e8c61a3a8f7015d71c0ae9c275cb4a9ae01d6213ca3707f04049bc646dd8dae
+      case_manifest_path: data/processed/aol-ia/manifests/e7_arctic.json
+      case_scope: case.aol-ia.arctic
+  depends_on:
+  - E6.aol-ia.arctic.random.m17.t101.9851e3e0dcef
+  variant_id: primary
+  overrides: {}
+- config: configs/experiments/e6.yaml
+  phase: official
+  experiment: E6
+  measurement_mode: quality
+  priority: 30
+  profile_hash: 42e53855a53453ce192179c276090b136191f71ec9930451c86af6fd1986763d
+  tuning_scope: case.aol-ia.arctic
+  input_refs: *id001
+  case_scope: case.aol-ia.arctic
+  parent_e4_artifact_id: E4-scale-full_bootstrap-057a9480199a
+  parent_e4_artifact_hash: f9e2ac8aa1c6b53ef1085e8c68f4f446792ac4df3332654221b8b3921dc9e4d0
+  resources: *id002
+  task_id: E6.aol-ia.arctic.read.m17.t101.f19295e79a94
+  config_overrides:
+    execution:
+      phase: official
+      mode: cached_access
+    dataset:
+      name: aol-ia
+      subset_size: null
+    models:
+      pair: arctic
+    scheduler:
+      kind: read
+    mapping:
+      kind: residual_mlp
+    search:
+      backend: exact
+    experiment:
+      profile_hash: 42e53855a53453ce192179c276090b136191f71ec9930451c86af6fd1986763d
+      tuning_scope: case.aol-ia.arctic
+      run_budget_policy: compact_v1
+      cell_role: required
+      map_seed: 17
+      traffic_seed: 101
+      scale_variant: e4e567_scale_v3_50k
+      scale_manifest_hash: 28051259f7f779b226836af8fe4886604f05407614bf3613925e56200af3381d
+      scale_manifest_path: data/processed/msmarco-docs-v1/manifests/e4e567_scale_v3_50k.json
+      case_manifest_hash: 6e8c61a3a8f7015d71c0ae9c275cb4a9ae01d6213ca3707f04049bc646dd8dae
+      case_manifest_path: data/processed/aol-ia/manifests/e7_arctic.json
+      case_scope: case.aol-ia.arctic
+  depends_on:
+  - E6.aol-ia.arctic.degree.m17.t101.bae8124f75da
+  variant_id: primary
+  overrides: {}
+- config: configs/experiments/e6.yaml
+  phase: official
+  experiment: E6
+  measurement_mode: quality
+  priority: 30
+  profile_hash: 42e53855a53453ce192179c276090b136191f71ec9930451c86af6fd1986763d
+  tuning_scope: case.aol-ia.arctic
+  input_refs: *id001
+  case_scope: case.aol-ia.arctic
+  parent_e4_artifact_id: E4-scale-full_bootstrap-057a9480199a
+  parent_e4_artifact_hash: f9e2ac8aa1c6b53ef1085e8c68f4f446792ac4df3332654221b8b3921dc9e4d0
+  resources: *id002
+  task_id: E6.aol-ia.arctic.greedy.m17.t101.b3920640bd5c
+  config_overrides:
+    execution:
+      phase: official
+      mode: cached_access
+    dataset:
+      name: aol-ia
+      subset_size: null
+    models:
+      pair: arctic
+    scheduler:
+      kind: greedy
+    mapping:
+      kind: residual_mlp
+    search:
+      backend: exact
+    experiment:
+      profile_hash: 42e53855a53453ce192179c276090b136191f71ec9930451c86af6fd1986763d
+      tuning_scope: case.aol-ia.arctic
+      run_budget_policy: compact_v1
+      cell_role: required
+      map_seed: 17
+      traffic_seed: 101
+      scale_variant: e4e567_scale_v3_50k
+      scale_manifest_hash: 28051259f7f779b226836af8fe4886604f05407614bf3613925e56200af3381d
+      scale_manifest_path: data/processed/msmarco-docs-v1/manifests/e4e567_scale_v3_50k.json
+      case_manifest_hash: 6e8c61a3a8f7015d71c0ae9c275cb4a9ae01d6213ca3707f04049bc646dd8dae
+      case_manifest_path: data/processed/aol-ia/manifests/e7_arctic.json
+      case_scope: case.aol-ia.arctic
+  depends_on:
+  - E6.aol-ia.arctic.read.m17.t101.f19295e79a94
+  variant_id: primary
+  overrides: {}
