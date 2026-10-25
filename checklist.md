@@ -247,6 +247,7 @@ Agent/runner cập nhật block sau mỗi run hoặc sync transition. Checkbox c
 - [x] E7-fever-bge-residual_mlp-random-m17-t101-ef1d95a51b3e — compute=COMPUTE_DONE; sync=VERIFIED; outcome=inconclusive; expect=KHỚP; HF=https://huggingface.co/datasets/deadgod3005/mixindex-runs-005/tree/fca3fe7599ab54e168bd9047a16f10bd9f6b29d7/runs/E7-fever-bge-residual_mlp-random-m17-t101-ef1d95a51b3e/d432a132480d1783c42d981a900589244833aac9761e78c2d756739a3f1006b2
 - [x] E7-fever-bge-residual_mlp-greedy-m17-t101-dc4a3fc901cf — compute=COMPUTE_DONE; sync=VERIFIED; outcome=inconclusive; expect=KHỚP; HF=https://huggingface.co/datasets/deadgod3005/mixindex-runs-005/tree/a0139c7246bc987f6d5568c089cc366c6e7cedb7/runs/E7-fever-bge-residual_mlp-greedy-m17-t101-dc4a3fc901cf/641396e621d5162d57aab8a4be608ebc3701caf0ab15248b2fb1f9bf40c36413
 - [x] E7-fever-bge-op-greedy-m17-t101-32184a73f105 — compute=COMPUTE_DONE; sync=VERIFIED; outcome=inconclusive; expect=KHỚP; HF=https://huggingface.co/datasets/deadgod3005/mixindex-runs-005/tree/2dcfbc8659c6b85d87e7ac5c2cefae1a18ff3122/runs/E7-fever-bge-op-greedy-m17-t101-32184a73f105/9d73d0d150ca283f7b386cd0588dbc6fab13a9c42edd7fe733c1b2701c15fb7f
+- [x] RUNTIME_PROBE-aol-ia-arctic-c4210cd04207 — compute=COMPUTE_DONE; sync=VERIFIED; outcome=diagnostic; HF=https://huggingface.co/datasets/deadgod3005/mixindex-runs-005/tree/bd0faa71e17bcde7ccea43b29a84624b19a8746e/runs/RUNTIME_PROBE-aol-ia-arctic-c4210cd04207/07fbc3df349812f87d53925400094c818c70009de7def9a1787ace2fe3bac49a
 <!-- progress:end -->
 
 <!-- expect-audit-policy:begin -->
