@@ -71,7 +71,12 @@ def _iter_aol_log_records(archive_path):
                         parsed_time = datetime.fromisoformat(timestamp)
                     except ValueError as exc:
                         raise ValueError("AOL_SOURCE_INVALID: invalid timestamp") from exc
-                    parsed_rank = int(rank) if rank else None
+                    try:
+                        parsed_rank = int(rank) if rank else None
+                    except ValueError:
+                        # Preserve the real event and chronology while making
+                        # the malformed optional rank explicit as missing.
+                        parsed_rank = None
                     normalized = " ".join(unicodedata.normalize("NFKC", query).casefold().split())
                     yield {
                         "user_id": user_id,
@@ -108,7 +113,15 @@ def _iter_aol_recovered_documents(path):
 def _select_aol_documents(downloaded_path, cap, seed):
     """Select the smallest stable hashes without holding the full corpus in RAM."""
     heap = []
+    seen_doc_ids = set()
     for record in _iter_aol_recovered_documents(downloaded_path):
+        # A resumed/retried recovery may contain the same document in a shard
+        # more than once.  Selection is over document IDs, not physical rows;
+        # otherwise duplicate rows can consume heap slots and make a valid
+        # 50k pool appear short after the deterministic selection.
+        if record["doc_id"] in seen_doc_ids:
+            continue
+        seen_doc_ids.add(record["doc_id"])
         key = int(hashlib.sha256(
             f"{seed}\0AOL-uniform-document\0{record['doc_id']}".encode()).hexdigest(), 16)
         item = (-key, record["doc_id"])
@@ -160,8 +173,11 @@ def prepare_aol_dataset(cfg, root):
     if file_digest(id2wb_path, "md5") != AOL_ID2WB_MD5:
         raise ValueError("AOL_SOURCE_INVALID: id2wb checksum differs")
     if not completed_recovery:
-        raise ValueError("AOL_RECOVERY_INCOMPLETE: aolia-tools has not recovered all documents")
+        raise ValueError("AOL_RECOVERY_INCOMPLETE: candidate recovery has no completion marker")
     downloaded_path, recovery_transport = completed_recovery[0]
+    unavailable_path = downloaded_path / "unavailable_ids.tsv"
+    unavailable_documents = (sum(1 for _ in unavailable_path.open())
+                             if unavailable_path.exists() else 0)
     recovery_metadata = {}
     recovery_metadata_path = downloaded_path / "recovery_metadata.json"
     if recovery_metadata_path.exists():
@@ -327,6 +343,8 @@ def prepare_aol_dataset(cfg, root):
             "recovery_tool": "terrierteam/aolia-tools",
             "recovery_transport": recovery_transport,
             "recovery_directory": downloaded_path.name,
+            "recovery_unavailable_file": (unavailable_path.name
+                                          if unavailable_path.exists() else None),
         }
         if recovery_metadata:
             source["recovery_scope"] = {
@@ -339,6 +357,7 @@ def prepare_aol_dataset(cfg, root):
             }
         counts = {
             "documents": AOL_DOCUMENT_CAP, "recovered_documents": recovered_documents,
+            "recovery_unavailable_documents": unavailable_documents,
             "source_events": source_events, "source_users": len(source_users),
             "selected_events": len(events), "selected_events_by_week": {
                 str(week): sum(event["week"] == week for event in events)

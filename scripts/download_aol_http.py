@@ -12,7 +12,9 @@ pass ``--parallel 1 --request_delay 3.5 --backoff_threshold 1
 --backoff_duration 60``.  Faster profiles produced persistent Wayback 429
 responses in earlier fixed-delay tests, so the adaptive controller is bounded
 and starts from the last known safe profile.  The wrapper consumes the delay
-option before delegating to the pinned tool.
+option before delegating to the pinned tool. A bounded per-document retry can
+be requested with ``--max_retries_per_document``; exhausted documents are
+recorded in ``unavailable_ids.tsv`` and never replaced with synthetic content.
 """
 
 from datetime import datetime, timezone
