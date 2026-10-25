@@ -170,7 +170,7 @@ jobs:
   parent_e4_artifact_id: E4-scale-full_bootstrap-057a9480199a
   parent_e4_artifact_hash: f9e2ac8aa1c6b53ef1085e8c68f4f446792ac4df3332654221b8b3921dc9e4d0
   resources: *id002
-  task_id: E6.aol-ia.arctic.read.m17.t101.f19295e79a94
+  task_id: E6.aol-ia.arctic.read.m17.t101.f19295e79a94-r1
   config_overrides:
     execution:
       phase: official
@@ -215,7 +215,7 @@ jobs:
   parent_e4_artifact_id: E4-scale-full_bootstrap-057a9480199a
   parent_e4_artifact_hash: f9e2ac8aa1c6b53ef1085e8c68f4f446792ac4df3332654221b8b3921dc9e4d0
   resources: *id002
-  task_id: E6.aol-ia.arctic.greedy.m17.t101.b3920640bd5c
+  task_id: E6.aol-ia.arctic.greedy.m17.t101.b3920640bd5c-r1
   config_overrides:
     execution:
       phase: official
@@ -245,6 +245,6 @@ jobs:
       case_manifest_path: data/processed/aol-ia/manifests/e7_arctic.json
       case_scope: case.aol-ia.arctic
   depends_on:
-  - E6.aol-ia.arctic.read.m17.t101.f19295e79a94
+  - E6.aol-ia.arctic.read.m17.t101.f19295e79a94-r1
   variant_id: primary
   overrides: {}
