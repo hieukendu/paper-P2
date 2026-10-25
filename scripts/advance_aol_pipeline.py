@@ -77,8 +77,13 @@ def _verified_case_t0():
     payload = json.loads(path.read_text())
     for record in payload.get("tasks", {}).values():
         spec = record.get("spec", {})
+        overrides = spec.get("config_overrides", {})
+        experiment = overrides.get("experiment", {})
+        scope = (spec.get("tuning_scope") or
+                 experiment.get("tuning_scope") or
+                 experiment.get("case_scope"))
         if (spec.get("experiment") == "T0" and
-                spec.get("tuning_scope") == "case.aol-ia.arctic" and
+                scope == "case.aol-ia.arctic" and
                 record.get("status") == "COMPUTE_DONE" and
                 record.get("sync_status") == "VERIFIED" and
                 record.get("handle_alive") is False):

@@ -834,6 +834,116 @@ profiles:
       source_run: T0-case-hotpotqa.arctic-32846d363eaf
       target_hardware_pass: true
       timing_ref: T0-case-hotpotqa.arctic-32846d363eaf/timing.json
+  42e53855a53453ce192179c276090b136191f71ec9930451c86af6fd1986763d:
+    inputs:
+      case_manifest_hash: 6e8c61a3a8f7015d71c0ae9c275cb4a9ae01d6213ca3707f04049bc646dd8dae
+      dataset: aol-ia
+      hardware:
+        cpu_cores: 16.0
+        devices:
+        - compute_capability:
+          - 9
+          - 0
+          name: NVIDIA H100 80GB HBM3
+          vram_total_bytes: 84929478656
+        hnsw_build:
+          commit: d9b3608c83d83b46c96e25088cb1d729b29dcfe9
+          sha256: adf8c94849c6015ad81ae58e7cddf2c9a99914ebeb60cb03aaf1986d43e762df
+          source: https://github.com/nmslib/hnswlib.git
+        packages:
+          hnswlib: 0.9.0
+          huggingface-hub: 0.34.4
+          numpy: 2.2.6
+          pyarrow: 20.0.0
+          scikit-learn: 1.6.1
+          scipy: 1.15.3
+          sentence-transformers: 4.1.0
+          torch: 2.6.0+cu124
+          transformers: 4.51.3
+        ram_limit_bytes: 268435456000
+        torch_cuda: '12.4'
+      models:
+        new:
+          adapter: sentence_transformer
+          dim: 1024
+          document_prefix: ''
+          download_patterns:
+          - '*.json'
+          - '*.safetensors'
+          - '*.txt'
+          - '*.model'
+          - '*.md'
+          dtype: float32
+          max_tokens: 8192
+          pooling: cls
+          query_prefix: 'query: '
+          repo_id: Snowflake/snowflake-arctic-embed-l-v2.0
+          resolved_revision: ac6544c8a46e00af67e330e85a9028c66b8cfd9a
+          trust_remote_code: false
+        old:
+          adapter: sentence_transformer
+          dim: 1024
+          document_prefix: ''
+          download_patterns:
+          - '*.json'
+          - '*.safetensors'
+          - '*.txt'
+          - '*.model'
+          - '*.md'
+          dtype: float32
+          max_tokens: 512
+          pooling: cls
+          query_prefix: 'Represent this sentence for searching relevant passages: '
+          repo_id: Snowflake/snowflake-arctic-embed-l
+          resolved_revision: d8fb21ca8d905d2832ee8b96c894d3298964346b
+          trust_remote_code: false
+      pair: arctic
+      release: 76cb4e5dc216bc99cd612a193462b8de3fc07f74077044a62a6e5765666123ae
+      split_hash: aa795e4aa0bedec219c0f4ac33ad70a4a3d3832b130a578d443cd84af97cf421
+    policy_hash: 106e032124fe933cd8d64c92e02b7901659ee5dd63f3245f7dc78076f7373053
+    scope: case.aol-ia.arctic
+    selections:
+      ann_status: N/A_EXACT
+      case_manifest_hash: 6e8c61a3a8f7015d71c0ae9c275cb4a9ae01d6213ca3707f04049bc646dd8dae
+      case_manifest_path: data/processed/aol-ia/manifests/e7_arctic.json
+      correctness_pass: true
+      estimate_ref: T0-case-aol-ia.arctic-29683b205745/estimate.json
+      local_restore_pass: true
+      lr_selection: validation_grid_v1
+      map:
+        la:
+          epochs: 50
+          kind: la
+          lr: 0.001
+          status: PASS
+          validation_loss: 0.9009533524513245
+        op:
+          epochs: 0
+          kind: op
+          lr: null
+          status: PASS
+          validation_loss: 0.8120793700218201
+        residual_mlp:
+          epochs: 22
+          kind: residual_mlp
+          lr: 0.001
+          status: PASS
+          validation_loss: 0.6907297372817993
+      runtime:
+        batches:
+          new: 2
+          old: 16
+        probe_run: RUNTIME_PROBE-aol-ia-arctic-c4210cd04207
+        threads:
+          selected_threads: 1
+      search:
+        backend: exact
+        candidates: null
+        ef_search: null
+        status: N/A_EXACT
+      source_run: T0-case-aol-ia.arctic-29683b205745
+      target_hardware_pass: true
+      timing_ref: T0-case-aol-ia.arctic-29683b205745/timing.json
   5c9e024875573ce9ae9dc952744b1838a17945a435db41c23687d4666d64ce07:
     inputs:
       case_manifest_hash: 048602433f7ea06d995ec3821e133b6344e353561a646cef700665625e91be1a
