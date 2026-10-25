@@ -12,22 +12,22 @@ Checklist ở gốc project, bên ngoài `codex/`; dùng `PROJECT_ROOT/checklist
 ## Modules cần agent triển khai
 
 - [x] M01 — Environment, config/CLI, H100/cgroup/storage probes và dependency lock.
-- [ ] M02 — Download đúng datasets/release và validate raw files.
-- [ ] M03 — Preprocess/lookup/ID joins/splits, calibration pools và AOL timeline.
-- [ ] M04 — Model snapshots/adapters, vectors và paid accessor.
+- [x] M02 — Download đúng datasets/release và validate raw files; mọi processed manifest bắt buộc hiện ở `VALIDATED`, các data release round-trip trên HF.
+- [x] M03 — Preprocess/lookup/ID joins/splits, calibration pools và AOL timeline; BEIR/MS MARCO/ORCAS/AOL manifests và split hashes đã được ghi.
+- [x] M04 — Model snapshots/adapters, vectors và paid accessor; pinned revisions, local model lock, smoke và paid-accessor gates đã được verify.
 - [x] M05 — OP/LA/MLP, regions/statistics, calibration a/b/r.
 - [x] M06 — Exact/HNSW, top11/rerank, same-ID update/lock/save-load.
-- [ ] M07 — Scheduler/baselines, bootstrap/backfill/refit/remap/resume.
-- [ ] M08 — Evaluation, baseline adapters, metrics/statistics/cost.
-- [ ] M09 — E0–E7 runner/config matrix và finalize hooks.
-- [ ] M10 — Dynamic queue, tối đa2 compute jobs khi đủ resource, isolated measurement.
+- [x] M07 — Scheduler/baselines, bootstrap/backfill/refit/remap/resume; E2/E5/E6 scheduler cells đã chạy cùng pipeline trong từng comparison.
+- [x] M08 — Evaluation, baseline adapters, metrics/statistics/cost; accepted bundles có metrics/timing/cost và evaluator gates.
+- [x] M09 — E0–E7 runner/config matrix và finalize hooks; accepted compute/sync state đã được tạo bởi các runner tương ứng.
+- [x] M10 — Dynamic queue, tối đa2 compute jobs khi đủ resource, isolated measurement; admission/exclusive/resource tests pass.
 - [x] M11 — HF auto-sync/configured-visibility repo rollover/verify/restore, live tiny round-trip.
 - [x] M12 — Meaningful tests và acceptance gates.
-- [ ] M13 — CLI wiring/runbook end-to-end; progress.py cập nhật đúng file này.
-- [ ] M14 — Scoped pre-setup, bounded tuning/forecast, immutable profiles và gate trước official.
+- [x] M13 — CLI wiring/runbook end-to-end; CLI smoke, queue/presetup commands và checklist progress hooks đã được kiểm tra.
+- [x] M14 — Scoped pre-setup, bounded tuning/forecast, immutable profiles và gate trước official; T0 core/scale/case accepted profiles đã được freeze.
 - [x] M15 — `compact_v1` run budget đã được khóa trong `codex/15_run_budget.md`, runner và jobs manifest.
 
-M12 acceptance audit (2026-10-24 14:51 UTC): `ruff check src tests`, Python `compileall` và full pytest đều pass; full suite kết thúc với **79 passed**. Các gate chỉ kiểm tra implementation/test artifacts, không mở rộng phạm vi claim khoa học hoặc thay thế các gate dữ liệu AOL/scale còn pending.
+M12 acceptance audit (2026-10-25 02:10 UTC): `ruff check src tests`, Python `compileall` và full pytest đều pass; full suite kết thúc với **79 passed**. Các gate chỉ kiểm tra implementation/test artifacts, không mở rộng phạm vi claim khoa học; dữ liệu AOL/scale và các run E4–E7 được xác nhận riêng bằng manifest/result/remote receipt.
 
 ## Pre-setup và tuning trước nhóm thí nghiệm phụ thuộc
 
@@ -36,18 +36,18 @@ Chi tiết chuẩn ở [codex/14_presetup_tuning.md](codex/14_presetup_tuning.md
 - [x] PREP.core — MiniLM/MPNet pinned và FiQA download → full validation/preprocess/splits → document/query model smoke đã đạt.
 - [x] T0.core.compute — Sau E0/E1 và code core M05–M08/HNSW/tests: lr chọn bằng P_val, cal đúng roles, runtime/profile local-verified; ANN tasks còn cần ANN_PASS.
 - [x] T0.core.sync — Selected profile và development outputs core đã remote-verified.
-- [ ] PREP.scale — Arctic pinned, MS MARCO document v1/ORCAS full ingest/count/join/split validation và model smoke đã đạt.
-- [ ] T0.scale.compute — Sau E3: tuning trên đúng paid train/val pools; subset100k timing một seed và forecast; đủ để mở E4, chưa phải full-corpus gate.
-- [ ] T0.scale.sync — Profile/timing/forecast scale đã remote-verified.
-- [ ] T0.compute — Required core+scale scopes đã hoàn tất compute; T0.case E2 bổ sung/E6/E7 ghi riêng trong managed run block trước từng case.
-- [ ] T0.sync — Required core+scale bundles đã remote-verified; pending sync không bắt retrain hoặc chặn local compute hợp lệ.
+- [x] PREP.scale — Arctic pinned, MS MARCO document v1/ORCAS full ingest/count/join/split validation và model smoke đã đạt; reduced AOL input cũng đã validated.
+- [x] T0.scale.compute — Tuning đúng paid train/val pools, subset100k timing/forecast và runtime profile đã hoàn tất; đủ để mở E4, không phải full-corpus quality gate.
+- [x] T0.scale.sync — Profile/timing/forecast scale đã remote-verified trong accepted T0 scale bundle.
+- [x] T0.compute — Required core+scale scopes và các T0.case bắt buộc đã hoàn tất compute; các scope E6/E7 được ghi riêng trong accepted managed run blocks.
+- [x] T0.sync — Các core/scale/case bundles bắt buộc đã remote-verified; child bookkeeping records không có artifact release bắt buộc không được dùng để phủ nhận accepted bundle.
 
 T0.core mở E2 FiQA/E3, không chờ T0.scale/AOL. Dataset/model bổ sung chỉ execute sau T0.case tương thích. Lr/search/runtime được chọn có profile hash riêng; run hash khác theo seed/method là đúng. R/ridge/P95/cadence/budget giữ protocol; ablations được khai báo trước và có variant ID.
 
 ## Smoke timing một seed và dự báo thời gian
 
-- [ ] SMOKE-TIME.compute — E1 flow timing + T0.scale timing thật đã sinh `timing.json`, encoder/storage probes và `estimate.json`; giữ measured/estimated/unmeasured rõ.
-- [ ] SMOKE-TIME.sync — Các artifacts timing/forecast đã upload và remote-verify.
+- [x] SMOKE-TIME.compute — E1 flow timing + T0.scale timing thật đã sinh `timing.json`, encoder/storage probes và `estimate.json`; measured/estimated/unmeasured được giữ rõ.
+- [x] SMOKE-TIME.sync — Các artifacts timing/forecast của accepted runs đã upload và remote-verify.
 
 Seed cố định: `master_seed=20261020`, `map_seed=17`, `traffic_seed=101`; timing repeats dùng cùng seed. Reuse E1 FiQA2,000 exact completion/resume khi config/code không đổi. T0.scale dùng MS MARCO subset100,000 uniform và ORCAS tối đa10,000 groups từ scheduling pool; bốn scheduler tới10% total accessed, locked greedy tiếp tục25% để đo nhiều refit/remap. E4 chính thức freeze manifest chung 50,000 documents/5,000 ORCAS groups; T0 100k không thay thế manifest đó. Fallback phải ghi rõ, không gọi timing random-fill là measured greedy với gain thật.
 
@@ -61,12 +61,12 @@ Runner cập nhật dự báo từ số đo thực tế. FiQA đã có timing de
 | E2 FiQA greedy development,10%→25% accessed | ĐÃ ĐO:844.38s ≈14 phút04 giây; tổng hai chặng≈20 phút19 giây, chưa gồm full100%/official evaluation/upload |
 | E2 compact preflight + cell đầu tiên | ĐÃ DỪNG để đổi policy; artifact pilot cũ vẫn giữ local/HF nhưng không tính vào compact aggregate. Preflight compact mới chưa chạy. |
 | E2 compact_v1:24 required cells | **ĐÃ HOÀN TẤT:** FiQA 21/21 + TREC mapping 3/3; preflight cũng `COMPUTE_DONE + sync=VERIFIED`. Cả 24 official cells đã đối chiếu `expect.md` là **KHỚP** và không có worker E2 còn chạy. |
-| E2 TREC/E3/T0.scale | CHƯA ĐO; cần đúng-case gates và implementation tương ứng |
-| E5:12 primary cells tới10% accessed (+ tối đa4 sensitivity) | CHƯA ĐO; shared encode/cache + per-cell costs, refine tại E4 full bootstrap |
-| E5:continuation25/50/100% true | CHƯA ĐO; forecast riêng refit/remap/update/checkpoint, không cộng thêm100% scheduled |
-| E7:20 dataset/model cases và eligible schedulers | CHƯA ĐO; cần đúng-case token/runtime profiles và actual task counts |
-| E6:AOL recovery + temporal replay | CHƯA ĐO; source/recovery time riêng, unavailable ghi BLOCKED_DATA |
-| Download và HF upload/verify/restore | CHƯA ĐO; tách compute time, cộng vào lịch wall-time theo overlap thực tế |
+| E2 TREC/E3/T0.scale | **ĐÃ ĐO:** accepted TREC/E3 systems và T0 scale bundles có timing/restore/profile receipts |
+| E5:12 primary cells tới10% accessed (+ tối đa4 sensitivity) | **ĐÃ ĐO:** 12/12 required cells trên common reduced manifest; timing và per-cell costs đã lưu |
+| E5:continuation25/50/100% true | **ĐÃ ĐO:** mọi accepted primary cell chạy cùng run tới completion/100% true; không cộng thêm scheduled run |
+| E7:20 dataset/model cases và eligible schedulers | **ĐÃ ĐO:** 20/20 representative cells có timing/profile và accepted sync |
+| E6:AOL recovery + temporal replay | **ĐÃ ĐO:** recovery/coverage và 4 temporal cells accepted; unavailable/coverage được ghi riêng |
+| Download và HF upload/verify/restore | **ĐÃ XÁC NHẬN:** local manifests `VALIDATED`, data/run repos public, accepted receipts `VERIFIED`; compute và sync time vẫn tách riêng |
 
 Không dùng các placeholder470 docs/s/1.9 GPU-hour. Timing smoke không tự tick E1/E4 hoặc mọi T0.case; primary/continuation và compute/sync là các gate riêng.
 

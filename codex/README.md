@@ -1,6 +1,6 @@
 # Hướng dẫn cho Codex triển khai thí nghiệm MixIndex
 
-Bộ tài liệu này là đặc tả để **agent ở phiên sau viết code và chạy thí nghiệm**. Implementation, prepared inputs and verified uploads now exist; see the root checklist for current evidence. T0.core is implemented, while scale/temporal and official runners are still incomplete. Target chạy từ E0 đến E7 là **server H100 80GB**. Windows chỉ dùng đọc tài liệu, chỉnh code và chuẩn bị cấu hình.
+Bộ tài liệu này là đặc tả để **agent ở phiên sau viết code và chạy thí nghiệm**. Implementation, prepared inputs, accepted E0–E7 bundles và verified uploads hiện đã có; xem checklist ở gốc project để biết evidence hiện hành. T0.core, T0.scale, các T0.case bắt buộc và các runner scale/temporal/representative đã được chạy qua gate trong phạm vi protocol hiện tại. E4–E7 dùng reduced-scale pilot `e4e567_scale_v3_50k`, nên không được diễn giải là full-corpus replication hay positive performance claim tổng quát. Target chạy từ E0 đến E7 là **server H100 80GB**. Windows chỉ dùng đọc tài liệu, chỉnh code và chuẩn bị cấu hình.
 
 **Agent bắt đầu tại file này**, rồi đọc đầy đủ report/expect và các file nền bên dưới. Luồng bắt buộc: inputs đã validate → E0/E1 correctness → T0 tuning/timing trong phạm vi hữu hạn → freeze profile → official experiments. T0 làm theo từng dataset/model; FiQA PASS không tự chứng nhận Arctic, BGE, Nomic hoặc full MS MARCO.
 
@@ -38,4 +38,4 @@ Bộ tài liệu này là đặc tả để **agent ở phiên sau viết code v
 
 ## Điểm vào cho phiên tiếp theo
 
-Đọc theo thứ tự trên, kiểm trạng thái hiện tại bằng file thật và checklist; chưa có implementation thì triển khai M01/P1 trong plan. Không chạy một lượt download/training dài trước E1/T0 tương ứng. Không đánh dấu checklist hoàn thành thí nghiệm chỉ vì đã viết code hoặc tài liệu. Mỗi run có compute, sync và scientific outcome riêng.
+Đọc theo thứ tự trên, kiểm trạng thái hiện tại bằng file thật và checklist; chỉ triển khai phần còn thiếu sau khi đối chiếu state, artifact và remote receipt. Không chạy một lượt download/training dài trước E1/T0 tương ứng. Không đánh dấu checklist hoàn thành thí nghiệm chỉ vì đã viết code hoặc tài liệu. Mỗi run có compute, sync và scientific outcome riêng; accepted result phải có đủ gate và remote verification.
