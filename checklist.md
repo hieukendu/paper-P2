@@ -86,8 +86,8 @@ Tick compute khi mọi required cells/gates đã hoàn tất hợp lệ. Tick sy
 - [x] E4.sync — Ba artifact E4 reduced-scale bắt buộc đã `sync=VERIFIED` trên HF, cùng common manifest/profile/config hashes.
 - [x] E5.compute — `e4e567_scale_v3_50k`: 12/12 reduced-workload primary cells (MS MARCO common manifest50k, ORCAS tối đa5k groups) và required checkpoints tới100% true hoàn tất; mọi cell đạt correctness gate PASS và đối chiếu `expect.md` là **KHỚP**. Sensitivity không chạy và không chặn stage.
 - [x] E5.sync — Toàn bộ 12 required primary states/results đã `sync=VERIFIED` trên HF; chỉ các run pass được report/upload.
-- [ ] E6.compute — `e4e567_scale_v3_50k`: recovered AOL temporal study8 tuần/7 decisions, cap50k documents/50k events mỗi tuần và coverage hợp lệ.
-- [ ] E6.sync — Temporal states/metrics/coverage artifacts đã sync verified.
+- [x] E6.compute — `e4e567_scale_v3_50k`: recovered AOL temporal study 8 tuần/7 decisions, cap 50k documents/50k events mỗi tuần; cả 4 scheduler cells đạt `COMPUTE_DONE`, correctness/temporal/future-leakage/recovery gates PASS và expect **KHỚP**.
+- [x] E6.sync — Cả 4 temporal states/metrics/coverage artifacts đạt `sync=VERIFIED` trên HF; chỉ các run pass được report/upload.
 - [x] E7.compute — `e4e567_scale_v3_50k`: 20/20 representative compact cells đã `COMPUTE_DONE`, correctness/provenance gates PASS và đối chiếu `expect.md` là **KHỚP**; các outcome quality vẫn được giữ theo từng case/reduced-coverage scope, không tạo positive performance claim tổng quát.
 - [x] E7.sync — Toàn bộ 20/20 E7 bundles, matrix weights/results và source/config artifacts đã `sync=VERIFIED` trên HF; chỉ các run đã verify được report/upload.
 
