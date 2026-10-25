@@ -1,0 +1,13 @@
+dataset:
+  subset_size: 2000
+mapping:
+  kind: op
+  regional: none
+calibration:
+  enabled: false
+search:
+  backend: exact
+scheduler:
+  kind: random
+execution:
+  phase: development

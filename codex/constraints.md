@@ -2,10 +2,10 @@
 
 ## Phạm vi
 
-- Viết implementation cho protocol trong `report.md`/`expect.md`, T0 scoped prep theo [M14](14_presetup_tuning.md), chạy E0–E7 trên server A100 80GB, lưu kết quả và auto-sync HF. Encoder g/h giữ cố định; học map/calibration, scheduler không dùng RL.
+- Viết implementation cho protocol trong `report.md`/`expect.md`, T0 scoped prep theo [M14](14_presetup_tuning.md), chạy E0–E7 trên server H100 80GB, lưu kết quả và auto-sync HF. Encoder g/h giữ cố định; học map/calibration, scheduler không dùng RL.
 - Giai đoạn hiện tại chỉ có tài liệu Markdown. Agent lần sau mới tạo code, config và thực hiện network/download/upload.
 - Không viết lại paper; không thay placeholder trong PDF bằng số tự đặt. Không coi tài liệu thiết kế là bằng chứng đã chạy.
-- Windows là máy chuẩn bị; pilot, encoder inference và benchmark đều chạy trên server. CPU fallback chỉ phục vụ debug có nhãn, không đại diện performance A100.
+- Windows là máy chuẩn bị; pilot, encoder inference và benchmark đều chạy trên server. CPU fallback chỉ phục vụ debug có nhãn, không đại diện performance H100.
 - Giữ dirty worktree và file người dùng. Không reset/clean, xóa corpus hoặc dọn checkpoints ở giai đoạn này. Upload trước; cleanup là việc riêng sau này.
 
 ## Không overengineering
@@ -49,7 +49,7 @@ Không tạo Material Passport cho từng module/run. Không lặp nhiều bản
 
 - Đọc `.env` đúng project root bằng `load_dotenv(..., override=False)`. `HF_TOKEN` là một biến trong `.env`, không phải tên file chứa token. Không in, ghi, yêu cầu dán lại hoặc upload nội dung token.
 - `.env`, credential caches, SSH files, raw AOL event/query text và full upstream model/dataset copies không thuộc gói auto-upload mặc định. Upload learned map weights, configs, splits/IDs được phép, outputs và code cần tái lập.
-- Dùng private HF dataset repos cho run bundles. Không tự public, đổi billing plan hoặc thuê GPU. Không tạo repo mới để né quota tổng tài khoản.
+- User explicitly requested public project repositories: use `sync.private: false` for HF run/data repositories and keep GitHub public. This overrides the original private default. Do not change billing plans, rent GPUs, or create repositories to evade account quota.
 - Mọi run/checkpoint hoàn thành đều enqueue auto-sync; thiếu token/quyền/quota thì ghi pending, giữ file local, cho biết lỗi cụ thể. Không coi upload request thành công là verified trước khi kiểm remote files.
 - Sau khi sync verified vẫn **không xóa local** trong đợt này. Không rewrite HF history hoặc xóa repo để giải phóng quota.
 

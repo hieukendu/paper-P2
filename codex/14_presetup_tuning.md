@@ -11,7 +11,7 @@ Mọi case phải đi qua: **tải model → tải dữ liệu → validate/prep
 | Scope/task ID | Inputs phải sẵn sàng | Cho phép mở bước nào |
 |---|---|---|
 | `T0.core` | FiQA đầy đủ và MiniLM/MPNet; E0/E1 đã qua; LA/MLP, regional/calibration, scheduler, HNSW và acceptance code đã có | E2 exact trên FiQA; E2 ANN/E3 cần thêm ANN profile PASS |
-| `T0.scale` | E3 correctness; Arctic snapshots; MS MARCO documents v1 + ORCAS đã ingest/validate; subset 100k cố định | E4 trên subset; E5 còn cần gate full-corpus tại E4 |
+| `T0.scale` | E3 correctness; Arctic snapshots; MS MARCO documents v1 + ORCAS đã ingest/validate; subset 100k cố định | Diagnostic timing/profile source; E4 v3 còn cần common 50k/5k manifest và reduced-pool gate |
 | `T0.case.<dataset>.<pair>` | Inputs thật của case E2 bổ sung/E6/E7 đã validate; core code dùng lại | Case tương ứng, sau các dependency E3/E4 nếu có |
 
 `T0.core` không phụ thuộc E2/E3/E4; nó dùng implementation M05–M08 đã code trước khi chạy các E đó. `T0.scale` không phụ thuộc E4, và T0.case không phụ thuộc chính E đang chuẩn bị. T0 cho TREC dùng document train/validation để chọn lr; không có Q_tune thì search kế thừa FiQA cùng pair với nhãn `UNTUNED_TRANSFER`. AOL chỉ dùng document pools và query/history tuần1. Case thiếu corpus thật là `BLOCKED_DATA`; không block các case độc lập đã đủ inputs.
@@ -38,7 +38,7 @@ Chạy grid `(50,200),(100,200),(500,1000),(1000,2000)` trên Q_tune và bootstr
 
 HNSW trên FiQA/subset 100k không chứng nhận recall cho full MS MARCO hoặc model pair khác. E4 phải build actual full bootstrap graph rồi kiểm Q_tune trên snapshot đó trước E5; exact reference ở gate này dùng **stored vectors**, không target chưa paid. Những map seed còn lại được kiểm với settings đã freeze trước khi đọc test; gate fail không được âm thầm đổi settings riêng cho seed đó. Một sửa đổi development cần profile/version mới cho toàn comparison liên quan.
 
-E4 readiness tasks chỉ cần T0.scale input/lr/runtime/subset profile và resource reservation cho target size; **không yêu cầu full-corpus ANN profile mà E4 đang tạo**. E4 không đọc official quality để chọn; sau full-bootstrap gate nó publish một search profile entry mới cho full corpus, giữ nguyên subset entry. E5 mới bắt buộc full entry PASS. Preflight các bootstrap map seeds/variants trong comparison trước khi mở test của comparison đó; lỗi sau khi đã xem test không được dùng để retune rồi thay kết quả cũ.
+E4 readiness tasks cần T0.scale input/lr/runtime/subset profile, common v3 manifest và resource reservation cho reduced target size; **không đọc official quality để chọn**. Sau reduced-pool bootstrap gate, E4 publish search/restore evidence consumed by E5. Preflight các bootstrap map seeds/variants trong comparison trước khi mở test của comparison đó; lỗi sau khi đã xem test không được dùng để retune rồi thay kết quả cũ.
 
 Không có Q_tune hợp lệ: kế thừa profile FiQA cùng pair như M06, ghi `UNTUNED_TRANSFER`; exact evaluation vẫn hợp lệ, ANN fidelity của case chưa được chứng nhận. Không coi N/A/transfer là PASS0.99. ANN_GATE_FAILED chặn task ANN phụ thuộc; exact tasks đã qua correctness vẫn được chạy với nhãn exact. Không mở rộng grid/M/efC sau khi xem test để cứu kết quả.
 
@@ -65,11 +65,11 @@ T_cell   = bootstrap_fit + mapped_build + sum_batch(search + select + backfill_e
 T_serial = T_shared + sum(required_cells T_cell) + final_upload_verify
 ```
 
-Không tính full target cache/old encode lại60 lần nếu cache dùng chung; cũng không bỏ mọi build/mutable-index copy hay100k-query refresh của từng run. E5 có60 primary cells (`4×3×5`), cần forecast riêng đến10% accessed và phần continuation25/50/100% true. Graph build/update và regional solves không được mặc định scale tuyến tính từ100k đến3.21M; E4 cập nhật bằng full-bootstrap measurements trước khi launch60 cells. Dùng ranges từ repeats/length buckets và ghi phần chưa đo, không bịa một hệ số an toàn hay GPU-hour.
+Không tính full target cache/old encode lại theo số cell nếu cache dùng chung; cũng không bỏ mọi build/mutable-index copy hay100k-query refresh của từng run. Theo M15, E5 compact có12 primary cells (`4×3×1`) và tối đa4 traffic-sensitivity cells; continuation25/50/100% true nằm trong cùng run. Graph build/update và regional solves không được mặc định scale tuyến tính từ100k đến3.21M; E4 cập nhật bằng full-bootstrap measurements trước khi mở E5. Dùng ranges từ repeats/length buckets và ghi phần chưa đo, không bịa một hệ số an toàn hay GPU-hour.
 
 Nếu reuse immutable bootstrap templates theo map seed, training/build chuẩn bị chung được đếm đúng số lần trong T_shared; T_cell dùng clone/load/copy cost thật. Per-run migration comparison vẫn báo bootstrap cost theo cost mode đã khai báo; không gọi clone lookup là measured fit/encode. Live h(d) của từng backfill được tính trong T_cell; cached-access chỉ có lookup cost và estimated live cost ghi riêng.
 
-E7 cần sample encoder/runtime của **mỗi pair trên từng corpus thật**, và actual TaskSpecs để đếm mapping/scheduler/ablations; không nhân thời gian Arctic cho cả20 cases. Có thể reuse đúng profile/input hash. E6 recovery time ghi riêng; chưa có source thì `BLOCKED_DATA`, không đặt một deadline giả. Scheduling forecast cho concurrency2 chỉ dùng throughput đã co-schedule đo được; nếu chưa đo, dùng serial estimate.
+E7 cần sample encoder/runtime của **mỗi compact case trên corpus thật**, và actual TaskSpecs để đếm mapping/scheduler/ablations; không nhân thời gian Arctic cho tám case. Có thể reuse đúng profile/input hash. E6 recovery time ghi riêng; chưa có source thì `BLOCKED_DATA`, không đặt một deadline giả. Scheduling forecast cho concurrency2 chỉ dùng throughput đã co-schedule đo được; nếu chưa đo, dùng serial estimate.
 
 Dừng tuning khi grid hợp lệ đã được đánh giá, chọn được candidate finite/feasible theo quy tắc trên, correctness/resume/restore pass và đủ timing/estimate cho scope. Không chạy thêm search chỉ vì quality chưa đẹp. Nếu sửa bug hoặc đổi inputs/hardware/adapter làm profile mất hiệu lực, tạo T0 scope revision mới; giữ outputs cũ và rerun phần bị ảnh hưởng. Sau khi đã xem test, thay đổi khoa học thuộc một study revision/exploratory riêng, không thay thế âm thầm kết quả official cũ.
 

@@ -1,0 +1,1585 @@
+jobs:
+- config: configs/experiments/e7.yaml
+  phase: official
+  measurement_mode: exclusive
+  development_hardware: false
+  run_budget_policy: compact_v1
+  resources: &id001
+    gpu_device: 0
+    gpu_memory_gib: 20
+    host_ram_gib: 12
+    cpu_cores: 8
+    disk_scratch_gib: 32
+    io_heavy: true
+  allow_ann_from_verified_parent: true
+  task_id: E7.fiqa.minilm_mpnet.residual_mlp.random.m17.t101.4994f5389367
+  experiment: E7
+  config_overrides:
+    dataset:
+      name: fiqa
+      subset_size: null
+    models:
+      pair: minilm_mpnet
+    mapping:
+      kind: residual_mlp
+      lr: 0.001
+    scheduler:
+      kind: random
+    experiment:
+      profile_hash: 5c9e024875573ce9ae9dc952744b1838a17945a435db41c23687d4666d64ce07
+      tuning_scope: case.fiqa.minilm_mpnet
+      run_budget_policy: compact_v1
+      cell_role: primary
+      map_seed: 17
+      traffic_seed: 101
+      scale_variant: e4e567_scale_v3_50k
+      scale_manifest_hash: 28051259f7f779b226836af8fe4886604f05407614bf3613925e56200af3381d
+      scale_manifest_path: data/processed/msmarco-docs-v1/manifests/e4e567_scale_v3_50k.json
+      case_manifest_hash: 048602433f7ea06d995ec3821e133b6344e353561a646cef700665625e91be1a
+      case_manifest_path: data/processed/fiqa/manifests/e7_minilm_mpnet.json
+      case_scope: case.fiqa.minilm_mpnet
+    search:
+      backend: exact
+    execution:
+      mode: cached_access
+      phase: official
+  profile_hash: 5c9e024875573ce9ae9dc952744b1838a17945a435db41c23687d4666d64ce07
+  tuning_scope: case.fiqa.minilm_mpnet
+  input_refs: &id002
+    case_manifest_hash: 048602433f7ea06d995ec3821e133b6344e353561a646cef700665625e91be1a
+    dataset: fiqa
+    hardware:
+      cpu_cores: 16.0
+      devices:
+      - compute_capability:
+        - 9
+        - 0
+        name: NVIDIA H100 80GB HBM3
+        vram_total_bytes: 84929478656
+      hnsw_build:
+        commit: d9b3608c83d83b46c96e25088cb1d729b29dcfe9
+        sha256: adf8c94849c6015ad81ae58e7cddf2c9a99914ebeb60cb03aaf1986d43e762df
+        source: https://github.com/nmslib/hnswlib.git
+      packages:
+        hnswlib: 0.9.0
+        huggingface-hub: 0.34.4
+        numpy: 2.2.6
+        pyarrow: 20.0.0
+        scikit-learn: 1.6.1
+        scipy: 1.15.3
+        sentence-transformers: 4.1.0
+        torch: 2.6.0+cu124
+        transformers: 4.51.3
+      ram_limit_bytes: 268435456000
+      torch_cuda: '12.4'
+    models:
+      new:
+        adapter: sentence_transformer
+        dim: 768
+        document_prefix: ''
+        download_patterns:
+        - '*.json'
+        - '*.safetensors'
+        - '*.txt'
+        - '*.model'
+        - '*.md'
+        dtype: float32
+        max_tokens: 384
+        pooling: mean
+        query_prefix: ''
+        repo_id: sentence-transformers/all-mpnet-base-v2
+        resolved_revision: e8c3b32edf5434bc2275fc9bab85f82640a19130
+        trust_remote_code: false
+      old:
+        adapter: sentence_transformer
+        dim: 384
+        document_prefix: ''
+        download_patterns:
+        - '*.json'
+        - '*.safetensors'
+        - '*.txt'
+        - '*.model'
+        - '*.md'
+        dtype: float32
+        max_tokens: 256
+        pooling: mean
+        query_prefix: ''
+        repo_id: sentence-transformers/all-MiniLM-L6-v2
+        resolved_revision: 1110a243fdf4706b3f48f1d95db1a4f5529b4d41
+        trust_remote_code: false
+    pair: minilm_mpnet
+    release: 584640e32aecdf4ce3517078a50ac7e771025e768c8c21fd3ae824d0699c5058
+    split_hash: 44b9adf3317face605a7d9ce7bd875bfa88142dc4967a1cc2d5c4efbc2d22594
+  variant_id: primary
+  overrides: {}
+  depends_on:
+  - E4.scale.full_bootstrap.7c06f0e9170f
+  - T0.case.fiqa.minilm_mpnet
+  priority: 40
+  case_scope: case.fiqa.minilm_mpnet
+  parent_e4_artifact_id: E4-scale-full_bootstrap-057a9480199a
+  parent_e4_artifact_hash: f9e2ac8aa1c6b53ef1085e8c68f4f446792ac4df3332654221b8b3921dc9e4d0
+- config: configs/experiments/e7.yaml
+  phase: official
+  measurement_mode: exclusive
+  development_hardware: false
+  run_budget_policy: compact_v1
+  resources: *id001
+  allow_ann_from_verified_parent: true
+  task_id: E7.fiqa.minilm_mpnet.residual_mlp.greedy.m17.t101.4994f5389367
+  experiment: E7
+  config_overrides:
+    dataset:
+      name: fiqa
+      subset_size: null
+    models:
+      pair: minilm_mpnet
+    mapping:
+      kind: residual_mlp
+      lr: 0.001
+    scheduler:
+      kind: greedy
+    experiment:
+      profile_hash: 5c9e024875573ce9ae9dc952744b1838a17945a435db41c23687d4666d64ce07
+      tuning_scope: case.fiqa.minilm_mpnet
+      run_budget_policy: compact_v1
+      cell_role: primary
+      map_seed: 17
+      traffic_seed: 101
+      scale_variant: e4e567_scale_v3_50k
+      scale_manifest_hash: 28051259f7f779b226836af8fe4886604f05407614bf3613925e56200af3381d
+      scale_manifest_path: data/processed/msmarco-docs-v1/manifests/e4e567_scale_v3_50k.json
+      case_manifest_hash: 048602433f7ea06d995ec3821e133b6344e353561a646cef700665625e91be1a
+      case_manifest_path: data/processed/fiqa/manifests/e7_minilm_mpnet.json
+      case_scope: case.fiqa.minilm_mpnet
+    search:
+      backend: exact
+    execution:
+      mode: cached_access
+      phase: official
+  profile_hash: 5c9e024875573ce9ae9dc952744b1838a17945a435db41c23687d4666d64ce07
+  tuning_scope: case.fiqa.minilm_mpnet
+  input_refs: *id002
+  variant_id: primary
+  overrides: {}
+  depends_on:
+  - E7.fiqa.minilm_mpnet.residual_mlp.random.m17.t101.4994f5389367
+  - T0.case.fiqa.minilm_mpnet
+  priority: 40
+  case_scope: case.fiqa.minilm_mpnet
+  parent_e4_artifact_id: E4-scale-full_bootstrap-057a9480199a
+  parent_e4_artifact_hash: f9e2ac8aa1c6b53ef1085e8c68f4f446792ac4df3332654221b8b3921dc9e4d0
+- config: configs/experiments/e7.yaml
+  phase: official
+  measurement_mode: exclusive
+  development_hardware: false
+  run_budget_policy: compact_v1
+  resources: *id001
+  allow_ann_from_verified_parent: true
+  task_id: E7.fiqa.minilm_mpnet.op.greedy.m17.t101.4994f5389367
+  experiment: E7
+  config_overrides:
+    dataset:
+      name: fiqa
+      subset_size: null
+    models:
+      pair: minilm_mpnet
+    mapping:
+      kind: op
+    scheduler:
+      kind: greedy
+    search:
+      backend: exact
+    execution:
+      mode: cached_access
+      phase: official
+    experiment:
+      profile_hash: 5c9e024875573ce9ae9dc952744b1838a17945a435db41c23687d4666d64ce07
+      tuning_scope: case.fiqa.minilm_mpnet
+      run_budget_policy: compact_v1
+      cell_role: crosscheck
+      map_seed: 17
+      traffic_seed: 101
+      scale_variant: e4e567_scale_v3_50k
+      scale_manifest_hash: 28051259f7f779b226836af8fe4886604f05407614bf3613925e56200af3381d
+      scale_manifest_path: data/processed/msmarco-docs-v1/manifests/e4e567_scale_v3_50k.json
+      case_manifest_hash: 048602433f7ea06d995ec3821e133b6344e353561a646cef700665625e91be1a
+      case_manifest_path: data/processed/fiqa/manifests/e7_minilm_mpnet.json
+      case_scope: case.fiqa.minilm_mpnet
+  profile_hash: 5c9e024875573ce9ae9dc952744b1838a17945a435db41c23687d4666d64ce07
+  tuning_scope: case.fiqa.minilm_mpnet
+  input_refs: *id002
+  variant_id: crosscheck
+  overrides: {}
+  depends_on:
+  - E7.fiqa.minilm_mpnet.residual_mlp.greedy.m17.t101.4994f5389367
+  - T0.case.fiqa.minilm_mpnet
+  priority: 35
+  case_scope: case.fiqa.minilm_mpnet
+  parent_e4_artifact_id: E4-scale-full_bootstrap-057a9480199a
+  parent_e4_artifact_hash: f9e2ac8aa1c6b53ef1085e8c68f4f446792ac4df3332654221b8b3921dc9e4d0
+- config: configs/experiments/e7.yaml
+  phase: official
+  measurement_mode: exclusive
+  development_hardware: false
+  run_budget_policy: compact_v1
+  resources: *id001
+  allow_ann_from_verified_parent: true
+  task_id: E7.trec-covid.minilm_mpnet.residual_mlp.random.m17.t101.4994f5389367
+  experiment: E7
+  config_overrides:
+    dataset:
+      name: trec-covid
+      subset_size: null
+    models:
+      pair: minilm_mpnet
+    mapping:
+      kind: residual_mlp
+      lr: 0.001
+    scheduler:
+      kind: random
+    experiment:
+      profile_hash: 2742a810698ebcc574b4000783d58a5016bd4f00acb03c235c9884ed65fd3fb3
+      tuning_scope: case.trec-covid.minilm_mpnet
+      run_budget_policy: compact_v1
+      cell_role: primary
+      map_seed: 17
+      traffic_seed: 101
+      scale_variant: e4e567_scale_v3_50k
+      scale_manifest_hash: 28051259f7f779b226836af8fe4886604f05407614bf3613925e56200af3381d
+      scale_manifest_path: data/processed/msmarco-docs-v1/manifests/e4e567_scale_v3_50k.json
+      case_manifest_hash: ef26de3f1c6d9a8bc0e7c64045cc69e1ec22a1fa9181545d4f9d909a34f5612b
+      case_manifest_path: data/processed/trec-covid/manifests/e7_minilm_mpnet.json
+      case_scope: case.trec-covid.minilm_mpnet
+    search:
+      backend: exact
+    execution:
+      mode: cached_access
+      phase: official
+  profile_hash: 2742a810698ebcc574b4000783d58a5016bd4f00acb03c235c9884ed65fd3fb3
+  tuning_scope: case.trec-covid.minilm_mpnet
+  input_refs: &id003
+    case_manifest_hash: ef26de3f1c6d9a8bc0e7c64045cc69e1ec22a1fa9181545d4f9d909a34f5612b
+    dataset: trec-covid
+    hardware:
+      cpu_cores: 16.0
+      devices:
+      - compute_capability:
+        - 9
+        - 0
+        name: NVIDIA H100 80GB HBM3
+        vram_total_bytes: 84929478656
+      hnsw_build:
+        commit: d9b3608c83d83b46c96e25088cb1d729b29dcfe9
+        sha256: adf8c94849c6015ad81ae58e7cddf2c9a99914ebeb60cb03aaf1986d43e762df
+        source: https://github.com/nmslib/hnswlib.git
+      packages:
+        hnswlib: 0.9.0
+        huggingface-hub: 0.34.4
+        numpy: 2.2.6
+        pyarrow: 20.0.0
+        scikit-learn: 1.6.1
+        scipy: 1.15.3
+        sentence-transformers: 4.1.0
+        torch: 2.6.0+cu124
+        transformers: 4.51.3
+      ram_limit_bytes: 268435456000
+      torch_cuda: '12.4'
+    models:
+      new:
+        adapter: sentence_transformer
+        dim: 768
+        document_prefix: ''
+        download_patterns:
+        - '*.json'
+        - '*.safetensors'
+        - '*.txt'
+        - '*.model'
+        - '*.md'
+        dtype: float32
+        max_tokens: 384
+        pooling: mean
+        query_prefix: ''
+        repo_id: sentence-transformers/all-mpnet-base-v2
+        resolved_revision: e8c3b32edf5434bc2275fc9bab85f82640a19130
+        trust_remote_code: false
+      old:
+        adapter: sentence_transformer
+        dim: 384
+        document_prefix: ''
+        download_patterns:
+        - '*.json'
+        - '*.safetensors'
+        - '*.txt'
+        - '*.model'
+        - '*.md'
+        dtype: float32
+        max_tokens: 256
+        pooling: mean
+        query_prefix: ''
+        repo_id: sentence-transformers/all-MiniLM-L6-v2
+        resolved_revision: 1110a243fdf4706b3f48f1d95db1a4f5529b4d41
+        trust_remote_code: false
+    pair: minilm_mpnet
+    release: 40f5aed7c5d1f9af84ba4fa000b545ff7097621a6397a87293cda76940a644ed
+    split_hash: 52e3b118acb270825db215f1d918d6613734eb5fbe0f812190079e81e5270755
+  variant_id: primary
+  overrides: {}
+  depends_on:
+  - E7.fiqa.minilm_mpnet.op.greedy.m17.t101.4994f5389367
+  - T0.case.trec-covid.minilm_mpnet
+  priority: 40
+  case_scope: case.trec-covid.minilm_mpnet
+  parent_e4_artifact_id: E4-scale-full_bootstrap-057a9480199a
+  parent_e4_artifact_hash: f9e2ac8aa1c6b53ef1085e8c68f4f446792ac4df3332654221b8b3921dc9e4d0
+- config: configs/experiments/e7.yaml
+  phase: official
+  measurement_mode: exclusive
+  development_hardware: false
+  run_budget_policy: compact_v1
+  resources: *id001
+  allow_ann_from_verified_parent: true
+  task_id: E7.trec-covid.minilm_mpnet.residual_mlp.greedy.m17.t101.4994f5389367
+  experiment: E7
+  config_overrides:
+    dataset:
+      name: trec-covid
+      subset_size: null
+    models:
+      pair: minilm_mpnet
+    mapping:
+      kind: residual_mlp
+      lr: 0.001
+    scheduler:
+      kind: greedy
+    experiment:
+      profile_hash: 2742a810698ebcc574b4000783d58a5016bd4f00acb03c235c9884ed65fd3fb3
+      tuning_scope: case.trec-covid.minilm_mpnet
+      run_budget_policy: compact_v1
+      cell_role: primary
+      map_seed: 17
+      traffic_seed: 101
+      scale_variant: e4e567_scale_v3_50k
+      scale_manifest_hash: 28051259f7f779b226836af8fe4886604f05407614bf3613925e56200af3381d
+      scale_manifest_path: data/processed/msmarco-docs-v1/manifests/e4e567_scale_v3_50k.json
+      case_manifest_hash: ef26de3f1c6d9a8bc0e7c64045cc69e1ec22a1fa9181545d4f9d909a34f5612b
+      case_manifest_path: data/processed/trec-covid/manifests/e7_minilm_mpnet.json
+      case_scope: case.trec-covid.minilm_mpnet
+    search:
+      backend: exact
+    execution:
+      mode: cached_access
+      phase: official
+  profile_hash: 2742a810698ebcc574b4000783d58a5016bd4f00acb03c235c9884ed65fd3fb3
+  tuning_scope: case.trec-covid.minilm_mpnet
+  input_refs: *id003
+  variant_id: primary
+  overrides: {}
+  depends_on:
+  - E7.trec-covid.minilm_mpnet.residual_mlp.random.m17.t101.4994f5389367
+  - T0.case.trec-covid.minilm_mpnet
+  priority: 40
+  case_scope: case.trec-covid.minilm_mpnet
+  parent_e4_artifact_id: E4-scale-full_bootstrap-057a9480199a
+  parent_e4_artifact_hash: f9e2ac8aa1c6b53ef1085e8c68f4f446792ac4df3332654221b8b3921dc9e4d0
+- config: configs/experiments/e7.yaml
+  phase: official
+  measurement_mode: exclusive
+  development_hardware: false
+  run_budget_policy: compact_v1
+  resources: *id001
+  allow_ann_from_verified_parent: true
+  task_id: E7.nq.arctic.residual_mlp.random.m17.t101.4994f5389367
+  experiment: E7
+  config_overrides:
+    dataset:
+      name: nq
+      subset_size: null
+    models:
+      pair: arctic
+    mapping:
+      kind: residual_mlp
+      lr: 0.001
+    scheduler:
+      kind: random
+    experiment:
+      profile_hash: c8cdf10995b9e003914fbdaccba0d0c31f594b8e846f04d03afdcd5ed07ec68a
+      tuning_scope: case.nq.arctic
+      run_budget_policy: compact_v1
+      cell_role: primary
+      map_seed: 17
+      traffic_seed: 101
+      scale_variant: e4e567_scale_v3_50k
+      scale_manifest_hash: 28051259f7f779b226836af8fe4886604f05407614bf3613925e56200af3381d
+      scale_manifest_path: data/processed/msmarco-docs-v1/manifests/e4e567_scale_v3_50k.json
+      case_manifest_hash: d65efd78dcf49e87188b0f96eaba940b909203027a4d954b06b09931949fab94
+      case_manifest_path: data/processed/nq/manifests/e7_arctic.json
+      case_scope: case.nq.arctic
+    search:
+      backend: exact
+    execution:
+      mode: cached_access
+      phase: official
+  profile_hash: c8cdf10995b9e003914fbdaccba0d0c31f594b8e846f04d03afdcd5ed07ec68a
+  tuning_scope: case.nq.arctic
+  input_refs: &id004
+    case_manifest_hash: d65efd78dcf49e87188b0f96eaba940b909203027a4d954b06b09931949fab94
+    dataset: nq
+    hardware:
+      cpu_cores: 16.0
+      devices:
+      - compute_capability:
+        - 9
+        - 0
+        name: NVIDIA H100 80GB HBM3
+        vram_total_bytes: 84929478656
+      hnsw_build:
+        commit: d9b3608c83d83b46c96e25088cb1d729b29dcfe9
+        sha256: adf8c94849c6015ad81ae58e7cddf2c9a99914ebeb60cb03aaf1986d43e762df
+        source: https://github.com/nmslib/hnswlib.git
+      packages:
+        hnswlib: 0.9.0
+        huggingface-hub: 0.34.4
+        numpy: 2.2.6
+        pyarrow: 20.0.0
+        scikit-learn: 1.6.1
+        scipy: 1.15.3
+        sentence-transformers: 4.1.0
+        torch: 2.6.0+cu124
+        transformers: 4.51.3
+      ram_limit_bytes: 268435456000
+      torch_cuda: '12.4'
+    models:
+      new:
+        adapter: sentence_transformer
+        dim: 1024
+        document_prefix: ''
+        download_patterns:
+        - '*.json'
+        - '*.safetensors'
+        - '*.txt'
+        - '*.model'
+        - '*.md'
+        dtype: float32
+        max_tokens: 8192
+        pooling: cls
+        query_prefix: 'query: '
+        repo_id: Snowflake/snowflake-arctic-embed-l-v2.0
+        resolved_revision: ac6544c8a46e00af67e330e85a9028c66b8cfd9a
+        trust_remote_code: false
+      old:
+        adapter: sentence_transformer
+        dim: 1024
+        document_prefix: ''
+        download_patterns:
+        - '*.json'
+        - '*.safetensors'
+        - '*.txt'
+        - '*.model'
+        - '*.md'
+        dtype: float32
+        max_tokens: 512
+        pooling: cls
+        query_prefix: 'Represent this sentence for searching relevant passages: '
+        repo_id: Snowflake/snowflake-arctic-embed-l
+        resolved_revision: d8fb21ca8d905d2832ee8b96c894d3298964346b
+        trust_remote_code: false
+    pair: arctic
+    release: 7d93e804cfd1ea372e97a0f74cd04f50a2af64f5a0ae93aaffede19f8515480b
+    split_hash: 9282484cf4b1daad26298a2f7f488daa6c2ca1a6b1779c4d6efabd63458430db
+  variant_id: primary
+  overrides: {}
+  depends_on:
+  - E7.trec-covid.minilm_mpnet.residual_mlp.greedy.m17.t101.4994f5389367
+  - T0.case.nq.arctic
+  priority: 40
+  case_scope: case.nq.arctic
+  parent_e4_artifact_id: E4-scale-full_bootstrap-057a9480199a
+  parent_e4_artifact_hash: f9e2ac8aa1c6b53ef1085e8c68f4f446792ac4df3332654221b8b3921dc9e4d0
+- config: configs/experiments/e7.yaml
+  phase: official
+  measurement_mode: exclusive
+  development_hardware: false
+  run_budget_policy: compact_v1
+  resources: *id001
+  allow_ann_from_verified_parent: true
+  task_id: E7.nq.arctic.residual_mlp.greedy.m17.t101.4994f5389367
+  experiment: E7
+  config_overrides:
+    dataset:
+      name: nq
+      subset_size: null
+    models:
+      pair: arctic
+    mapping:
+      kind: residual_mlp
+      lr: 0.001
+    scheduler:
+      kind: greedy
+    experiment:
+      profile_hash: c8cdf10995b9e003914fbdaccba0d0c31f594b8e846f04d03afdcd5ed07ec68a
+      tuning_scope: case.nq.arctic
+      run_budget_policy: compact_v1
+      cell_role: primary
+      map_seed: 17
+      traffic_seed: 101
+      scale_variant: e4e567_scale_v3_50k
+      scale_manifest_hash: 28051259f7f779b226836af8fe4886604f05407614bf3613925e56200af3381d
+      scale_manifest_path: data/processed/msmarco-docs-v1/manifests/e4e567_scale_v3_50k.json
+      case_manifest_hash: d65efd78dcf49e87188b0f96eaba940b909203027a4d954b06b09931949fab94
+      case_manifest_path: data/processed/nq/manifests/e7_arctic.json
+      case_scope: case.nq.arctic
+    search:
+      backend: exact
+    execution:
+      mode: cached_access
+      phase: official
+  profile_hash: c8cdf10995b9e003914fbdaccba0d0c31f594b8e846f04d03afdcd5ed07ec68a
+  tuning_scope: case.nq.arctic
+  input_refs: *id004
+  variant_id: primary
+  overrides: {}
+  depends_on:
+  - E7.nq.arctic.residual_mlp.random.m17.t101.4994f5389367
+  - T0.case.nq.arctic
+  priority: 40
+  case_scope: case.nq.arctic
+  parent_e4_artifact_id: E4-scale-full_bootstrap-057a9480199a
+  parent_e4_artifact_hash: f9e2ac8aa1c6b53ef1085e8c68f4f446792ac4df3332654221b8b3921dc9e4d0
+- config: configs/experiments/e7.yaml
+  phase: official
+  measurement_mode: exclusive
+  development_hardware: false
+  run_budget_policy: compact_v1
+  resources: *id001
+  allow_ann_from_verified_parent: true
+  task_id: E7.nq.arctic.op.greedy.m17.t101.4994f5389367
+  experiment: E7
+  config_overrides:
+    dataset:
+      name: nq
+      subset_size: null
+    models:
+      pair: arctic
+    mapping:
+      kind: op
+    scheduler:
+      kind: greedy
+    search:
+      backend: exact
+    execution:
+      mode: cached_access
+      phase: official
+    experiment:
+      profile_hash: c8cdf10995b9e003914fbdaccba0d0c31f594b8e846f04d03afdcd5ed07ec68a
+      tuning_scope: case.nq.arctic
+      run_budget_policy: compact_v1
+      cell_role: crosscheck
+      map_seed: 17
+      traffic_seed: 101
+      scale_variant: e4e567_scale_v3_50k
+      scale_manifest_hash: 28051259f7f779b226836af8fe4886604f05407614bf3613925e56200af3381d
+      scale_manifest_path: data/processed/msmarco-docs-v1/manifests/e4e567_scale_v3_50k.json
+      case_manifest_hash: d65efd78dcf49e87188b0f96eaba940b909203027a4d954b06b09931949fab94
+      case_manifest_path: data/processed/nq/manifests/e7_arctic.json
+      case_scope: case.nq.arctic
+  profile_hash: c8cdf10995b9e003914fbdaccba0d0c31f594b8e846f04d03afdcd5ed07ec68a
+  tuning_scope: case.nq.arctic
+  input_refs: *id004
+  variant_id: crosscheck
+  overrides: {}
+  depends_on:
+  - E7.nq.arctic.residual_mlp.greedy.m17.t101.4994f5389367
+  - T0.case.nq.arctic
+  priority: 35
+  case_scope: case.nq.arctic
+  parent_e4_artifact_id: E4-scale-full_bootstrap-057a9480199a
+  parent_e4_artifact_hash: f9e2ac8aa1c6b53ef1085e8c68f4f446792ac4df3332654221b8b3921dc9e4d0
+- config: configs/experiments/e7.yaml
+  phase: official
+  measurement_mode: exclusive
+  development_hardware: false
+  run_budget_policy: compact_v1
+  resources: *id001
+  allow_ann_from_verified_parent: true
+  task_id: E7.hotpotqa.arctic.residual_mlp.random.m17.t101.4994f5389367
+  experiment: E7
+  config_overrides:
+    dataset:
+      name: hotpotqa
+      subset_size: null
+    models:
+      pair: arctic
+    mapping:
+      kind: residual_mlp
+      lr: 0.001
+    scheduler:
+      kind: random
+    experiment:
+      profile_hash: 428d62abc0909f32ed4c46f58c9c70df2f20cbf375f5694eb1cf8bc071f8c279
+      tuning_scope: case.hotpotqa.arctic
+      run_budget_policy: compact_v1
+      cell_role: primary
+      map_seed: 17
+      traffic_seed: 101
+      scale_variant: e4e567_scale_v3_50k
+      scale_manifest_hash: 28051259f7f779b226836af8fe4886604f05407614bf3613925e56200af3381d
+      scale_manifest_path: data/processed/msmarco-docs-v1/manifests/e4e567_scale_v3_50k.json
+      case_manifest_hash: 69e753adbf69f2a910e96d07ac63034cab8414c4bd165e67bf77b8dd24aa9e2e
+      case_manifest_path: data/processed/hotpotqa/manifests/e7_arctic.json
+      case_scope: case.hotpotqa.arctic
+    search:
+      backend: exact
+    execution:
+      mode: cached_access
+      phase: official
+  profile_hash: 428d62abc0909f32ed4c46f58c9c70df2f20cbf375f5694eb1cf8bc071f8c279
+  tuning_scope: case.hotpotqa.arctic
+  input_refs: &id005
+    case_manifest_hash: 69e753adbf69f2a910e96d07ac63034cab8414c4bd165e67bf77b8dd24aa9e2e
+    dataset: hotpotqa
+    hardware:
+      cpu_cores: 16.0
+      devices:
+      - compute_capability:
+        - 9
+        - 0
+        name: NVIDIA H100 80GB HBM3
+        vram_total_bytes: 84929478656
+      hnsw_build:
+        commit: d9b3608c83d83b46c96e25088cb1d729b29dcfe9
+        sha256: adf8c94849c6015ad81ae58e7cddf2c9a99914ebeb60cb03aaf1986d43e762df
+        source: https://github.com/nmslib/hnswlib.git
+      packages:
+        hnswlib: 0.9.0
+        huggingface-hub: 0.34.4
+        numpy: 2.2.6
+        pyarrow: 20.0.0
+        scikit-learn: 1.6.1
+        scipy: 1.15.3
+        sentence-transformers: 4.1.0
+        torch: 2.6.0+cu124
+        transformers: 4.51.3
+      ram_limit_bytes: 268435456000
+      torch_cuda: '12.4'
+    models:
+      new:
+        adapter: sentence_transformer
+        dim: 1024
+        document_prefix: ''
+        download_patterns:
+        - '*.json'
+        - '*.safetensors'
+        - '*.txt'
+        - '*.model'
+        - '*.md'
+        dtype: float32
+        max_tokens: 8192
+        pooling: cls
+        query_prefix: 'query: '
+        repo_id: Snowflake/snowflake-arctic-embed-l-v2.0
+        resolved_revision: ac6544c8a46e00af67e330e85a9028c66b8cfd9a
+        trust_remote_code: false
+      old:
+        adapter: sentence_transformer
+        dim: 1024
+        document_prefix: ''
+        download_patterns:
+        - '*.json'
+        - '*.safetensors'
+        - '*.txt'
+        - '*.model'
+        - '*.md'
+        dtype: float32
+        max_tokens: 512
+        pooling: cls
+        query_prefix: 'Represent this sentence for searching relevant passages: '
+        repo_id: Snowflake/snowflake-arctic-embed-l
+        resolved_revision: d8fb21ca8d905d2832ee8b96c894d3298964346b
+        trust_remote_code: false
+    pair: arctic
+    release: 6c30fc0ee0f114df38898df00640b76d88cc5b58222da28bae8cc2dc1b6f8d1d
+    split_hash: 2fa0984411673f3dacd60cc3211ba64d84d510408bf8719d14e796adf0f339cf
+  variant_id: primary
+  overrides: {}
+  depends_on:
+  - E7.nq.arctic.op.greedy.m17.t101.4994f5389367
+  - T0.case.hotpotqa.arctic.fast.2079b9e46d59.final
+  priority: 40
+  case_scope: case.hotpotqa.arctic
+  parent_e4_artifact_id: E4-scale-full_bootstrap-057a9480199a
+  parent_e4_artifact_hash: f9e2ac8aa1c6b53ef1085e8c68f4f446792ac4df3332654221b8b3921dc9e4d0
+- config: configs/experiments/e7.yaml
+  phase: official
+  measurement_mode: exclusive
+  development_hardware: false
+  run_budget_policy: compact_v1
+  resources: *id001
+  allow_ann_from_verified_parent: true
+  task_id: E7.hotpotqa.arctic.residual_mlp.greedy.m17.t101.4994f5389367
+  experiment: E7
+  config_overrides:
+    dataset:
+      name: hotpotqa
+      subset_size: null
+    models:
+      pair: arctic
+    mapping:
+      kind: residual_mlp
+      lr: 0.001
+    scheduler:
+      kind: greedy
+    experiment:
+      profile_hash: 428d62abc0909f32ed4c46f58c9c70df2f20cbf375f5694eb1cf8bc071f8c279
+      tuning_scope: case.hotpotqa.arctic
+      run_budget_policy: compact_v1
+      cell_role: primary
+      map_seed: 17
+      traffic_seed: 101
+      scale_variant: e4e567_scale_v3_50k
+      scale_manifest_hash: 28051259f7f779b226836af8fe4886604f05407614bf3613925e56200af3381d
+      scale_manifest_path: data/processed/msmarco-docs-v1/manifests/e4e567_scale_v3_50k.json
+      case_manifest_hash: 69e753adbf69f2a910e96d07ac63034cab8414c4bd165e67bf77b8dd24aa9e2e
+      case_manifest_path: data/processed/hotpotqa/manifests/e7_arctic.json
+      case_scope: case.hotpotqa.arctic
+    search:
+      backend: exact
+    execution:
+      mode: cached_access
+      phase: official
+  profile_hash: 428d62abc0909f32ed4c46f58c9c70df2f20cbf375f5694eb1cf8bc071f8c279
+  tuning_scope: case.hotpotqa.arctic
+  input_refs: *id005
+  variant_id: primary
+  overrides: {}
+  depends_on:
+  - E7.hotpotqa.arctic.residual_mlp.random.m17.t101.4994f5389367
+  - T0.case.hotpotqa.arctic.fast.2079b9e46d59.final
+  priority: 40
+  case_scope: case.hotpotqa.arctic
+  parent_e4_artifact_id: E4-scale-full_bootstrap-057a9480199a
+  parent_e4_artifact_hash: f9e2ac8aa1c6b53ef1085e8c68f4f446792ac4df3332654221b8b3921dc9e4d0
+- config: configs/experiments/e7.yaml
+  phase: official
+  measurement_mode: exclusive
+  development_hardware: false
+  run_budget_policy: compact_v1
+  resources: *id001
+  allow_ann_from_verified_parent: true
+  task_id: E7.fever.nomic.residual_mlp.random.m17.t101.4994f5389367
+  experiment: E7
+  config_overrides:
+    dataset:
+      name: fever
+      subset_size: null
+    models:
+      pair: nomic
+    mapping:
+      kind: residual_mlp
+      lr: 0.001
+    scheduler:
+      kind: random
+    experiment:
+      profile_hash: 2f2d39ba0146c520375769fc8898508ab8def80153736549a833ea4cadafcecd
+      tuning_scope: case.fever.nomic
+      run_budget_policy: compact_v1
+      cell_role: primary
+      map_seed: 17
+      traffic_seed: 101
+      scale_variant: e4e567_scale_v3_50k
+      scale_manifest_hash: 28051259f7f779b226836af8fe4886604f05407614bf3613925e56200af3381d
+      scale_manifest_path: data/processed/msmarco-docs-v1/manifests/e4e567_scale_v3_50k.json
+      case_manifest_hash: b1001deb71dfd1106c32cc58a5febf4408abbc3fb13f992a41ac87d45615f014
+      case_manifest_path: data/processed/fever/manifests/e7_nomic.json
+      case_scope: case.fever.nomic
+    search:
+      backend: exact
+    execution:
+      mode: cached_access
+      phase: official
+  profile_hash: 2f2d39ba0146c520375769fc8898508ab8def80153736549a833ea4cadafcecd
+  tuning_scope: case.fever.nomic
+  input_refs: &id006
+    case_manifest_hash: b1001deb71dfd1106c32cc58a5febf4408abbc3fb13f992a41ac87d45615f014
+    dataset: fever
+    hardware:
+      cpu_cores: 16.0
+      devices:
+      - compute_capability:
+        - 9
+        - 0
+        name: NVIDIA H100 80GB HBM3
+        vram_total_bytes: 84929478656
+      hnsw_build:
+        commit: d9b3608c83d83b46c96e25088cb1d729b29dcfe9
+        sha256: adf8c94849c6015ad81ae58e7cddf2c9a99914ebeb60cb03aaf1986d43e762df
+        source: https://github.com/nmslib/hnswlib.git
+      packages:
+        hnswlib: 0.9.0
+        huggingface-hub: 0.34.4
+        numpy: 2.2.6
+        pyarrow: 20.0.0
+        scikit-learn: 1.6.1
+        scipy: 1.15.3
+        sentence-transformers: 4.1.0
+        torch: 2.6.0+cu124
+        transformers: 4.51.3
+      ram_limit_bytes: 268435456000
+      torch_cuda: '12.4'
+    models:
+      new:
+        adapter: nomic_pinned
+        code_files:
+          configuration_hf_nomic_bert.py: f7871694b8de3d3df4ac6640313d5799ce323261a0fb90c5cc567ecc34a0039e
+          modeling_hf_nomic_bert.py: 3b24a366c4cc31b869466ccfb7bbb8879e138c97f8de06c83d4fa1e31a21f149
+        code_repo_id: nomic-ai/nomic-bert-2048
+        code_revision: 7710840340a098cfb869c4f65e87cf2b1b70caca
+        code_snapshot: /root/paper-P2/cache/models/hub/models--nomic-ai--nomic-bert-2048/snapshots/7710840340a098cfb869c4f65e87cf2b1b70caca
+        dim: 768
+        document_prefix: 'search_document: '
+        download_patterns:
+        - '*.json'
+        - '*.safetensors'
+        - '*.txt'
+        - '*.model'
+        - '*.md'
+        dtype: float32
+        max_tokens: 8192
+        pooling: masked_mean_layernorm
+        query_prefix: 'search_query: '
+        repo_id: nomic-ai/nomic-embed-text-v1.5
+        resolved_revision: e9b6763023c676ca8431644204f50c2b100d9aab
+        trust_remote_code: false
+      old:
+        adapter: nomic_pinned
+        code_files:
+          configuration_hf_nomic_bert.py: f7871694b8de3d3df4ac6640313d5799ce323261a0fb90c5cc567ecc34a0039e
+          modeling_hf_nomic_bert.py: 3b24a366c4cc31b869466ccfb7bbb8879e138c97f8de06c83d4fa1e31a21f149
+        code_repo_id: nomic-ai/nomic-bert-2048
+        code_revision: 7710840340a098cfb869c4f65e87cf2b1b70caca
+        code_snapshot: /root/paper-P2/cache/models/hub/models--nomic-ai--nomic-bert-2048/snapshots/7710840340a098cfb869c4f65e87cf2b1b70caca
+        dim: 768
+        document_prefix: 'search_document: '
+        download_patterns:
+        - '*.json'
+        - '*.safetensors'
+        - '*.txt'
+        - '*.model'
+        - '*.md'
+        dtype: float32
+        max_tokens: 8192
+        pooling: masked_mean
+        query_prefix: 'search_query: '
+        repo_id: nomic-ai/nomic-embed-text-v1
+        resolved_revision: 3ac47f125a41961d13b397d0332866be2f9152e1
+        trust_remote_code: false
+    pair: nomic
+    release: 36e787667533843237fb713b8afbe7ec05406f184f4c195c203ae69b7c7e8cde
+    split_hash: ee63c018b2ab1b03b4e2bf0f78774107dcc809b447a4cb96cc8f4e60b6b50168
+  variant_id: primary
+  overrides: {}
+  depends_on:
+  - E7.hotpotqa.arctic.residual_mlp.greedy.m17.t101.4994f5389367
+  - T0.case.fever.nomic
+  priority: 40
+  case_scope: case.fever.nomic
+  parent_e4_artifact_id: E4-scale-full_bootstrap-057a9480199a
+  parent_e4_artifact_hash: f9e2ac8aa1c6b53ef1085e8c68f4f446792ac4df3332654221b8b3921dc9e4d0
+- config: configs/experiments/e7.yaml
+  phase: official
+  measurement_mode: exclusive
+  development_hardware: false
+  run_budget_policy: compact_v1
+  resources: *id001
+  allow_ann_from_verified_parent: true
+  task_id: E7.fever.nomic.residual_mlp.greedy.m17.t101.4994f5389367
+  experiment: E7
+  config_overrides:
+    dataset:
+      name: fever
+      subset_size: null
+    models:
+      pair: nomic
+    mapping:
+      kind: residual_mlp
+      lr: 0.001
+    scheduler:
+      kind: greedy
+    experiment:
+      profile_hash: 2f2d39ba0146c520375769fc8898508ab8def80153736549a833ea4cadafcecd
+      tuning_scope: case.fever.nomic
+      run_budget_policy: compact_v1
+      cell_role: primary
+      map_seed: 17
+      traffic_seed: 101
+      scale_variant: e4e567_scale_v3_50k
+      scale_manifest_hash: 28051259f7f779b226836af8fe4886604f05407614bf3613925e56200af3381d
+      scale_manifest_path: data/processed/msmarco-docs-v1/manifests/e4e567_scale_v3_50k.json
+      case_manifest_hash: b1001deb71dfd1106c32cc58a5febf4408abbc3fb13f992a41ac87d45615f014
+      case_manifest_path: data/processed/fever/manifests/e7_nomic.json
+      case_scope: case.fever.nomic
+    search:
+      backend: exact
+    execution:
+      mode: cached_access
+      phase: official
+  profile_hash: 2f2d39ba0146c520375769fc8898508ab8def80153736549a833ea4cadafcecd
+  tuning_scope: case.fever.nomic
+  input_refs: *id006
+  variant_id: primary
+  overrides: {}
+  depends_on:
+  - E7.fever.nomic.residual_mlp.random.m17.t101.4994f5389367
+  - T0.case.fever.nomic
+  priority: 40
+  case_scope: case.fever.nomic
+  parent_e4_artifact_id: E4-scale-full_bootstrap-057a9480199a
+  parent_e4_artifact_hash: f9e2ac8aa1c6b53ef1085e8c68f4f446792ac4df3332654221b8b3921dc9e4d0
+- config: configs/experiments/e7.yaml
+  phase: official
+  measurement_mode: exclusive
+  development_hardware: false
+  run_budget_policy: compact_v1
+  resources: *id001
+  allow_ann_from_verified_parent: true
+  task_id: E7.fever.nomic.op.greedy.m17.t101.4994f5389367
+  experiment: E7
+  config_overrides:
+    dataset:
+      name: fever
+      subset_size: null
+    models:
+      pair: nomic
+    mapping:
+      kind: op
+    scheduler:
+      kind: greedy
+    search:
+      backend: exact
+    execution:
+      mode: cached_access
+      phase: official
+    experiment:
+      profile_hash: 2f2d39ba0146c520375769fc8898508ab8def80153736549a833ea4cadafcecd
+      tuning_scope: case.fever.nomic
+      run_budget_policy: compact_v1
+      cell_role: crosscheck
+      map_seed: 17
+      traffic_seed: 101
+      scale_variant: e4e567_scale_v3_50k
+      scale_manifest_hash: 28051259f7f779b226836af8fe4886604f05407614bf3613925e56200af3381d
+      scale_manifest_path: data/processed/msmarco-docs-v1/manifests/e4e567_scale_v3_50k.json
+      case_manifest_hash: b1001deb71dfd1106c32cc58a5febf4408abbc3fb13f992a41ac87d45615f014
+      case_manifest_path: data/processed/fever/manifests/e7_nomic.json
+      case_scope: case.fever.nomic
+  profile_hash: 2f2d39ba0146c520375769fc8898508ab8def80153736549a833ea4cadafcecd
+  tuning_scope: case.fever.nomic
+  input_refs: *id006
+  variant_id: crosscheck
+  overrides: {}
+  depends_on:
+  - E7.fever.nomic.residual_mlp.greedy.m17.t101.4994f5389367
+  - T0.case.fever.nomic
+  priority: 35
+  case_scope: case.fever.nomic
+  parent_e4_artifact_id: E4-scale-full_bootstrap-057a9480199a
+  parent_e4_artifact_hash: f9e2ac8aa1c6b53ef1085e8c68f4f446792ac4df3332654221b8b3921dc9e4d0
+- config: configs/experiments/e7.yaml
+  phase: official
+  measurement_mode: exclusive
+  development_hardware: false
+  run_budget_policy: compact_v1
+  resources: *id001
+  allow_ann_from_verified_parent: true
+  task_id: E7.fiqa.nomic.residual_mlp.random.m17.t101.4994f5389367
+  experiment: E7
+  config_overrides:
+    dataset:
+      name: fiqa
+      subset_size: null
+    models:
+      pair: nomic
+    mapping:
+      kind: residual_mlp
+      lr: 0.001
+    scheduler:
+      kind: random
+    experiment:
+      profile_hash: 40c1603174da15b43942791d5c9f2d2968e1a4680a6f8b95ccf8c7857fcbd79c
+      tuning_scope: case.fiqa.nomic
+      run_budget_policy: compact_v1
+      cell_role: primary
+      map_seed: 17
+      traffic_seed: 101
+      scale_variant: e4e567_scale_v3_50k
+      scale_manifest_hash: 28051259f7f779b226836af8fe4886604f05407614bf3613925e56200af3381d
+      scale_manifest_path: data/processed/msmarco-docs-v1/manifests/e4e567_scale_v3_50k.json
+      case_manifest_hash: 42051fbd4965751acb64a433b3f8cac93eb73f224dae5c7ffe28a6cec71c3250
+      case_manifest_path: data/processed/fiqa/manifests/e7_nomic.json
+      case_scope: case.fiqa.nomic
+    search:
+      backend: exact
+    execution:
+      mode: cached_access
+      phase: official
+  profile_hash: 40c1603174da15b43942791d5c9f2d2968e1a4680a6f8b95ccf8c7857fcbd79c
+  tuning_scope: case.fiqa.nomic
+  input_refs: &id007
+    case_manifest_hash: 42051fbd4965751acb64a433b3f8cac93eb73f224dae5c7ffe28a6cec71c3250
+    dataset: fiqa
+    hardware:
+      cpu_cores: 16.0
+      devices:
+      - compute_capability:
+        - 9
+        - 0
+        name: NVIDIA H100 80GB HBM3
+        vram_total_bytes: 84929478656
+      hnsw_build:
+        commit: d9b3608c83d83b46c96e25088cb1d729b29dcfe9
+        sha256: adf8c94849c6015ad81ae58e7cddf2c9a99914ebeb60cb03aaf1986d43e762df
+        source: https://github.com/nmslib/hnswlib.git
+      packages:
+        hnswlib: 0.9.0
+        huggingface-hub: 0.34.4
+        numpy: 2.2.6
+        pyarrow: 20.0.0
+        scikit-learn: 1.6.1
+        scipy: 1.15.3
+        sentence-transformers: 4.1.0
+        torch: 2.6.0+cu124
+        transformers: 4.51.3
+      ram_limit_bytes: 268435456000
+      torch_cuda: '12.4'
+    models:
+      new:
+        adapter: nomic_pinned
+        code_files:
+          configuration_hf_nomic_bert.py: f7871694b8de3d3df4ac6640313d5799ce323261a0fb90c5cc567ecc34a0039e
+          modeling_hf_nomic_bert.py: 3b24a366c4cc31b869466ccfb7bbb8879e138c97f8de06c83d4fa1e31a21f149
+        code_repo_id: nomic-ai/nomic-bert-2048
+        code_revision: 7710840340a098cfb869c4f65e87cf2b1b70caca
+        code_snapshot: /root/paper-P2/cache/models/hub/models--nomic-ai--nomic-bert-2048/snapshots/7710840340a098cfb869c4f65e87cf2b1b70caca
+        dim: 768
+        document_prefix: 'search_document: '
+        download_patterns:
+        - '*.json'
+        - '*.safetensors'
+        - '*.txt'
+        - '*.model'
+        - '*.md'
+        dtype: float32
+        max_tokens: 8192
+        pooling: masked_mean_layernorm
+        query_prefix: 'search_query: '
+        repo_id: nomic-ai/nomic-embed-text-v1.5
+        resolved_revision: e9b6763023c676ca8431644204f50c2b100d9aab
+        trust_remote_code: false
+      old:
+        adapter: nomic_pinned
+        code_files:
+          configuration_hf_nomic_bert.py: f7871694b8de3d3df4ac6640313d5799ce323261a0fb90c5cc567ecc34a0039e
+          modeling_hf_nomic_bert.py: 3b24a366c4cc31b869466ccfb7bbb8879e138c97f8de06c83d4fa1e31a21f149
+        code_repo_id: nomic-ai/nomic-bert-2048
+        code_revision: 7710840340a098cfb869c4f65e87cf2b1b70caca
+        code_snapshot: /root/paper-P2/cache/models/hub/models--nomic-ai--nomic-bert-2048/snapshots/7710840340a098cfb869c4f65e87cf2b1b70caca
+        dim: 768
+        document_prefix: 'search_document: '
+        download_patterns:
+        - '*.json'
+        - '*.safetensors'
+        - '*.txt'
+        - '*.model'
+        - '*.md'
+        dtype: float32
+        max_tokens: 8192
+        pooling: masked_mean
+        query_prefix: 'search_query: '
+        repo_id: nomic-ai/nomic-embed-text-v1
+        resolved_revision: 3ac47f125a41961d13b397d0332866be2f9152e1
+        trust_remote_code: false
+    pair: nomic
+    release: 584640e32aecdf4ce3517078a50ac7e771025e768c8c21fd3ae824d0699c5058
+    split_hash: 44b9adf3317face605a7d9ce7bd875bfa88142dc4967a1cc2d5c4efbc2d22594
+  variant_id: primary
+  overrides: {}
+  depends_on:
+  - E7.fever.nomic.op.greedy.m17.t101.4994f5389367
+  - T0.case.fiqa.nomic
+  priority: 40
+  case_scope: case.fiqa.nomic
+  parent_e4_artifact_id: E4-scale-full_bootstrap-057a9480199a
+  parent_e4_artifact_hash: f9e2ac8aa1c6b53ef1085e8c68f4f446792ac4df3332654221b8b3921dc9e4d0
+- config: configs/experiments/e7.yaml
+  phase: official
+  measurement_mode: exclusive
+  development_hardware: false
+  run_budget_policy: compact_v1
+  resources: *id001
+  allow_ann_from_verified_parent: true
+  task_id: E7.fiqa.nomic.residual_mlp.greedy.m17.t101.4994f5389367
+  experiment: E7
+  config_overrides:
+    dataset:
+      name: fiqa
+      subset_size: null
+    models:
+      pair: nomic
+    mapping:
+      kind: residual_mlp
+      lr: 0.001
+    scheduler:
+      kind: greedy
+    experiment:
+      profile_hash: 40c1603174da15b43942791d5c9f2d2968e1a4680a6f8b95ccf8c7857fcbd79c
+      tuning_scope: case.fiqa.nomic
+      run_budget_policy: compact_v1
+      cell_role: primary
+      map_seed: 17
+      traffic_seed: 101
+      scale_variant: e4e567_scale_v3_50k
+      scale_manifest_hash: 28051259f7f779b226836af8fe4886604f05407614bf3613925e56200af3381d
+      scale_manifest_path: data/processed/msmarco-docs-v1/manifests/e4e567_scale_v3_50k.json
+      case_manifest_hash: 42051fbd4965751acb64a433b3f8cac93eb73f224dae5c7ffe28a6cec71c3250
+      case_manifest_path: data/processed/fiqa/manifests/e7_nomic.json
+      case_scope: case.fiqa.nomic
+    search:
+      backend: exact
+    execution:
+      mode: cached_access
+      phase: official
+  profile_hash: 40c1603174da15b43942791d5c9f2d2968e1a4680a6f8b95ccf8c7857fcbd79c
+  tuning_scope: case.fiqa.nomic
+  input_refs: *id007
+  variant_id: primary
+  overrides: {}
+  depends_on:
+  - E7.fiqa.nomic.residual_mlp.random.m17.t101.4994f5389367
+  - T0.case.fiqa.nomic
+  priority: 40
+  case_scope: case.fiqa.nomic
+  parent_e4_artifact_id: E4-scale-full_bootstrap-057a9480199a
+  parent_e4_artifact_hash: f9e2ac8aa1c6b53ef1085e8c68f4f446792ac4df3332654221b8b3921dc9e4d0
+- config: configs/experiments/e7.yaml
+  phase: official
+  measurement_mode: exclusive
+  development_hardware: false
+  run_budget_policy: compact_v1
+  resources: *id001
+  allow_ann_from_verified_parent: true
+  task_id: E7.nq.bge.residual_mlp.random.m17.t101.4994f5389367
+  experiment: E7
+  config_overrides:
+    dataset:
+      name: nq
+      subset_size: null
+    models:
+      pair: bge
+    mapping:
+      kind: residual_mlp
+      lr: 0.001
+    scheduler:
+      kind: random
+    experiment:
+      profile_hash: f7c06ce24bd2e5f66eff5a3b88996775417117c0bd4388e3a21caee7d17d3592
+      tuning_scope: case.nq.bge
+      run_budget_policy: compact_v1
+      cell_role: primary
+      map_seed: 17
+      traffic_seed: 101
+      scale_variant: e4e567_scale_v3_50k
+      scale_manifest_hash: 28051259f7f779b226836af8fe4886604f05407614bf3613925e56200af3381d
+      scale_manifest_path: data/processed/msmarco-docs-v1/manifests/e4e567_scale_v3_50k.json
+      case_manifest_hash: b6e9c37b1e4108efc4212a36bd87cd546469392226710e59c51a20d804c4c76c
+      case_manifest_path: data/processed/nq/manifests/e7_bge.json
+      case_scope: case.nq.bge
+    search:
+      backend: exact
+    execution:
+      mode: cached_access
+      phase: official
+  profile_hash: f7c06ce24bd2e5f66eff5a3b88996775417117c0bd4388e3a21caee7d17d3592
+  tuning_scope: case.nq.bge
+  input_refs: &id008
+    case_manifest_hash: b6e9c37b1e4108efc4212a36bd87cd546469392226710e59c51a20d804c4c76c
+    dataset: nq
+    hardware:
+      cpu_cores: 16.0
+      devices:
+      - compute_capability:
+        - 9
+        - 0
+        name: NVIDIA H100 80GB HBM3
+        vram_total_bytes: 84929478656
+      hnsw_build:
+        commit: d9b3608c83d83b46c96e25088cb1d729b29dcfe9
+        sha256: adf8c94849c6015ad81ae58e7cddf2c9a99914ebeb60cb03aaf1986d43e762df
+        source: https://github.com/nmslib/hnswlib.git
+      packages:
+        hnswlib: 0.9.0
+        huggingface-hub: 0.34.4
+        numpy: 2.2.6
+        pyarrow: 20.0.0
+        scikit-learn: 1.6.1
+        scipy: 1.15.3
+        sentence-transformers: 4.1.0
+        torch: 2.6.0+cu124
+        transformers: 4.51.3
+      ram_limit_bytes: 268435456000
+      torch_cuda: '12.4'
+    models:
+      new:
+        adapter: sentence_transformer
+        dim: 1024
+        document_prefix: ''
+        download_patterns:
+        - '*.json'
+        - '*.safetensors'
+        - '*.txt'
+        - '*.model'
+        - '*.md'
+        - pytorch_model.bin
+        dtype: float32
+        format_conversion:
+          files:
+            1_Pooling/config.json: e54c164a07274f2eb45bb724f54a79d1efcc90c41573887cd9a29aeee0597352
+            README.md: 0b81ccf9134e5874d620a86e6905062ea999e779c34eb1a7e65eaeb7fe00e450
+            config.json: 26159e7ad065073448460117eb24b7a4572f6f4e78eadff65dc0a11c052449fa
+            config_sentence_transformers.json: 1eef72430e7194a1e59680e635aed81ffa083f05668dbc5bb1c56c04c0999c38
+            model.safetensors: 993b2248881724788dcab8c644a91dfd63584b6e5604ff2037cb5541e1e38e7e
+            modules.json: 84e40c8e006c9b1d6c122e02cba9b02458120b5fb0c87b746c41e0207cf642cf
+            sentence_bert_config.json: eb9b44b13c0f52a3b3685c3b1cbdea1ba8b04bea123b98f61610048940776eb1
+            sentencepiece.bpe.model: cfc8146abe2a0488e9e2a0c56de7952f7c11ab059eca145a0a727afce0db2865
+            special_tokens_map.json: 8c785abebea9ae3257b61681b4e6fd8365ceafde980c21970d001e834cf10835
+            tokenizer.json: 21106b6d7dab2952c1d496fb21d5dc9db75c28ed361a05f5020bbba27810dd08
+            tokenizer_config.json: a62b2b6784f990259fddef5f16388693a8043be4f69179e6a5257eeb3f9abac4
+          recipe:
+            repo_id: BAAI/bge-m3
+            revision: 5617a9f61b028005a4858fdac845db406aefb181
+            source_sha256: b5e0ce3470abf5ef3831aa1bd5553b486803e83251590ab7ff35a117cf6aad38
+            version: weights-only-safetensors-v1
+          tensor_count: 391
+          tensor_equality: PASS
+          torch_version: 2.6.0+cu124
+          unsafe_globals: []
+        max_tokens: 8192
+        pooling: cls
+        query_prefix: ''
+        repo_id: BAAI/bge-m3
+        resolved_revision: 5617a9f61b028005a4858fdac845db406aefb181
+        trust_remote_code: false
+      old:
+        adapter: sentence_transformer
+        dim: 768
+        document_prefix: ''
+        download_patterns:
+        - '*.json'
+        - '*.safetensors'
+        - '*.txt'
+        - '*.model'
+        - '*.md'
+        dtype: float32
+        max_tokens: 512
+        pooling: cls
+        query_prefix: 'Represent this sentence for searching relevant passages: '
+        repo_id: BAAI/bge-base-en-v1.5
+        resolved_revision: a5beb1e3e68b9ab74eb54cfd186867f64f240e1a
+        trust_remote_code: false
+    pair: bge
+    release: 7d93e804cfd1ea372e97a0f74cd04f50a2af64f5a0ae93aaffede19f8515480b
+    split_hash: 9282484cf4b1daad26298a2f7f488daa6c2ca1a6b1779c4d6efabd63458430db
+  variant_id: primary
+  overrides: {}
+  depends_on:
+  - E7.fiqa.nomic.residual_mlp.greedy.m17.t101.4994f5389367
+  - T0.case.nq.bge.b95875e44c64
+  priority: 40
+  case_scope: case.nq.bge
+  parent_e4_artifact_id: E4-scale-full_bootstrap-057a9480199a
+  parent_e4_artifact_hash: f9e2ac8aa1c6b53ef1085e8c68f4f446792ac4df3332654221b8b3921dc9e4d0
+- config: configs/experiments/e7.yaml
+  phase: official
+  measurement_mode: exclusive
+  development_hardware: false
+  run_budget_policy: compact_v1
+  resources: *id001
+  allow_ann_from_verified_parent: true
+  task_id: E7.nq.bge.residual_mlp.greedy.m17.t101.4994f5389367
+  experiment: E7
+  config_overrides:
+    dataset:
+      name: nq
+      subset_size: null
+    models:
+      pair: bge
+    mapping:
+      kind: residual_mlp
+      lr: 0.001
+    scheduler:
+      kind: greedy
+    experiment:
+      profile_hash: f7c06ce24bd2e5f66eff5a3b88996775417117c0bd4388e3a21caee7d17d3592
+      tuning_scope: case.nq.bge
+      run_budget_policy: compact_v1
+      cell_role: primary
+      map_seed: 17
+      traffic_seed: 101
+      scale_variant: e4e567_scale_v3_50k
+      scale_manifest_hash: 28051259f7f779b226836af8fe4886604f05407614bf3613925e56200af3381d
+      scale_manifest_path: data/processed/msmarco-docs-v1/manifests/e4e567_scale_v3_50k.json
+      case_manifest_hash: b6e9c37b1e4108efc4212a36bd87cd546469392226710e59c51a20d804c4c76c
+      case_manifest_path: data/processed/nq/manifests/e7_bge.json
+      case_scope: case.nq.bge
+    search:
+      backend: exact
+    execution:
+      mode: cached_access
+      phase: official
+  profile_hash: f7c06ce24bd2e5f66eff5a3b88996775417117c0bd4388e3a21caee7d17d3592
+  tuning_scope: case.nq.bge
+  input_refs: *id008
+  variant_id: primary
+  overrides: {}
+  depends_on:
+  - E7.nq.bge.residual_mlp.random.m17.t101.4994f5389367
+  - T0.case.nq.bge.b95875e44c64
+  priority: 40
+  case_scope: case.nq.bge
+  parent_e4_artifact_id: E4-scale-full_bootstrap-057a9480199a
+  parent_e4_artifact_hash: f9e2ac8aa1c6b53ef1085e8c68f4f446792ac4df3332654221b8b3921dc9e4d0
+- config: configs/experiments/e7.yaml
+  phase: official
+  measurement_mode: exclusive
+  development_hardware: false
+  run_budget_policy: compact_v1
+  resources: *id001
+  allow_ann_from_verified_parent: true
+  task_id: E7.fever.bge.residual_mlp.random.m17.t101.4994f5389367
+  experiment: E7
+  config_overrides:
+    dataset:
+      name: fever
+      subset_size: null
+    models:
+      pair: bge
+    mapping:
+      kind: residual_mlp
+      lr: 0.001
+    scheduler:
+      kind: random
+    experiment:
+      profile_hash: 8a1c20c9496c75a68a5791116ae7b861dbee40dc7354ec08e15768d7fffb35ee
+      tuning_scope: case.fever.bge
+      run_budget_policy: compact_v1
+      cell_role: primary
+      map_seed: 17
+      traffic_seed: 101
+      scale_variant: e4e567_scale_v3_50k
+      scale_manifest_hash: 28051259f7f779b226836af8fe4886604f05407614bf3613925e56200af3381d
+      scale_manifest_path: data/processed/msmarco-docs-v1/manifests/e4e567_scale_v3_50k.json
+      case_manifest_hash: 10c39a3c269619f51bc03e087aa03d15c5e7e2b82459d60df7a4e41ee2fd5be1
+      case_manifest_path: data/processed/fever/manifests/e7_bge.json
+      case_scope: case.fever.bge
+    search:
+      backend: exact
+    execution:
+      mode: cached_access
+      phase: official
+  profile_hash: 8a1c20c9496c75a68a5791116ae7b861dbee40dc7354ec08e15768d7fffb35ee
+  tuning_scope: case.fever.bge
+  input_refs: &id009
+    case_manifest_hash: 10c39a3c269619f51bc03e087aa03d15c5e7e2b82459d60df7a4e41ee2fd5be1
+    dataset: fever
+    hardware:
+      cpu_cores: 16.0
+      devices:
+      - compute_capability:
+        - 9
+        - 0
+        name: NVIDIA H100 80GB HBM3
+        vram_total_bytes: 84929478656
+      hnsw_build:
+        commit: d9b3608c83d83b46c96e25088cb1d729b29dcfe9
+        sha256: adf8c94849c6015ad81ae58e7cddf2c9a99914ebeb60cb03aaf1986d43e762df
+        source: https://github.com/nmslib/hnswlib.git
+      packages:
+        hnswlib: 0.9.0
+        huggingface-hub: 0.34.4
+        numpy: 2.2.6
+        pyarrow: 20.0.0
+        scikit-learn: 1.6.1
+        scipy: 1.15.3
+        sentence-transformers: 4.1.0
+        torch: 2.6.0+cu124
+        transformers: 4.51.3
+      ram_limit_bytes: 268435456000
+      torch_cuda: '12.4'
+    models:
+      new:
+        adapter: sentence_transformer
+        dim: 1024
+        document_prefix: ''
+        download_patterns:
+        - '*.json'
+        - '*.safetensors'
+        - '*.txt'
+        - '*.model'
+        - '*.md'
+        - pytorch_model.bin
+        dtype: float32
+        format_conversion:
+          files:
+            1_Pooling/config.json: e54c164a07274f2eb45bb724f54a79d1efcc90c41573887cd9a29aeee0597352
+            README.md: 0b81ccf9134e5874d620a86e6905062ea999e779c34eb1a7e65eaeb7fe00e450
+            config.json: 26159e7ad065073448460117eb24b7a4572f6f4e78eadff65dc0a11c052449fa
+            config_sentence_transformers.json: 1eef72430e7194a1e59680e635aed81ffa083f05668dbc5bb1c56c04c0999c38
+            model.safetensors: 993b2248881724788dcab8c644a91dfd63584b6e5604ff2037cb5541e1e38e7e
+            modules.json: 84e40c8e006c9b1d6c122e02cba9b02458120b5fb0c87b746c41e0207cf642cf
+            sentence_bert_config.json: eb9b44b13c0f52a3b3685c3b1cbdea1ba8b04bea123b98f61610048940776eb1
+            sentencepiece.bpe.model: cfc8146abe2a0488e9e2a0c56de7952f7c11ab059eca145a0a727afce0db2865
+            special_tokens_map.json: 8c785abebea9ae3257b61681b4e6fd8365ceafde980c21970d001e834cf10835
+            tokenizer.json: 21106b6d7dab2952c1d496fb21d5dc9db75c28ed361a05f5020bbba27810dd08
+            tokenizer_config.json: a62b2b6784f990259fddef5f16388693a8043be4f69179e6a5257eeb3f9abac4
+          recipe:
+            repo_id: BAAI/bge-m3
+            revision: 5617a9f61b028005a4858fdac845db406aefb181
+            source_sha256: b5e0ce3470abf5ef3831aa1bd5553b486803e83251590ab7ff35a117cf6aad38
+            version: weights-only-safetensors-v1
+          tensor_count: 391
+          tensor_equality: PASS
+          torch_version: 2.6.0+cu124
+          unsafe_globals: []
+        max_tokens: 8192
+        pooling: cls
+        query_prefix: ''
+        repo_id: BAAI/bge-m3
+        resolved_revision: 5617a9f61b028005a4858fdac845db406aefb181
+        trust_remote_code: false
+      old:
+        adapter: sentence_transformer
+        dim: 768
+        document_prefix: ''
+        download_patterns:
+        - '*.json'
+        - '*.safetensors'
+        - '*.txt'
+        - '*.model'
+        - '*.md'
+        dtype: float32
+        max_tokens: 512
+        pooling: cls
+        query_prefix: 'Represent this sentence for searching relevant passages: '
+        repo_id: BAAI/bge-base-en-v1.5
+        resolved_revision: a5beb1e3e68b9ab74eb54cfd186867f64f240e1a
+        trust_remote_code: false
+    pair: bge
+    release: 36e787667533843237fb713b8afbe7ec05406f184f4c195c203ae69b7c7e8cde
+    split_hash: ee63c018b2ab1b03b4e2bf0f78774107dcc809b447a4cb96cc8f4e60b6b50168
+  variant_id: primary
+  overrides: {}
+  depends_on:
+  - E7.nq.bge.residual_mlp.greedy.m17.t101.4994f5389367
+  - T0.case.fever.bge.d0c68cdf05a9
+  priority: 40
+  case_scope: case.fever.bge
+  parent_e4_artifact_id: E4-scale-full_bootstrap-057a9480199a
+  parent_e4_artifact_hash: f9e2ac8aa1c6b53ef1085e8c68f4f446792ac4df3332654221b8b3921dc9e4d0
+- config: configs/experiments/e7.yaml
+  phase: official
+  measurement_mode: exclusive
+  development_hardware: false
+  run_budget_policy: compact_v1
+  resources: *id001
+  allow_ann_from_verified_parent: true
+  task_id: E7.fever.bge.residual_mlp.greedy.m17.t101.4994f5389367
+  experiment: E7
+  config_overrides:
+    dataset:
+      name: fever
+      subset_size: null
+    models:
+      pair: bge
+    mapping:
+      kind: residual_mlp
+      lr: 0.001
+    scheduler:
+      kind: greedy
+    experiment:
+      profile_hash: 8a1c20c9496c75a68a5791116ae7b861dbee40dc7354ec08e15768d7fffb35ee
+      tuning_scope: case.fever.bge
+      run_budget_policy: compact_v1
+      cell_role: primary
+      map_seed: 17
+      traffic_seed: 101
+      scale_variant: e4e567_scale_v3_50k
+      scale_manifest_hash: 28051259f7f779b226836af8fe4886604f05407614bf3613925e56200af3381d
+      scale_manifest_path: data/processed/msmarco-docs-v1/manifests/e4e567_scale_v3_50k.json
+      case_manifest_hash: 10c39a3c269619f51bc03e087aa03d15c5e7e2b82459d60df7a4e41ee2fd5be1
+      case_manifest_path: data/processed/fever/manifests/e7_bge.json
+      case_scope: case.fever.bge
+    search:
+      backend: exact
+    execution:
+      mode: cached_access
+      phase: official
+  profile_hash: 8a1c20c9496c75a68a5791116ae7b861dbee40dc7354ec08e15768d7fffb35ee
+  tuning_scope: case.fever.bge
+  input_refs: *id009
+  variant_id: primary
+  overrides: {}
+  depends_on:
+  - E7.fever.bge.residual_mlp.random.m17.t101.4994f5389367
+  - T0.case.fever.bge.d0c68cdf05a9
+  priority: 40
+  case_scope: case.fever.bge
+  parent_e4_artifact_id: E4-scale-full_bootstrap-057a9480199a
+  parent_e4_artifact_hash: f9e2ac8aa1c6b53ef1085e8c68f4f446792ac4df3332654221b8b3921dc9e4d0
+- config: configs/experiments/e7.yaml
+  phase: official
+  measurement_mode: exclusive
+  development_hardware: false
+  run_budget_policy: compact_v1
+  resources: *id001
+  allow_ann_from_verified_parent: true
+  task_id: E7.fever.bge.op.greedy.m17.t101.4994f5389367
+  experiment: E7
+  config_overrides:
+    dataset:
+      name: fever
+      subset_size: null
+    models:
+      pair: bge
+    mapping:
+      kind: op
+    scheduler:
+      kind: greedy
+    search:
+      backend: exact
+    execution:
+      mode: cached_access
+      phase: official
+    experiment:
+      profile_hash: 8a1c20c9496c75a68a5791116ae7b861dbee40dc7354ec08e15768d7fffb35ee
+      tuning_scope: case.fever.bge
+      run_budget_policy: compact_v1
+      cell_role: crosscheck
+      map_seed: 17
+      traffic_seed: 101
+      scale_variant: e4e567_scale_v3_50k
+      scale_manifest_hash: 28051259f7f779b226836af8fe4886604f05407614bf3613925e56200af3381d
+      scale_manifest_path: data/processed/msmarco-docs-v1/manifests/e4e567_scale_v3_50k.json
+      case_manifest_hash: 10c39a3c269619f51bc03e087aa03d15c5e7e2b82459d60df7a4e41ee2fd5be1
+      case_manifest_path: data/processed/fever/manifests/e7_bge.json
+      case_scope: case.fever.bge
+  profile_hash: 8a1c20c9496c75a68a5791116ae7b861dbee40dc7354ec08e15768d7fffb35ee
+  tuning_scope: case.fever.bge
+  input_refs: *id009
+  variant_id: crosscheck
+  overrides: {}
+  depends_on:
+  - E7.fever.bge.residual_mlp.greedy.m17.t101.4994f5389367
+  - T0.case.fever.bge.d0c68cdf05a9
+  priority: 35
+  case_scope: case.fever.bge
+  parent_e4_artifact_id: E4-scale-full_bootstrap-057a9480199a
+  parent_e4_artifact_hash: f9e2ac8aa1c6b53ef1085e8c68f4f446792ac4df3332654221b8b3921dc9e4d0

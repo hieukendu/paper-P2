@@ -1,12 +1,12 @@
 # M01 — Environment, config và probes
 
-Đọc [constraints.md](constraints.md) và [contracts.md](contracts.md). Output là môi trường Linux chạy được MiniLM/MPNet trên **A100 80GB**, chưa cần full corpus.
+Đọc [constraints.md](constraints.md) và [contracts.md](contracts.md). Output là môi trường Linux chạy được MiniLM/MPNet trên **H100 80GB**, chưa cần full corpus.
 
 ## File cần code
 
 `pyproject.toml`, `.env.example`, `configs/base.yaml`, `src/mixindex/config.py`, `runtime.py`, `cli.py`. Cập nhật `.gitignore` để ignore `data/`, `cache/`, `runs/`, `state/`, `staging/`, `.env*` nhưng cho phép `.env.example`; không ignore configs, source, lock và checklist.
 
-Python 3.11 là target ban đầu. Dependencies: numpy, scipy, torch, transformers, sentence-transformers, huggingface_hub, safetensors, scikit-learn, hnswlib, pyarrow, PyYAML, python-dotenv, psutil, nvidia-ml-py, pytest; thêm `ir_datasets` khi làm E6. Không cài vLLM hoặc training framework cho encoder. Chọn torch/CUDA phù hợp **driver của server A100 thật**, smoke rồi ghi exact versions vào `requirements.lock.txt`. Không copy CUDA12.4 từ inventory H100 khác. Không dùng lệnh upgrade tự do khi rerun.
+Python 3.11 là target ban đầu. Dependencies: numpy, scipy, torch, transformers, sentence-transformers, huggingface_hub, safetensors, scikit-learn, hnswlib, pyarrow, PyYAML, python-dotenv, psutil, nvidia-ml-py, pytest; thêm `ir_datasets` khi làm E6. Không cài vLLM hoặc training framework cho encoder. Chọn torch/CUDA phù hợp **driver của server H100 thật**, smoke rồi ghi exact versions vào `requirements.lock.txt`. Không copy CUDA12.4 từ inventory H100 khác. Không dùng lệnh upgrade tự do khi rerun.
 
 HNSW target là tag `v0.9.0`; resolve commit từ upstream, build và pin. Nếu tag/build không khả dụng thì E0 báo lỗi dependency, không âm thầm dùng latest hoặc một phiên bản khác.
 
@@ -42,7 +42,7 @@ Namespace rỗng thì lấy `whoami().name` từ token lúc sync; path rỗng d�
 | `cost_scope(name)` | Context manager time.monotonic + CPU time; CUDA synchronize/events trong measurement; aggregate theo component | tất cả module |
 | `main(argv=None) -> int` | argparse subcommands theo runbook; gọi module, không chứa scientific code | entrypoint `mixindex` |
 
-GPU model phải lấy từ device thực tế visible cho torch, không chỉ GPU vật lý do `nvidia-smi -L` in ra. Nếu chỉ thấy MIG80/40 slice thì ghi profile; không label full A10080. CPU quota tính `quota/period`; danh sách cpuset128 không có nghĩa job được128 cores. RAM availability lấy min(host available, cgroup headroom).
+GPU model phải lấy từ device thực tế visible cho torch, không chỉ GPU vật lý do `nvidia-smi -L` in ra. Nếu chỉ thấy MIG80/40 slice thì ghi profile; không label full H10080. CPU quota tính `quota/period`; danh sách cpuset128 không có nghĩa job được128 cores. RAM availability lấy min(host available, cgroup headroom).
 
 Probes lưu một lần `state/environment.json`, `state/throughput_probe.json`, `state/storage_manifest.json`, được update khi hardware/config inference thay đổi. Không tạo telemetry service; một bảng record/sample là đủ. Mức headroom và resource policy xem M10.
 

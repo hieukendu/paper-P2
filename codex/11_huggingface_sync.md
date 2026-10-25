@@ -1,5 +1,7 @@
 # M11 — Auto-sync Hugging Face sau mỗi run/checkpoint
 
+> Current user instruction (2026-10-20): project repositories must be **public**. Use `sync.private: false`; the original private-default passages below are superseded. Visibility must match configuration, and existing repositories still require the MixIndex ownership marker.
+
 Code `hf_sync.py`, progress hooks trong `experiments.py`/`progress.py`. Đây là chức năng bắt buộc, **triển khai từ đầu trước các run dài**. User đã yêu cầu tự upload và tạo repo tiếp theo khi cần; không cần hỏi lại mỗi upload trong phạm vi artifacts này. Chưa upload gì ở giai đoạn soạn Markdown.
 
 ## Auth và namespace

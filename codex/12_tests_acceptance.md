@@ -25,12 +25,12 @@ Code tests tập trung vào lỗi làm sai nghiên cứu hoặc mất run/sync. 
 
 ## Integration gates theo thứ tự
 
-1. **Environment:** server GPU visible đúng A10080 hoặc báo discrepancy; CPU/RAM effective limits; dependency/model pooling smoke.
+1. **Environment:** server GPU visible đúng H10080 hoặc báo discrepancy; CPU/RAM effective limits; dependency/model pooling smoke.
 2. **HF tiny sync:** private test bundle có config + tiny safetensors + npz→upload→verify→restore/load; mock test không thay live result. Giữ tiny repo trong pool, không tự xóa để dọn.
 3. **FiQA exact:** small subset, accessor audit, complete100% exact, learned map saved/loaded và resumed cùng batch IDs.
 4. **T0.core:** core M05–M08 implementation + bounded lr validation/CAL/INDEX/RUNTIME theo M14; profile local-verified trước official. ANN ≥0.99 trên Q_tune/cùng stored snapshot; gate fail chặn ANN branch, exact branch có thể tiếp tục. Calibration thiếu giữ N/A/fallback đúng rule.
 5. **FiQA full/TREC/E3:** official output per-query sau scope tương thích, không test leakage; fidelity/update/lock/cadence/cost measurements với settings freeze. Không yêu cầu positive-effect để pass.
-6. **T0.scale và E4:** download/ingest/model validation → 100k one-seed timing/estimate → subset resource probe → actual full-bootstrap stored-graph fidelity/footprint trước full E5. Không tự cho full scale PASS từ subset.
+6. **T0.scale và E4:** download/ingest/model validation → 100k one-seed timing/estimate → freeze common 50k/5k manifest → reduced-pool probe → actual reduced-pool bootstrap stored-graph fidelity/footprint trước E5. Không tự cho full scale PASS từ subset.
 7. **E6/E7 case readiness:** validate inputs, scope T0/runtime đúng pair/corpus; temporal tuning chỉ tuần1, no-Q_tune transfer/N/A ghi rõ. Không đòi một seed/model probe đại diện toàn matrix.
 8. **Full/temporal/matrix:** required cells count + endpoint/split + synced artifacts; không chỉ one passing run chứng minh whole stage.
 

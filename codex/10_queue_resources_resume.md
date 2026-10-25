@@ -25,13 +25,13 @@ Queue state `state/tasks.json` lưu task status, PID, process birth time, run_di
 
 T0 và official tasks dùng cùng queue. Enqueue task có prerequisite chưa xong là hợp lệ, giữ PENDING; chỉ reject graph cycle/config bất hợp lệ. Admission và worker đều gọi `validate_tuning_profile` trước official execution: đúng scoped T0 compute, input/policy/profile hash, branch gate và allowed ablation overrides theo M14. Không chờ T0.scale/AOL để mở E2 exact khi T0.core đã qua. Sync pending không khóa compute dependency.
 
-E4 readiness là producer của full-corpus search profile, chỉ cần T0.scale prerequisite/profile và target-size reservation để build/check. E5 là consumer, cần full entry PASS; không đặt E4 phụ thuộc chính full entry chưa được tạo.
+E4 readiness là producer của search/profile evidence cho reduced common pool trong `e4e567_scale_v3_50k`; cần T0.scale prerequisite/profile, exact 50k/5k manifest và target-size reservation để build/check. E5 là consumer, cần verified E4 v3 entry; không đặt E4 phụ thuộc chính full entry chưa được tạo.
 
 Thứ tự priority mặc định: prerequisite/smoke > ready primary > optional ablations; không bỏ cells âm. Task lớn không vừa thì ghi reason và cho task nhỏ đủ tài nguyên chạy; không ép launch để vừa đủ2.
 
 ## Admission tài nguyên
 
-- A10080 là target; probe torch/NVML phải xác nhận full/MIG của device process dùng. Unknown free memory/permissions → chỉ1 GPU task và probe trước, không giả có80GiB usable.
+- H10080 là target; probe torch/NVML phải xác nhận full/MIG của device process dùng. Unknown free memory/permissions → chỉ1 GPU task và probe trước, không giả có80GiB usable.
 - Default headroom vận hành: GPU max(4GiB,10% visible VRAM), RAM max(8GiB,10% effective limit), CPU1 core. Đây là configurable planning defaults; ghi config, không gọi benchmark requirements của paper.
 - Free memory hiện tại đã chứa allocations của jobs đang chạy. Tránh double-count: `remaining_reservation_i=max(0,requested_peak_i-observed_usage_i)`; admit nếu `new_request + sum(remaining_reservations) + headroom <= free_now`. Nếu không đo được usage theo job, dùng cách conservative serialize, không optimistic trừ nhầm.
 - CPU quota/cpuset lấy effective min; sum requested CPU≤quota−headroom. Set thread limits cả BLAS, torch, sklearn và hnswlib để2 processes không mỗi process tạo128 threads.

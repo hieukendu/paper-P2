@@ -1,0 +1,24 @@
+execution:
+  phase: official
+  mode: cached_access
+  device: cuda
+  max_compute_jobs: 1
+search:
+  backend: exact
+  candidates: 50
+  ef_search: 200
+  threads: 8
+models:
+  pair: arctic
+  batch_size: 8
+experiment:
+  profile_hash: null
+  tuning_scope: scale
+  run_budget_policy: compact_v1
+  cell_role: readiness
+  scale_task: null
+  source_run: null
+  full_bootstrap_task_id: null
+dataset:
+  name: msmarco-docs-v1
+  subset_size: null

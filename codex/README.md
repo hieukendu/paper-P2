@@ -1,6 +1,6 @@
 # Hướng dẫn cho Codex triển khai thí nghiệm MixIndex
 
-Bộ tài liệu này là đặc tả để **agent ở phiên sau viết code và chạy thí nghiệm**. Hiện chỉ soạn Markdown; chưa tải dữ liệu/model, chưa có implementation và chưa upload Hugging Face. Target chạy từ E0 đến E7 là **server A100 80GB**. Windows chỉ dùng đọc tài liệu, chỉnh code và chuẩn bị cấu hình.
+Bộ tài liệu này là đặc tả để **agent ở phiên sau viết code và chạy thí nghiệm**. Implementation, prepared inputs, accepted E0–E7 bundles và verified uploads hiện đã có; xem checklist ở gốc project để biết evidence hiện hành. T0.core, T0.scale, các T0.case bắt buộc và các runner scale/temporal/representative đã được chạy qua gate trong phạm vi protocol hiện tại. E4–E7 dùng reduced-scale pilot `e4e567_scale_v3_50k`, nên không được diễn giải là full-corpus replication hay positive performance claim tổng quát. Target chạy từ E0 đến E7 là **server H100 80GB**. Windows chỉ dùng đọc tài liệu, chỉnh code và chuẩn bị cấu hình.
 
 **Agent bắt đầu tại file này**, rồi đọc đầy đủ report/expect và các file nền bên dưới. Luồng bắt buộc: inputs đã validate → E0/E1 correctness → T0 tuning/timing trong phạm vi hữu hạn → freeze profile → official experiments. T0 làm theo từng dataset/model; FiQA PASS không tự chứng nhận Arctic, BGE, Nomic hoặc full MS MARCO.
 
@@ -14,7 +14,7 @@ Bộ tài liệu này là đặc tả để **agent ở phiên sau viết code v
 
 | File | Công việc được giao |
 |---|---|
-| [01_environment.md](01_environment.md) | Linux/A100, dependency lock, config, `.env`, probe tài nguyên |
+| [01_environment.md](01_environment.md) | Linux/H100, dependency lock, config, `.env`, probe tài nguyên |
 | [02_download_data.md](02_download_data.md) | Tải đúng BEIR, MS MARCO documents, ORCAS, AOL-IA và kiểm file |
 | [03_preprocess_splits.md](03_preprocess_splits.md) | Parse, ID joins, text, query grouping, pools/splits và timeline |
 | [04_models_embeddings.md](04_models_embeddings.md) | Tải 8 checkpoints, adapter, vector cache và encoder accessor |
@@ -31,11 +31,11 @@ Bộ tài liệu này là đặc tả để **agent ở phiên sau viết code v
 
 ## Nguồn quyết định
 
-- User đã chốt A100 **80GB**, không đổi target về Windows hoặc H100-MIG từ attachment cũ. Các giới hạn host phải đo trên chính server A100.
+- User corrected the earlier A100 typo: the target is **H100 80GB in this workspace**. Measure the visible device and current CPU/RAM/storage limits here; the historical 40GB MIG inventory is not a readiness measurement.
 - Phương pháp chính theo `report.md` mục 8.3 và 15; `expect.md` giải thích mục tiêu từng E. T0 cụ thể hóa yêu cầu mới tối ưu trước official và lr grid validation đã có ở report15.3. E0–E7 vẫn là **8 milestone**; T0 là prep gate bổ sung.
 - Các tài liệu ở đây cụ thể hóa implementation, không được thay đổi primary chỉ vì ablation thắng trên test. Nếu có chỗ chưa rõ, ghi một quyết định ngắn trong config/module đang làm; không tạo thêm chuỗi báo cáo audit.
-- User đã yêu cầu auto-upload artifacts và tự tạo các repo tiếp theo. Khi triển khai có thể thực hiện trong namespace có quyền của `HF_TOKEN`; mặc định repo **private**. Hiện chưa có hành động external nào.
+- User đã yêu cầu auto-upload artifacts và tự tạo các repo tiếp theo. Khi triển khai có thể thực hiện trong namespace có quyền của `HF_TOKEN`; repo **public** theo yêu cầu hiện hành của user. GitHub PR và các HF releases được theo dõi trong checklist gốc.
 
 ## Điểm vào cho phiên tiếp theo
 
-Đọc theo thứ tự trên, kiểm trạng thái hiện tại bằng file thật và checklist; chưa có implementation thì triển khai M01/P1 trong plan. Không chạy một lượt download/training dài trước E1/T0 tương ứng. Không đánh dấu checklist hoàn thành thí nghiệm chỉ vì đã viết code hoặc tài liệu. Mỗi run có compute, sync và scientific outcome riêng.
+Đọc theo thứ tự trên, kiểm trạng thái hiện tại bằng file thật và checklist; chỉ triển khai phần còn thiếu sau khi đối chiếu state, artifact và remote receipt. Không chạy một lượt download/training dài trước E1/T0 tương ứng. Không đánh dấu checklist hoàn thành thí nghiệm chỉ vì đã viết code hoặc tài liệu. Mỗi run có compute, sync và scientific outcome riêng; accepted result phải có đủ gate và remote verification.
