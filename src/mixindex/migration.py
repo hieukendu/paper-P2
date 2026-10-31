@@ -39,7 +39,8 @@ class MigrationState:
 
 
 def bootstrap_migration(doc_ids, pools, old_vectors, paid_accessor, cfg, map_seed=17,
-                        traffic_seed=101, calibration_queries=None, fixed_calibration_pools=None):
+                        traffic_seed=101, calibration_queries=None, fixed_calibration_pools=None,
+                        fixed_regions=None):
     from .runtime import cost_scope
     costs = []
     with cost_scope("bootstrap", costs):
@@ -77,6 +78,13 @@ def bootstrap_migration(doc_ids, pools, old_vectors, paid_accessor, cfg, map_see
             regions = {"assignments": np.zeros(n, dtype=np.int64),
                        "centers": np.mean(old_vectors, axis=0, keepdims=True),
                        "sample_rows": np.arange(n, dtype=np.int64)}
+        elif fixed_regions is not None:
+            regions = {key: np.asarray(fixed_regions[key]).copy()
+                       for key in ("assignments", "centers", "sample_rows")}
+            if (len(regions["assignments"]) != n or len(regions["centers"]) == 0 or
+                    np.any(regions["assignments"] < 0) or
+                    np.max(regions["assignments"]) >= len(regions["centers"])):
+                raise ValueError("Fixed regional partition is not aligned to the document pool")
         else:
             regions = fit_regions(old_vectors, len(train), map_seed)
         stats = RegionalStatistics(y_train.shape[1], len(regions["centers"]), cfg["mapping"]["ridge"])
@@ -237,16 +245,27 @@ def refresh_scheduling_snapshot(state, traffic):
     if set(traffic.query_ids) & set(state.calibration_queries):
         raise PermissionError("Calibration queries cannot enter scheduling gain")
     candidates = {}
+    reviewer = state.cfg.get("reviewer", {})
     with cost_scope("scheduling_full_refresh", state.cost_records) as record:
         for start in range(0, len(traffic.query_ids), 32):
             result = state.index.search(traffic.vectors[start:start + 32])
             proxies = traffic.proxies[start:start + 32] if traffic.proxies is not None else None
+            radius_by_row = None
+            if reviewer.get("uncertainty_proxy"):
+                by_region = np.asarray(reviewer.get("radius_by_region", ()), dtype=np.float64)
+                assignments = np.asarray(state.regions["assignments"], dtype=np.int64)
+                if len(by_region) == 0 or assignments.max(initial=-1) >= len(by_region):
+                    raise ValueError("Uncertainty proxy radii do not cover all regions")
+                radius_by_row = by_region[assignments]
             local = build_candidate_sets(result, proxies, state.index.fidelity,
                                           state.index.calibration.radius,
-                                          traffic.weights[start:start + 32])
+                                          traffic.weights[start:start + 32],
+                                          reviewer.get("radius_multiplier", 1.0),
+                                          reviewer.get("safety", True), radius_by_row)
             candidates.update({start + q: values for q, values in local.items()})
         record.update(queries_refreshed=len(traffic.query_ids), at_risk_queries=len(candidates),
-                      proxy_policy="served_top10" if traffic.proxies is None else "scheduling_labels",
+                      proxy_policy=("uncertainty_region_std" if reviewer.get("uncertainty_proxy") else
+                                    ("served_top10" if traffic.proxies is None else "scheduling_labels")),
                       epoch=state.index.epoch)
     return candidates
 

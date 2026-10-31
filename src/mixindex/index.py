@@ -87,6 +87,63 @@ class ExactIndex:
         return rows[keep][order], scores[keep][order]
 
     def _search(self, queries, k, calibrated=True):
+        # The reviewer supplemental cells repeatedly search the same full
+        # exact snapshot for hundreds of evaluation queries.  Keep the
+        # reference top-k/tie semantics but batch the GEMM when explicitly
+        # requested; the default remains the original streaming path.
+        if (len(queries) > 1 and __import__("os").environ.get("MIXINDEX_BATCH_EXACT") == "1"):
+            count = min(k + 1, len(self.ids))
+            output_rows, output_scores, candidates = [], [], []
+            batch_size = 32
+            id_order = self.id_order
+            gpu_scores = None
+            if (__import__("os").environ.get("MIXINDEX_GPU_EXACT") == "1"):
+                try:
+                    import torch
+                    if torch.cuda.is_available():
+                        gpu_scores = torch.from_numpy(self.vectors).to("cuda")
+                except Exception:
+                    gpu_scores = None
+            for start_q in range(0, len(queries), batch_size):
+                # Query arrays are often read-only memmaps.  ``torch.from_numpy``
+                # cannot safely wrap a non-writable NumPy view, so make one
+                # writable contiguous copy before transferring the batch to
+                # CUDA.  This removes the undefined-behaviour warning without
+                # changing scores or tie-breaking.
+                batch = np.array(
+                    queries[start_q:start_q + batch_size],
+                    dtype=np.float32,
+                    copy=True,
+                    order="C",
+                )
+                if gpu_scores is not None:
+                    import torch
+                    with torch.inference_mode():
+                        raw_matrix = (gpu_scores @ torch.from_numpy(batch).to("cuda").T).cpu().numpy()
+                else:
+                    raw_matrix = self.vectors @ batch.T
+                if calibrated:
+                    fidelity = self.fidelity[:, None]
+                    score_matrix = np.where(
+                        fidelity, raw_matrix,
+                        self.calibration.a * raw_matrix + self.calibration.b,
+                    )
+                else:
+                    score_matrix = raw_matrix
+                all_rows = np.arange(len(self.ids), dtype=np.int64)
+                for column in range(score_matrix.shape[1]):
+                    scores = score_matrix[:, column]
+                    if len(all_rows) > count:
+                        threshold = np.partition(scores, len(scores) - count)[-count]
+                        keep = np.flatnonzero(scores >= threshold)
+                    else:
+                        keep = all_rows
+                    order = np.lexsort((id_order[keep], -scores[keep]))[:count]
+                    chosen = keep[order]
+                    output_rows.append(chosen)
+                    output_scores.append(scores[chosen])
+                    candidates.append(chosen.copy())
+            return SearchResult(np.asarray(output_rows), np.asarray(output_scores), candidates, self.epoch)
         count = min(k + 1, len(self.ids))
         output_rows, output_scores, candidates = [], [], []
         for query in queries:

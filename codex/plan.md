@@ -1,6 +1,6 @@
 # Plan triển khai và nối toàn bộ thí nghiệm MixIndex
 
-Trạng thái: **đặc tả đã viết; E4 đang chạy và E5-E7 chưa mở**. Target **server H100 80GB**. Agent làm lần lượt các phần dưới, giữ cập nhật [checklist gốc](../checklist.md); không tạo một plan khác thay cho plan này.
+Trạng thái cập nhật **31/10/2026**: E0–E7 có accepted bundles trong phạm vi đã công bố ở [result](../result/README.md) và [checklist gốc](../checklist.md). **Thí nghiệm bổ sung theo reviewer đang chạy**: REV-01 raw + extra feasibility, REV-02 có 18/18 raw cells verified, REV-03 đã hoàn tất 18/18 cells và sync HF verified, REV-04 depth20 + E5 post-hoc/REV-05 TREC/REV-06 cost và REV-08 held-out contrasts đã có receipts verified; REV-07 transitions, aggregate cuối, wording và Git delivery còn mở. Xem P9 và [M17](17_reviewer_experiments.md). Target **server H100 80GB**. Các P0–P8 bên dưới mô tả protocol triển khai lịch sử; đối chiếu artifacts trước khi quyết định chạy lại.
 
 Điểm vào của agent là [codex/README.md](README.md). Luồng thực thi đã rà lại: **tải/validate inputs → E0/E1 correctness → code đầy đủ core → T0.core → freeze → E2/E3 → tải/validate scale inputs → T0.scale → freeze common v3 50k/5k manifest → E4 artifact/profile/hash verified → E5-E7 với `e4e567_scale_v3_50k`**. E6/E7 mở từng case sau T0 tương thích; không chờ tải hết mọi dữ liệu mới bắt đầu smoke.
 
@@ -130,6 +130,21 @@ Hai nhánh có thể chuẩn bị/chạy xen với E5 theo DAG và resource, kh�
 - Matrix reuse chỉ khi exact config/data/model/split hashes khớp; mọi case âm giữ. Aggregate từng model/dataset, không chỉ grand mean.
 
 E5/E6 có thể đổi thứ tự; E7 smaller cells có thể chạy khi E5 đợi network/inputs, nhưng không chen vào primary systems measurement. Stage hoàn thành không yêu cầu chứng minh method thắng mọi baseline, chỉ yêu cầu completed valid measurements và artifacts đã sync.
+
+## P9 — Bổ sung đầy đủ theo reviewer, đang chạy
+
+Đặc tả chi tiết là [17_reviewer_experiments.md](17_reviewer_experiments.md), phần mở rộng của chính plan này. Đã đọc đủ5 trang PDF duy nhất trong `reviewer/`; các task mới có marker `REV.*` trong checklist gốc và không dùng checkbox E0–E7 cũ để thay thế.
+
+Rà soát độ phủ tại [M17 mục10](17_reviewer_experiments.md#10-đối-chiếu-đầy-đủ-với-pdf-reviewer): đủ9/9 nhóm thí nghiệm/đo,11/11 clarification và7/7 Questions; giữ4 NO ACTION, chỉ EXCLUDED corpus expansion. TREC seed repetitions dùng `(map_seed,traffic_seed)=(17,101)/(29,103)/(43,109)` để kiểm cả random backfill; FiQA giữ traffic101 theo protocol chính. Core có63 configurations trước reuse, dự kiến54 mới khi9 defaults hợp lệ; analysis/search/benchmark và P2 đếm riêng.
+
+1. REV-00: lấy old results từ HF qua token `.env`, pin revisions/parts/checksums, restore có chọn lọc và freeze supplemental protocol `reviewer_v1`.
+2. REV-01/Q1 và REV-02/Q4: làm **cả matched query-side baseline và component ablation**, cùng ngân sách và controls đã mô tả trong M17.
+3. REV-03/Q2, REV-04/Q5, REV-05 và REV-06/Q7: rho/safety sensitivity, RBO/Overlap@k, TREC ≥3 seeds, compute/storage benchmark. Ranking cũ chỉ top10; top20 cần search lại stored snapshots, E5 cần per-query evaluation mới.
+4. REV-07/08/09/Q6: model transitions trên cùng FiQA scope, ORCAS held-out và AOL proxy có gate signal. **Tất cả có trong kế hoạch**, không chỉ gói minimum; thiếu điều kiện phải báo status và evidence, không âm thầm bỏ.
+5. REV-10/Q3: toàn bộ wording/clarification, degree/read construction, budget, corpus/model/AOL limitations và related-work positioning. Giữ các finding/measurements reviewer đánh dấu NO ACTION.
+6. REV-11: mỗi run xong sync/verify HF; sau toàn bộ thí nghiệm/analysis đã xong mới commit code và push, tạo/cập nhật đúng **một PR từ một branch**. Dùng immutable uncommitted-source snapshots để tái lập trước commit. Không tạo PR riêng cho từng nhóm thí nghiệm.
+
+**EXCLUDED:** mở rộng các reduced corpora vượt50k; giữ full FiQA/TREC anchors sẵn có, không đổi pool theo qrels. Lượt lập kế hoạch ban đầu không chạy experiments/không upload/không commit; hiện REV-01/REV-02 raw bundles đã verified và REV-03 đã verified đủ 18/18 cells. Vẫn chưa commit hoặc tạo PR; những quy tắc phạm vi/bàn giao ở P9/M17 ưu tiên hơn nội dung cũ nếu khác nhau.
 
 ## DAG và run/sync lifecycle
 

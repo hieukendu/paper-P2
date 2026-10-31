@@ -4,8 +4,23 @@ from copy import deepcopy
 import os
 from pathlib import Path
 
-from dotenv import load_dotenv
 import yaml
+
+try:
+    from dotenv import load_dotenv
+except ImportError:  # Keep analysis/runtime usable in the minimal system worker.
+    def load_dotenv(path=None, override=False):
+        path = Path(path) if path else None
+        if path is None or not path.exists():
+            return False
+        for line in path.read_text().splitlines():
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, value = line.split("=", 1)
+            if override or key not in os.environ:
+                os.environ[key] = value
+        return True
 
 from .io import atomic_bytes, digest, file_lock, read_json, write_json
 

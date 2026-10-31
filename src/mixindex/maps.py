@@ -2,9 +2,9 @@
 
 from copy import deepcopy
 import math
+import os
 
 import numpy as np
-from safetensors.torch import load_file, save_file
 from sklearn.cluster import MiniBatchKMeans
 import torch
 from torch import nn
@@ -25,6 +25,26 @@ class LinearMap(nn.Module):
 
     def forward(self, x):
         return x @ self.weight.T
+
+
+class FixedProjection(nn.Module):
+    """Deterministic dimension-safe zero-padding control for reviewer ablations."""
+
+    def __init__(self, old_dim, new_dim):
+        super().__init__()
+        self.old_dim, self.new_dim = int(old_dim), int(new_dim)
+        if self.old_dim > self.new_dim:
+            raise ValueError("Fixed projection cannot truncate the old embedding")
+        # Keep a tiny state entry so the dimension-safe, non-learned control
+        # can use the same safetensors checkpoint contract as learned maps.
+        self.register_buffer("_projection_marker", torch.empty(0, dtype=torch.float32))
+
+    def forward(self, x):
+        if x.shape[1] != self.old_dim:
+            raise ValueError("Fixed projection input dimension differs from lock")
+        result = torch.zeros((len(x), self.new_dim), dtype=x.dtype, device=x.device)
+        result[:, :self.old_dim] = x
+        return result
 
 
 def fit_op(X_train, Y_train):
@@ -73,13 +93,17 @@ class LowRankAffine(nn.Module):
 def transform_global(model, X, normalize_output=False, **kwargs):
     # `normalize` is accepted for the module contract without shadowing normalize().
     normalize_output = kwargs.get("normalize", normalize_output)
+    try:
+        device = next(model.parameters()).device
+    except StopIteration:
+        device = torch.device("cpu")
     result = None
     with torch.inference_mode():
         for start in range(0, len(X), 16384):
             values = np.asarray(X[start:start + 16384], dtype=np.float32)
             if not values.flags.writeable:
                 values = values.copy()  # Torch must not alias a read-only memory-map.
-            output = model(torch.from_numpy(values)).cpu().numpy()
+            output = model(torch.from_numpy(values).to(device)).cpu().numpy()
             if result is None:
                 result = np.empty((len(X), output.shape[1]), dtype=np.float32)
             result[start:start + len(output)] = output
@@ -104,14 +128,29 @@ def fit_global_map(kind, pairs, validation, cfg, seed=17):
         if not math.isfinite(loss):
             raise ValueError("Nonfinite OP validation loss")
         return model, {"validation_loss": loss, "epochs": 0, "kind": kind}
+    if kind == "fixed_projection":
+        model = FixedProjection(X.shape[1], Y.shape[1])
+        output = transform_global(model, XV)
+        normalize(output)
+        loss = float(np.mean(np.sum((output - YV) ** 2, axis=1)))
+        return model, {"validation_loss": loss, "epochs": 0, "kind": kind,
+                       "learned": False, "projection": "zero_padding"}
     if kind == "residual_mlp":
         model = ResidualMap(X.shape[1], Y.shape[1], cfg["hidden"], fit_op(X, Y))
     elif kind == "la":
         model = LowRankAffine(X.shape[1], Y.shape[1], cfg["rank"])
     else:
         raise ValueError("Unknown global map")
+    requested_device = os.environ.get("MIXINDEX_TORCH_DEVICE", "auto").strip().lower()
+    if requested_device == "auto":
+        requested_device = "cuda" if torch.cuda.is_available() else "cpu"
+    if requested_device == "cuda" and not torch.cuda.is_available():
+        requested_device = "cpu"
+    device = torch.device(requested_device)
+    model = model.to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=cfg["lr"], weight_decay=0)
-    x, y, xv, yv = [torch.as_tensor(np.asarray(a), dtype=torch.float32) for a in (X, Y, XV, YV)]
+    x, y, xv, yv = [torch.as_tensor(np.asarray(a), dtype=torch.float32, device=device)
+                     for a in (X, Y, XV, YV)]
     best, significant, stale = math.inf, math.inf, 0
     history, best_state = [], None
     for epoch in range(cfg["max_epochs"]):
@@ -141,7 +180,7 @@ def fit_global_map(kind, pairs, validation, cfg, seed=17):
     if best_state is None:
         raise ValueError("Map grid produced no valid checkpoint")
     model.load_state_dict(best_state)
-    model.eval().requires_grad_(False)
+    model.eval().requires_grad_(False).to("cpu")
     normalize(transform_global(model, XV))  # Zero outputs invalidate a candidate too.
     return model, {"validation_loss": best, "epochs": len(history), "kind": kind,
                    "history": history, "lr": cfg["lr"]}
@@ -153,8 +192,11 @@ def fit_la(X_train, Y_train, X_val, Y_val, cfg):
 
 def save_map_state(model, path):
     import json
+    from safetensors.torch import save_file
     if isinstance(model, LinearMap):
         spec = {"kind": "op", "old_dim": model.weight.shape[1], "new_dim": model.weight.shape[0]}
+    elif isinstance(model, FixedProjection):
+        spec = {"kind": "fixed_projection", "old_dim": model.old_dim, "new_dim": model.new_dim}
     elif isinstance(model, ResidualMap):
         spec = {"kind": "residual_mlp", "old_dim": model.linear.in_features,
                 "new_dim": model.linear.out_features, "hidden": model.residual[0].out_features}
@@ -166,12 +208,15 @@ def save_map_state(model, path):
 
 def load_map_state(path):
     import json
+    from safetensors.torch import load_file
     from safetensors import safe_open
     with safe_open(str(path), framework="pt") as file:
         spec = json.loads(file.metadata()["architecture"])
     kind = spec.pop("kind")
     if kind == "op":
         model = LinearMap(np.zeros((spec["new_dim"], spec["old_dim"]), dtype=np.float32))
+    elif kind == "fixed_projection":
+        model = FixedProjection(spec["old_dim"], spec["new_dim"])
     elif kind == "residual_mlp":
         model = ResidualMap(**spec)
     else:
@@ -228,6 +273,24 @@ class RegionalStatistics:
         d = self.dimension
         result = (np.repeat(np.column_stack([np.eye(d), np.zeros(d)])[None], self.n_regions, axis=0)
                   if current is None else np.array(current, copy=True))
+        selected = [int(region) for region in (range(self.n_regions) if regions is None else regions)
+                    if self.counts[int(region)] >= min_pairs and mode != "none"]
+        if mode == "full" and selected:
+            # Solve all active regional ridge systems as one batched LAPACK
+            # call.  This is algebraically identical to the per-region loop
+            # and avoids repeated Python/LAPACK setup for the 384/768-dim
+            # reviewer ablations.
+            if (os.environ.get("MIXINDEX_TORCH_DEVICE", "auto").strip().lower() == "cuda"
+                    and torch.cuda.is_available()):
+                with torch.inference_mode():
+                    h = torch.as_tensor(self.H[selected], dtype=torch.float64, device="cuda")
+                    b = torch.as_tensor(self.B[selected].transpose(0, 2, 1),
+                                        dtype=torch.float64, device="cuda")
+                    solved = torch.linalg.solve(h, b).cpu().numpy()
+            else:
+                solved = np.linalg.solve(self.H[selected], self.B[selected].transpose(0, 2, 1))
+            result[selected] = solved.transpose(0, 2, 1)
+            return result
         for region in (range(self.n_regions) if regions is None else regions):
             if self.counts[region] < min_pairs or mode == "none":
                 continue

@@ -7,10 +7,18 @@ import hashlib
 import numpy as np
 
 
-def build_candidate_sets(search_results, proxies, fidelity, radius, weights=None):
+def build_candidate_sets(search_results, proxies, fidelity, radius, weights=None,
+                         radius_multiplier=1.0, safety=True, radius_by_row=None):
     result = {}
     if radius is None or radius <= 0:
         return result
+    if not np.isfinite(radius_multiplier) or radius_multiplier <= 0:
+        raise ValueError("Radius multiplier must be positive")
+    effective_radius = float(radius) * float(radius_multiplier)
+    if radius_by_row is not None:
+        radius_by_row = np.asarray(radius_by_row, dtype=np.float64)
+        if radius_by_row.ndim != 1 or not np.isfinite(radius_by_row).all() or np.any(radius_by_row <= 0):
+            raise ValueError("Per-document uncertainty radii must be finite and positive")
     weights = weights if weights is not None else np.ones(len(search_results.rows))
     if len(weights) != len(search_results.rows) or not np.isfinite(weights).all() or np.any(np.asarray(weights) < 0):
         raise ValueError("Coverage weights must be nonnegative")
@@ -19,10 +27,12 @@ def build_candidate_sets(search_results, proxies, fidelity, radius, weights=None
             continue
         proxy = set(rows[:10]) if proxies is None or proxies[q] is None else set(proxies[q])
         slack = scores[:10] - scores[10]
+        local_radius = (effective_radius if radius_by_row is None else
+                        radius_by_row[np.asarray(rows[:10], dtype=np.int64)] * float(radius_multiplier))
         relevant = np.array([r in proxy for r in rows[:10]])
-        if np.any(relevant & (slack > 2 * radius)):
+        if safety and np.any(relevant & (slack > 2 * local_radius)):
             continue  # A true relevant proxy can also make the query safe.
-        eligible = relevant & ~fidelity[rows[:10]] & (slack > radius) & (slack <= 2 * radius)
+        eligible = relevant & ~fidelity[rows[:10]] & (slack > local_radius) & (slack <= 2 * local_radius)
         candidates = set(map(int, rows[:10][eligible]))
         if candidates:
             result[q] = (candidates, float(weights[q]))
