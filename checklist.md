@@ -22,7 +22,7 @@ Chi tiết: [codex/17_reviewer_experiments.md](codex/17_reviewer_experiments.md)
 - [ ] REV.00.branch — Khi bắt đầu thực thi, chọn/dùng lại đúng một branch cho vòng revise; ghi base SHA, giữ dirty files, chưa commit hoặc tạo PR trong lúc chạy.
 - [ ] REV.CODE — Nối supplemental task builder/CLI/config keys, query-side direction, fixed projection, rho/safety flags, RBO/top20/E5 evaluator và HF artifact/source allowlist.
 - [ ] REV.TEST — Meaningful targeted tests, default parity/budget/leakage/restore/metric tests, Ruff/compile và full suite pass trước official cohort.
-- [ ] REV.PREFLIGHT — Development smoke đúng input scope, source/config snapshot bất biến và supplemental profiles được freeze; test pass chưa phải official experiment done.
+- [x] REV.PREFLIGHT — 4/4 development preflight bundles (BGE/Nomic × OP/MLP) đã `COMPUTE_DONE + outcome=completed`, cùng 648 query IDs; artifact manifest có config lock, source snapshot và frozen reviewer profile. Đây vẫn là smoke/preflight, không phải official quality claim.
 
 P0 — thực hiện cả hai nhóm, không chỉ chọn một:
 
@@ -52,9 +52,9 @@ P1 — chạy/đo đủ các mục reviewer:
 
 P2 — vẫn có trong phạm vi kế hoạch, chỉ đóng theo dữ liệu thực:
 
-- [ ] REV.07.feasibility — Probe/profile BGE→M3 trên FiQA và standardized FiQA/Nomic; cùng648 query IDs, model/prefix/token/dtype và resource forecast được khóa.
-- [ ] REV.07.compute — Hai transition scopes ×OP/MLP ×random/read ×3 seeds (tối đa24 configurations trước reuse), cùng budgets/metrics; optional Nomic identity control ghi riêng.
-- [ ] REV.07.sync — Các transition runs hợp lệ đã sync HF verified; thiếu resource ghi DEFERRED_RESOURCE với evidence, ô compute chưa tick.
+- [x] REV.07.feasibility — Probe/profile BGE→M3 trên FiQA và standardized FiQA/Nomic đã đóng: 4/4 preflight và 4/4 encoder probes có `COMPUTE_DONE`, cùng 648 query IDs, model/prefix/token/dtype và H100 resource scope được ghi trong manifest.
+- [x] REV.07.compute — Hai transition scopes × OP/MLP × random/read ×3 seeds đã đủ 24/24 configurations `COMPUTE_DONE`, cùng 648 queries/57,638 documents; 3 Nomic identity controls cũng đã hoàn tất và được ghi riêng. Bundles nằm trong [runs-002](https://huggingface.co/datasets/deadgod3005/mixindex-runs-002/tree/main/runs) và [runs-003](https://huggingface.co/datasets/deadgod3005/mixindex-runs-003/tree/main/runs).
+- [ ] REV.07.sync — 26/27 payloads của 24 transition cells + 3 identity controls đã có `artifact_manifest.json` và `COMPLETED.json`. Bundle [`REV-07-bge-fiqa-op-read-m17-t101`](https://huggingface.co/datasets/deadgod3005/mixindex-runs-003/tree/main/runs/REV-07-bge-fiqa-op-read-m17-t101/c78ada8464624d2aa79875e042ff01bc4a9ad2e0d7d7d45d69d49645ed66a778) ở runs-003 có summary/manifest `COMPUTE_DONE` nhưng thiếu `COMPLETED.json` (bản trùng ở runs-002 cũng không usable); giữ gate mở để reconcile, không đánh dấu thiếu resource thành `DEFERRED_RESOURCE`.
 - [x] REV.08.split — Freeze ORCAS held-out eval groups, normalized-text disjoint với schedule/cal/tune, cùng document50k/schedule5k manifest và coverage denominator. `selection.parquet` có 5,000 seen + 10,000/10,000 eval held-out disjoint; split hash `8dc37eb460e58aeb588d0416fbd4a695040192a1da6011246aa6d1f4d1fec94c` và common manifest hash được giữ trong parent REV-04.E5.
 - [x] REV.08.compute — Đánh giá E5 trajectories tại bootstrap/5/10/25% trên seen+held-out qua parent REV-04.E5, rồi tính 800,000 per-query held-out rows cho read−random (3 seeds) và read−degree (2 replayable seeds; degree-m29 missing graph không bị giả định). `compute_status=COMPUTE_DONE`, `performance_claim=false`.
 - [x] REV.08.sync — Held-out query split/IDs, query-vector digest/ref, metrics và paired contrasts đã sync HF `VERIFIED`: https://huggingface.co/datasets/deadgod3005/mixindex-runs-002/tree/40b921ee3c96f5b6bdc25fe711f92362747abe78/runs/REV-08-heldout-e5/9f7cfa0b8fa9c2a50980a6f125fbd326023e44ac37b11fd59a6089f71c8235a5
@@ -69,22 +69,24 @@ Clarification và bàn giao Git sau khi thí nghiệm xong:
 - [ ] REV.10.degree — Formal graph/nodes/edges, unique-neighbor degree, duplicates/ties và static/temporal recompute đúng code, trả lời Q3.
 - [ ] REV.10.read — Workload/window, normalized query duplicates, sorting/ties/traversal/cursor và refresh đúng implementation.
 - [ ] REV.10.budget — Định nghĩa unique paid union, train/val/cal/backfill counts và matched training-pool sizes của từng baseline/control.
-- [ ] REV.10.corpus — Ghi50k/sparse-qrel coverage và limitation, FiQA/TREC full anchors; không claim đã xử lý corpus-scale concern.
-- [ ] REV.10.models — Main pair primary, transitions khác supporting và claim chỉ trong evaluated settings.
-- [ ] REV.10.aol — Agreement/operational replay và click proxy có covered population rõ; không suy relevance/user utility từ agreement.
+- [x] REV.10.corpus — Ghi50k/sparse-qrel coverage và limitation, FiQA/TREC full anchors; không claim đã xử lý corpus-scale concern.
+- [x] REV.10.models — Main pair primary, transitions khác supporting và claim chỉ trong evaluated settings.
+- [x] REV.10.aol — Agreement/operational replay và click proxy có covered population rõ; không suy relevance/user utility từ agreement.
 - [ ] REV.10.related — Taxonomy Drift-Adapter/QDC/Embedding-Converter, protocol adaptations và trade-offs đúng baseline thực chạy.
-- [ ] REV.10.theory — Thảo luận Procrustes/local/nonlinear và phạm vi bounds, không gán retrieval guarantee chưa chứng minh.
-- [ ] REV.10.greedy — Empirical radius/safety, positive-gain/fallback activity và collapse-to-random được giải thích bằng số đo.
-- [ ] REV.10.causal — Causal wording chỉ theo can thiệp/contrasts thực có, giữ core agreement–relevance finding.
+- [x] REV.10.theory — Thảo luận Procrustes/local/nonlinear và phạm vi bounds, không gán retrieval guarantee chưa chứng minh.
+- [x] REV.10.greedy — Empirical radius/safety, positive-gain/fallback activity và collapse-to-random được giải thích bằng số đo.
+- [x] REV.10.causal — Causal wording chỉ theo can thiệp/contrasts thực có, giữ core agreement–relevance finding.
 - [ ] REV.11.aggregate — Đủ required P0/P1 và các P2 khả thi, actual counts/reuse/negative findings/CI/multiple testing đúng; mỗi yêu cầu PDF và Q1–Q7 trỏ tới evidence hoặc condition/status cụ thể.
 - [ ] REV.11.coverage — Rà lại M17 mục10 bằng artifacts cuối:9 run/measure +11 wording +5 dispositions +Q1–Q7 có trạng thái/evidence cụ thể; blocked/deferred không tick compute hoặc gọi toàn bộ thí nghiệm hoàn tất.
 - [ ] REV.11.HF — Mọi completed supplemental run/analysis/benchmark đã có payload/parts/digest/marker/catalog verified và representative restore/load pass; không còn required SYNC_PENDING.
 - [ ] REV.11.commit — Chỉ sau khi thí nghiệm/analysis trong scope xong và checks/sync đạt: commit code/config/tests/docs/results summary trên branch duy nhất; source khớp snapshot dùng để chạy, không commit secrets/caches.
 - [ ] REV.11.PR — Push cùng branch, tạo/cập nhật đúng một PR về main, có validation/actual counts/HF pinned links/limitations/P2 status; chưa auto-merge hoặc mở PR riêng cho từng REV.
 
-Trạng thái hiện tại của phần bổ sung: **RUNNING**. REV-01 raw + rank-metric artifacts + extra feasibility, REV-02 18/18 learned-state bundles, REV-03 sensitivity + 3 proxy seeds, REV-04 depth20 + E5 post-hoc, REV-05 TREC, REV-06 cost và REV-08 held-out contrasts đã `COMPUTE_DONE + SYNC=VERIFIED`; aggregate REV-AGGREGATE-fiqa-v6 đã có paired bootstrap/Holm. REV-04 depth10 và REV-09 đã verified; REV-07 transitions, wording, final aggregate và Git delivery còn mở. Chưa commit/PR. Mỗi run xong phải sync HF ngay; compute và sync là hai gate riêng, chỉ tick bằng artifacts thực. Nhóm P2 chưa khả thi phải giữ status/ô trống và nêu lý do, không bị bỏ khỏi kế hoạch.
+Trạng thái hiện tại của phần bổ sung: **RUNNING**. REV-01 raw + rank-metric artifacts + extra feasibility, REV-02 18/18 learned-state bundles, REV-03 sensitivity + 3 proxy seeds, REV-04 depth20 + E5 post-hoc, REV-05 TREC, REV-06 cost và REV-08 held-out contrasts đã `COMPUTE_DONE + SYNC=VERIFIED`; aggregate REV-AGGREGATE-fiqa-v6 đã có paired bootstrap/Holm. REV-04 depth10 và REV-09 đã verified. REV-07 feasibility/preflight và 24/24 transition computes + 3 identity controls đã xong; REV-07 sync còn thiếu 1 completion marker. REV-10 đã đóng 6/11 wording rows theo manuscript hiện tại; 5 rows còn thiếu, REV-11 aggregate/coverage/HF final audit và Git delivery còn mở. Chưa commit/PR. Mỗi run xong phải sync HF ngay; compute và sync là hai gate riêng, chỉ tick bằng artifacts thực. Nhóm P2 chưa khả thi phải giữ status/ô trống và nêu lý do, không bị bỏ khỏi kế hoạch.
 
-Risk register lúc kiểm tra: **không có job nào đang mang status `DEFERRED`**; chỉ mở rộng corpus >50k là `EXCLUDED`. REV-01, REV-02, REV-03 raw/aggregate, REV-04 depth20 + E5 post-hoc, REV-05 và REV-06 cost đã có receipts; fixed-projection serializer đã test save/load và các cell retry đều verify. E5 degree-m29 compact-state-only là missing artifact có status cụ thể, không phải silent defer. Việc cần giữ làm gate là (1) REV-01 extra/REV-07 feasibility, (2) REV-08 contrasts + sync, (3) source đã freeze sau cohort, (4) wording/tests/final HF audit trước Git delivery. Cảnh báo kỹ thuật `torch.from_numpy` trên read-only mmap đã được sửa bằng writable contiguous copy; cần chạy targeted/full tests và ghi receipt trước commit/PR.
+Risk register lúc kiểm tra: **không có job nào đang mang status `DEFERRED`**; chỉ mở rộng corpus >50k là `EXCLUDED`. REV-01, REV-02, REV-03 raw/aggregate, REV-04 depth20 + E5 post-hoc, REV-05 và REV-06 cost đã có receipts; fixed-projection serializer đã test save/load và các cell retry đều verify. E5 degree-m29 compact-state-only là missing artifact có status cụ thể, không phải silent defer. Việc cần giữ làm gate là (1) reconcile completion marker của REV-07 OP/read m17, (2) 5 mục REV-10 còn thiếu và aggregate/coverage/HF audit REV-11, (3) source/tests/fix receipts trước Git delivery. Cảnh báo kỹ thuật `torch.from_numpy` trên read-only mmap đã được sửa bằng writable contiguous copy; cần chạy targeted/full tests và ghi receipt trước commit/PR.
+
+Audit REV-10/11 ngày 02/11/2026: manuscript hiện có đủ evidence cho `REV.10.corpus/models/aol/theory/greedy/causal`; giữ `rename/degree/read/budget/related` mở vì còn dùng `ARR@10`, thiếu formal graph/read construction và matched-pool detail, đồng thời chưa nêu QDC trong related work. `reviewer_aggregate.py` và các aggregate HF hiện chỉ bao phủ REV-01/02/03 (v6); chưa có final aggregate/coverage audit gồm REV-07, representative restore/load pass hoặc commit/PR, nên không tick REV-11.
 
 ### Ghi chú lỗi cần rà soát/xử lý sau — 01/11/2026 (Asia/Saigon)
 
