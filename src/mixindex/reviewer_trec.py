@@ -10,7 +10,6 @@ query split is changed.
 from __future__ import annotations
 
 import argparse
-from collections import defaultdict
 import gzip
 import hashlib
 import json

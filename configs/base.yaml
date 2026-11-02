@@ -117,3 +117,12 @@ sync:
   repo_target_files: 5000
   artifact_shard_gib: 2
   retries: 3
+reviewer:
+  study_id: reviewer_v1
+  protocol_path: configs/reviewer_v1.yaml
+  radius_multiplier: 1.0
+  safety: true
+  uncertainty_proxy: false
+  rbo_p: 0.9
+  bootstrap_draws: 10000
+  bootstrap_seed: 20261020

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import argparse
-from copy import deepcopy
 import gzip
 import json
 from pathlib import Path
@@ -111,7 +110,6 @@ def main() -> int:
     qids_old, old_q = _load(root / "runs/reviewer_inputs/fiqa_text/queries.jsonl", args.old_queries)
     qids_new, new_q = _load(root / "runs/reviewer_inputs/fiqa_text/queries.jsonl", args.new_queries)
     roles = json.loads((prepared / "splits/query_roles.json").read_text())["roles"]
-    train = np.array(sorted(set(range(len(ids_old))) - set()), dtype=np.int64)
     pools = sample_document_pools(ids_old, cfg)
     eval_ids = sorted(roles["eval"])
     train_rows, val_rows = pools["train"], pools["validation"]

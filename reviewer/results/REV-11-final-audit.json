@@ -1,0 +1,242 @@
+{
+  "audit": "REV-11",
+  "catalog": {
+    "action_counts": {
+      "REV-01": 7,
+      "REV-02": 18,
+      "REV-03": 21,
+      "REV-04": 8,
+      "REV-05": 6,
+      "REV-06": 1,
+      "REV-07": 35,
+      "REV-08": 1,
+      "REV-09": 1,
+      "REV-AGGREGATE": 6
+    },
+    "marker_audit": {
+      "catalog_runs": 104,
+      "marker_verified": 104,
+      "status": "VERIFIED",
+      "unverified": []
+    },
+    "repo_id": "deadgod3005/mixindex-runs-001",
+    "revision": "d5e6d8e0db211a01f2ca5b324cef47b9e7ade92c",
+    "run_count": 104
+  },
+  "e5_degree_m29": {
+    "graph_checkpoints": [
+      "bootstrap-000001750",
+      "accessed-000002500",
+      "accessed-000005000",
+      "accessed-000012500",
+      "accessed-000025000",
+      "accessed-000050000"
+    ],
+    "graph_count": 6,
+    "graph_repo": "deadgod3005/mixindex-runs-004",
+    "graph_revision": "f7f765b7361de2e4a557c728a0aaa442cf81746d",
+    "marker_path": "runs/E5-scale-degree-m29-t101-ca194e98f844/aa87818db8949896f43e63673043335bac08545583d2b19bfc0b11769dbacb1f/COMPLETED.json",
+    "marker_repo": "deadgod3005/mixindex-runs-003",
+    "marker_revision": "ff52cc31a9e41f31abc2ca5a2ddd7c3ea3fd86b0",
+    "payload_id": "aa87818db8949896f43e63673043335bac08545583d2b19bfc0b11769dbacb1f",
+    "representative_checkpoint": "bootstrap-000001750",
+    "representative_dimension": 1024,
+    "representative_graph_bytes": 212227556,
+    "representative_hnsw_load": "PASS",
+    "representative_index_rows": 50000
+  },
+  "negative_findings": [
+    {
+      "artifact": "REV-01-extra-feasibility",
+      "finding": "QDC and Embedding-Converter were not treated as faithful frozen MiniLM-to-MPNet matched-budget baselines; no fabricated quality cell was added.",
+      "quality_runs": 0,
+      "status": "INCOMPATIBLE_PROTOCOL"
+    },
+    {
+      "artifact": "performance_claims",
+      "finding": "Reviewer aggregates retain performance_claim=false and condition inference on the declared seed/query design.",
+      "status": "NO_PERFORMANCE_CLAIM"
+    }
+  ],
+  "protocol": {
+    "base_sha": "545f96bcba36acd1fd6aab45c50ccee7bdad885b",
+    "branch": "codex/reviewer-experiments",
+    "by_action": {
+      "REV-01": {
+        "completed_cells": 19,
+        "planned_cells": 19,
+        "reused_cells": 0,
+        "statuses": {
+          "completed": 19
+        }
+      },
+      "REV-02": {
+        "completed_cells": 18,
+        "planned_cells": 18,
+        "reused_cells": 1,
+        "statuses": {
+          "completed": 18
+        }
+      },
+      "REV-03": {
+        "completed_cells": 21,
+        "planned_cells": 21,
+        "reused_cells": 1,
+        "statuses": {
+          "completed": 21
+        }
+      },
+      "REV-04": {
+        "completed_cells": 19,
+        "planned_cells": 19,
+        "reused_cells": 19,
+        "statuses": {
+          "completed": 19
+        }
+      },
+      "REV-05": {
+        "completed_cells": 9,
+        "planned_cells": 9,
+        "reused_cells": 3,
+        "statuses": {
+          "completed": 9
+        }
+      },
+      "REV-06": {
+        "completed_cells": 1,
+        "planned_cells": 1,
+        "reused_cells": 1,
+        "statuses": {
+          "completed": 1
+        }
+      },
+      "REV-07": {
+        "completed_cells": 27,
+        "planned_cells": 27,
+        "reused_cells": 0,
+        "statuses": {
+          "completed": 27
+        }
+      },
+      "REV-08": {
+        "completed_cells": 50,
+        "planned_cells": 50,
+        "reused_cells": 50,
+        "statuses": {
+          "completed": 50
+        }
+      },
+      "REV-09": {
+        "completed_cells": 1,
+        "planned_cells": 1,
+        "reused_cells": 1,
+        "statuses": {
+          "completed": 1
+        }
+      }
+    },
+    "cell_count": 165,
+    "corpus_expansion": "EXCLUDED",
+    "new_cells": 89,
+    "protocol_sha256": "710a59a43ade7f5e8fe63704c3fe5de37f315511cbe7254f3aca569d1e58cff1",
+    "reuse_cells": 76,
+    "status_counts": {
+      "completed": 165
+    },
+    "study_id": "reviewer_v1"
+  },
+  "q_status": {
+    "Q1": {
+      "evidence": [
+        "REV-01",
+        "REV-AGGREGATE-fiqa-v6"
+      ],
+      "status": "COMPLETE"
+    },
+    "Q2": {
+      "evidence": [
+        "REV-03",
+        "REV-AGGREGATE-fiqa-v6"
+      ],
+      "status": "COMPLETE"
+    },
+    "Q3": {
+      "evidence": [
+        "REV-04",
+        "REV-08-heldout-e5"
+      ],
+      "status": "COMPLETE_WITH_DEFINED_WORKLOAD"
+    },
+    "Q4": {
+      "evidence": [
+        "REV-02",
+        "REV-AGGREGATE-fiqa-v6"
+      ],
+      "status": "COMPLETE"
+    },
+    "Q5": {
+      "evidence": [
+        "REV-04",
+        "REV-04-e5-posthoc"
+      ],
+      "status": "COMPLETE"
+    },
+    "Q6": {
+      "evidence": [
+        "REV-09-aol-click-proxy-m17-v2"
+      ],
+      "status": "COMPLETE_WITH_PROXY_LIMITATION"
+    },
+    "Q7": {
+      "evidence": [
+        "REV-06-fiqa-cost-m17"
+      ],
+      "status": "COMPLETE_WITH_SAMPLE_ESTIMATE"
+    }
+  },
+  "restore_and_analysis": {
+    "aggregate_v6": {
+      "bootstrap_draws": 10000,
+      "contrast_rows": 273,
+      "descriptive_rows": 336,
+      "hf_url": "https://huggingface.co/datasets/deadgod3005/mixindex-runs-002/tree/90f4410b919149883b0285d5ea32ed58f5d9bd74/runs/REV-AGGREGATE-fiqa-v6/2c29c49125a4d005f440bb3d7038fc4e02fe54684a20f81074e0cdb4533686b6",
+      "performance_claim": false,
+      "raw_rows": 167184
+    },
+    "rev04_e5": {
+      "hf_url": "https://huggingface.co/datasets/deadgod3005/mixindex-runs-003/tree/e2a82994cc4267265e175687de5001f70143ca95/runs/REV-04-e5-posthoc/7a2161e8b76fd6019c0d866cea089ce41ee6265059bd2eb7d3a15ca971862014",
+      "missing_cells": [],
+      "per_query_rows": 1080000,
+      "snapshot_cells_available": 12,
+      "snapshot_cells_expected": 12
+    },
+    "rev07_representative_restore": {
+      "bytes": 3145904,
+      "hf_url": "https://huggingface.co/datasets/deadgod3005/mixindex-runs-002/tree/cf7580f234c61379b189873f28a0c6b0df20448c/runs/REV-07-bge-fiqa-op-read-m17-t101/c78ada8464624d2aa79875e042ff01bc4a9ad2e0d7d7d45d69d49645ed66a778",
+      "path": "checkpoints/accessed-000002020/M0.safetensors",
+      "safetensors_load": "PASS",
+      "tensors": [
+        "weight"
+      ]
+    },
+    "rev08_heldout": {
+      "contrast_pairs": [
+        "read_minus_degree",
+        "read_minus_random"
+      ],
+      "contrast_rows": 960000,
+      "hf_url": "https://huggingface.co/datasets/deadgod3005/mixindex-runs-003/tree/ff52cc31a9e41f31abc2ca5a2ddd7c3ea3fd86b0/runs/REV-08-heldout-e5/27e2c03d161511b99268ca4fe273a22e7c599aa140a912a67a30299a2ba315b7",
+      "map_seeds": [
+        17,
+        29,
+        43
+      ]
+    }
+  },
+  "source": {
+    "protocol": "/root/paper-P2/configs/reviewer_v1.yaml",
+    "secrets_recorded": false,
+    "token_source": ".env:HF_TOKEN"
+  },
+  "status": "VERIFIED"
+}

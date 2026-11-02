@@ -1,6 +1,8 @@
+import warnings
+
 import numpy as np
 
-from mixindex.maps import FixedProjection, transform_global
+from mixindex.maps import FixedProjection, load_map_state, save_map_state, transform_global
 from mixindex.reviewer_aggregate import _paired_bootstrap
 from mixindex.reviewer_posthoc import overlap_at_k, rbo_extrapolated
 
@@ -21,6 +23,26 @@ def test_fixed_projection_is_dimension_safe_and_normalizable():
     assert values.shape == (2, 3)
     assert np.allclose(values[:, 2], 0.0)
     assert np.allclose(np.linalg.norm(values, axis=1), 1.0)
+
+
+def test_fixed_projection_checkpoint_roundtrip_preserves_outputs(tmp_path):
+    model = FixedProjection(2, 3)
+    inputs = np.array([[1.0, 2.0], [-2.0, 0.5]], dtype=np.float32)
+    path = tmp_path / "fixed.safetensors"
+    save_map_state(model, path)
+    restored = load_map_state(path)
+    assert np.array_equal(transform_global(model, inputs), transform_global(restored, inputs))
+
+
+def test_read_only_memmap_is_copied_before_torch_conversion(tmp_path):
+    path = tmp_path / "vectors.npy"
+    np.save(path, np.arange(6, dtype=np.float32).reshape(3, 2))
+    values = np.load(path, mmap_mode="r", allow_pickle=False)
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        result = transform_global(FixedProjection(2, 3), values)
+    assert result.shape == (3, 3)
+    assert not any("not writable" in str(item.message).lower() for item in caught)
 
 
 def test_reviewer_paired_bootstrap_is_reproducible_and_records_unit():

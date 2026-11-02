@@ -393,7 +393,8 @@ def restore_run(receipt, output, api=None):
 def source_files(root):
     root = Path(root)
     names = ["pyproject.toml", "requirements.lock.txt", "README.md", "scripts/setup.sh",
-             "scripts/ci-tests.yml"]
+             "scripts/ci-tests.yml", "scripts/reviewer_hf_audit.py",
+             "scripts/reviewer_final_audit.py"]
     names += [str(p.relative_to(root)) for directory in ("src", "configs", "tests")
               for p in (root / directory).rglob("*")
               if p.is_file() and "__pycache__" not in p.parts and p.suffix in {".py", ".yaml", ".json"}

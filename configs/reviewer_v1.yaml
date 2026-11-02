@@ -1,0 +1,3511 @@
+# Frozen supplemental reviewer protocol; every cell is explicit so counts and reuse are auditable.
+study:
+  study_id: reviewer_v1
+  created: 2026-11-02
+  branch: codex/reviewer-experiments
+  base_sha: 545f96bcba36acd1fd6aab45c50ccee7bdad885b
+  target_hardware: H100 80GB; actual shared scope must be recorded per run
+  corpus_expansion: EXCLUDED
+  source_revision_policy: immutable source snapshot before compute; no source edits within a cohort
+controls:
+  map_seeds: [17, 29, 43]
+  traffic_seed_fiqa: 101
+  traffic_seed_trec: [101, 103, 109]
+  primary_access_fraction: 0.10
+  checkpoints: [bootstrap, 0.05, 0.10, 0.25, 0.50, 1.00]
+  rbo_p: 0.9
+  bootstrap_draws: 10000
+  bootstrap_seed: 20261020
+  calibration_proxy: cal_fit_score_residual_std_min20
+  fixed_projection: zero_padding_384_to_768
+  heldout_split: normalized_text_disjoint
+expected_cell_counts:
+  REV-01: 19
+  REV-02: 18
+  REV-03: 21
+  REV-04: 19
+  REV-05: 9
+  REV-06: 1
+  REV-07: 27
+  REV-08: 50
+  REV-09: 1
+source_allowlist:
+  - src/mixindex/reviewer_plan.py
+  - src/mixindex/reviewer_migration.py
+  - src/mixindex/reviewer_query_baseline.py
+  - src/mixindex/reviewer_trec.py
+  - src/mixindex/reviewer_posthoc.py
+  - src/mixindex/reviewer_depth20.py
+  - src/mixindex/reviewer_e5.py
+  - src/mixindex/reviewer_aggregate.py
+  - src/mixindex/reviewer_cost.py
+  - src/mixindex/reviewer_aol_proxy.py
+  - src/mixindex/reviewer_transition_prep.py
+  - src/mixindex/reviewer_transition_encode.py
+  - configs/reviewer_v1.yaml
+  - scripts/reviewer_hf_audit.py
+  - scripts/reviewer_final_audit.py
+  - tests/test_reviewer_plan.py
+cells:
+  - cell_id: "REV-01.query_side_new_to_old.op.m17.t101"
+    review_action: "REV-01"
+    subgroup: "matched_controls"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "minilm_mpnet"
+    method: "op"
+    direction: "query_side_new_to_old"
+    variant: "matched_refit"
+    scheduler: "matched"
+    map_seed: 17
+    traffic_seed: 101
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "M0.safetensors"
+  - cell_id: "REV-01.query_side_new_to_old.op.m29.t101"
+    review_action: "REV-01"
+    subgroup: "matched_controls"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "minilm_mpnet"
+    method: "op"
+    direction: "query_side_new_to_old"
+    variant: "matched_refit"
+    scheduler: "matched"
+    map_seed: 29
+    traffic_seed: 101
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "M0.safetensors"
+  - cell_id: "REV-01.query_side_new_to_old.op.m43.t101"
+    review_action: "REV-01"
+    subgroup: "matched_controls"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "minilm_mpnet"
+    method: "op"
+    direction: "query_side_new_to_old"
+    variant: "matched_refit"
+    scheduler: "matched"
+    map_seed: 43
+    traffic_seed: 101
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "M0.safetensors"
+  - cell_id: "REV-01.query_side_new_to_old.la.m17.t101"
+    review_action: "REV-01"
+    subgroup: "matched_controls"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "minilm_mpnet"
+    method: "la"
+    direction: "query_side_new_to_old"
+    variant: "matched_refit"
+    scheduler: "matched"
+    map_seed: 17
+    traffic_seed: 101
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "M0.safetensors"
+  - cell_id: "REV-01.query_side_new_to_old.la.m29.t101"
+    review_action: "REV-01"
+    subgroup: "matched_controls"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "minilm_mpnet"
+    method: "la"
+    direction: "query_side_new_to_old"
+    variant: "matched_refit"
+    scheduler: "matched"
+    map_seed: 29
+    traffic_seed: 101
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "M0.safetensors"
+  - cell_id: "REV-01.query_side_new_to_old.la.m43.t101"
+    review_action: "REV-01"
+    subgroup: "matched_controls"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "minilm_mpnet"
+    method: "la"
+    direction: "query_side_new_to_old"
+    variant: "matched_refit"
+    scheduler: "matched"
+    map_seed: 43
+    traffic_seed: 101
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "M0.safetensors"
+  - cell_id: "REV-01.query_side_new_to_old.residual_mlp.m17.t101"
+    review_action: "REV-01"
+    subgroup: "matched_controls"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "minilm_mpnet"
+    method: "residual_mlp"
+    direction: "query_side_new_to_old"
+    variant: "matched_refit"
+    scheduler: "matched"
+    map_seed: 17
+    traffic_seed: 101
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "M0.safetensors"
+  - cell_id: "REV-01.query_side_new_to_old.residual_mlp.m29.t101"
+    review_action: "REV-01"
+    subgroup: "matched_controls"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "minilm_mpnet"
+    method: "residual_mlp"
+    direction: "query_side_new_to_old"
+    variant: "matched_refit"
+    scheduler: "matched"
+    map_seed: 29
+    traffic_seed: 101
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "M0.safetensors"
+  - cell_id: "REV-01.query_side_new_to_old.residual_mlp.m43.t101"
+    review_action: "REV-01"
+    subgroup: "matched_controls"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "minilm_mpnet"
+    method: "residual_mlp"
+    direction: "query_side_new_to_old"
+    variant: "matched_refit"
+    scheduler: "matched"
+    map_seed: 43
+    traffic_seed: 101
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "M0.safetensors"
+  - cell_id: "REV-01.forward_global_old_to_new.op.m17.t101"
+    review_action: "REV-01"
+    subgroup: "matched_controls"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "minilm_mpnet"
+    method: "op"
+    direction: "forward_global_old_to_new"
+    variant: "matched_refit"
+    scheduler: "matched"
+    map_seed: 17
+    traffic_seed: 101
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "M0.safetensors"
+  - cell_id: "REV-01.forward_global_old_to_new.op.m29.t101"
+    review_action: "REV-01"
+    subgroup: "matched_controls"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "minilm_mpnet"
+    method: "op"
+    direction: "forward_global_old_to_new"
+    variant: "matched_refit"
+    scheduler: "matched"
+    map_seed: 29
+    traffic_seed: 101
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "M0.safetensors"
+  - cell_id: "REV-01.forward_global_old_to_new.op.m43.t101"
+    review_action: "REV-01"
+    subgroup: "matched_controls"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "minilm_mpnet"
+    method: "op"
+    direction: "forward_global_old_to_new"
+    variant: "matched_refit"
+    scheduler: "matched"
+    map_seed: 43
+    traffic_seed: 101
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "M0.safetensors"
+  - cell_id: "REV-01.forward_global_old_to_new.la.m17.t101"
+    review_action: "REV-01"
+    subgroup: "matched_controls"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "minilm_mpnet"
+    method: "la"
+    direction: "forward_global_old_to_new"
+    variant: "matched_refit"
+    scheduler: "matched"
+    map_seed: 17
+    traffic_seed: 101
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "M0.safetensors"
+  - cell_id: "REV-01.forward_global_old_to_new.la.m29.t101"
+    review_action: "REV-01"
+    subgroup: "matched_controls"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "minilm_mpnet"
+    method: "la"
+    direction: "forward_global_old_to_new"
+    variant: "matched_refit"
+    scheduler: "matched"
+    map_seed: 29
+    traffic_seed: 101
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "M0.safetensors"
+  - cell_id: "REV-01.forward_global_old_to_new.la.m43.t101"
+    review_action: "REV-01"
+    subgroup: "matched_controls"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "minilm_mpnet"
+    method: "la"
+    direction: "forward_global_old_to_new"
+    variant: "matched_refit"
+    scheduler: "matched"
+    map_seed: 43
+    traffic_seed: 101
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "M0.safetensors"
+  - cell_id: "REV-01.forward_global_old_to_new.residual_mlp.m17.t101"
+    review_action: "REV-01"
+    subgroup: "matched_controls"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "minilm_mpnet"
+    method: "residual_mlp"
+    direction: "forward_global_old_to_new"
+    variant: "matched_refit"
+    scheduler: "matched"
+    map_seed: 17
+    traffic_seed: 101
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "M0.safetensors"
+  - cell_id: "REV-01.forward_global_old_to_new.residual_mlp.m29.t101"
+    review_action: "REV-01"
+    subgroup: "matched_controls"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "minilm_mpnet"
+    method: "residual_mlp"
+    direction: "forward_global_old_to_new"
+    variant: "matched_refit"
+    scheduler: "matched"
+    map_seed: 29
+    traffic_seed: 101
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "M0.safetensors"
+  - cell_id: "REV-01.forward_global_old_to_new.residual_mlp.m43.t101"
+    review_action: "REV-01"
+    subgroup: "matched_controls"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "minilm_mpnet"
+    method: "residual_mlp"
+    direction: "forward_global_old_to_new"
+    variant: "matched_refit"
+    scheduler: "matched"
+    map_seed: 43
+    traffic_seed: 101
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "M0.safetensors"
+  - cell_id: "REV-01.extra.feasibility"
+    review_action: "REV-01"
+    subgroup: "extra_feasibility"
+    mode: "feasibility"
+    dataset: "fiqa"
+    pair: "minilm_mpnet"
+    method: "Embedding-Converter+QDC"
+    direction: "protocol_compatibility"
+    variant: "incompatible_protocol"
+    scheduler: "none"
+    map_seed: 17
+    traffic_seed: 101
+    parent_run_id: null
+    reuse: false
+    gate: "FEASIBILITY_CLOSED_WITH_NEGATIVE_EVIDENCE"
+    status: "completed"
+    budget_checkpoints: ["n/a"]
+    expected_outputs:
+      - "feasibility.json"
+      - "reference_inputs.json"
+  - cell_id: "REV-02.G_R_C.m17.t101"
+    review_action: "REV-02"
+    subgroup: "component_ablation"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "minilm_mpnet"
+    method: "residual_mlp"
+    direction: "old_to_new"
+    variant: "G_R_C"
+    scheduler: "random"
+    map_seed: 17
+    traffic_seed: 101
+    parent_run_id: "E2-fiqa-mapping-residual_mlp-primary-random-m17-t101"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "checkpoint-level learned state"
+  - cell_id: "REV-02.G_R_C.m29.t101"
+    review_action: "REV-02"
+    subgroup: "component_ablation"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "minilm_mpnet"
+    method: "residual_mlp"
+    direction: "old_to_new"
+    variant: "G_R_C"
+    scheduler: "random"
+    map_seed: 29
+    traffic_seed: 101
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "checkpoint-level learned state"
+  - cell_id: "REV-02.G_R_C.m43.t101"
+    review_action: "REV-02"
+    subgroup: "component_ablation"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "minilm_mpnet"
+    method: "residual_mlp"
+    direction: "old_to_new"
+    variant: "G_R_C"
+    scheduler: "random"
+    map_seed: 43
+    traffic_seed: 101
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "checkpoint-level learned state"
+  - cell_id: "REV-02.G_R_0.m17.t101"
+    review_action: "REV-02"
+    subgroup: "component_ablation"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "minilm_mpnet"
+    method: "residual_mlp"
+    direction: "old_to_new"
+    variant: "G_R_0"
+    scheduler: "random"
+    map_seed: 17
+    traffic_seed: 101
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "checkpoint-level learned state"
+  - cell_id: "REV-02.G_R_0.m29.t101"
+    review_action: "REV-02"
+    subgroup: "component_ablation"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "minilm_mpnet"
+    method: "residual_mlp"
+    direction: "old_to_new"
+    variant: "G_R_0"
+    scheduler: "random"
+    map_seed: 29
+    traffic_seed: 101
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "checkpoint-level learned state"
+  - cell_id: "REV-02.G_R_0.m43.t101"
+    review_action: "REV-02"
+    subgroup: "component_ablation"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "minilm_mpnet"
+    method: "residual_mlp"
+    direction: "old_to_new"
+    variant: "G_R_0"
+    scheduler: "random"
+    map_seed: 43
+    traffic_seed: 101
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "checkpoint-level learned state"
+  - cell_id: "REV-02.G_0_C.m17.t101"
+    review_action: "REV-02"
+    subgroup: "component_ablation"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "minilm_mpnet"
+    method: "residual_mlp"
+    direction: "old_to_new"
+    variant: "G_0_C"
+    scheduler: "random"
+    map_seed: 17
+    traffic_seed: 101
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "checkpoint-level learned state"
+  - cell_id: "REV-02.G_0_C.m29.t101"
+    review_action: "REV-02"
+    subgroup: "component_ablation"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "minilm_mpnet"
+    method: "residual_mlp"
+    direction: "old_to_new"
+    variant: "G_0_C"
+    scheduler: "random"
+    map_seed: 29
+    traffic_seed: 101
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "checkpoint-level learned state"
+  - cell_id: "REV-02.G_0_C.m43.t101"
+    review_action: "REV-02"
+    subgroup: "component_ablation"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "minilm_mpnet"
+    method: "residual_mlp"
+    direction: "old_to_new"
+    variant: "G_0_C"
+    scheduler: "random"
+    map_seed: 43
+    traffic_seed: 101
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "checkpoint-level learned state"
+  - cell_id: "REV-02.G_0_0.m17.t101"
+    review_action: "REV-02"
+    subgroup: "component_ablation"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "minilm_mpnet"
+    method: "residual_mlp"
+    direction: "old_to_new"
+    variant: "G_0_0"
+    scheduler: "random"
+    map_seed: 17
+    traffic_seed: 101
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "checkpoint-level learned state"
+  - cell_id: "REV-02.G_0_0.m29.t101"
+    review_action: "REV-02"
+    subgroup: "component_ablation"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "minilm_mpnet"
+    method: "residual_mlp"
+    direction: "old_to_new"
+    variant: "G_0_0"
+    scheduler: "random"
+    map_seed: 29
+    traffic_seed: 101
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "checkpoint-level learned state"
+  - cell_id: "REV-02.G_0_0.m43.t101"
+    review_action: "REV-02"
+    subgroup: "component_ablation"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "minilm_mpnet"
+    method: "residual_mlp"
+    direction: "old_to_new"
+    variant: "G_0_0"
+    scheduler: "random"
+    map_seed: 43
+    traffic_seed: 101
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "checkpoint-level learned state"
+  - cell_id: "REV-02.Gfixed_R_C.m17.t101"
+    review_action: "REV-02"
+    subgroup: "component_ablation"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "minilm_mpnet"
+    method: "residual_mlp"
+    direction: "old_to_new"
+    variant: "Gfixed_R_C"
+    scheduler: "random"
+    map_seed: 17
+    traffic_seed: 101
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "checkpoint-level learned state"
+  - cell_id: "REV-02.Gfixed_R_C.m29.t101"
+    review_action: "REV-02"
+    subgroup: "component_ablation"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "minilm_mpnet"
+    method: "residual_mlp"
+    direction: "old_to_new"
+    variant: "Gfixed_R_C"
+    scheduler: "random"
+    map_seed: 29
+    traffic_seed: 101
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "checkpoint-level learned state"
+  - cell_id: "REV-02.Gfixed_R_C.m43.t101"
+    review_action: "REV-02"
+    subgroup: "component_ablation"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "minilm_mpnet"
+    method: "residual_mlp"
+    direction: "old_to_new"
+    variant: "Gfixed_R_C"
+    scheduler: "random"
+    map_seed: 43
+    traffic_seed: 101
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "checkpoint-level learned state"
+  - cell_id: "REV-02.Gfixed_0_0.m17.t101"
+    review_action: "REV-02"
+    subgroup: "component_ablation"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "minilm_mpnet"
+    method: "residual_mlp"
+    direction: "old_to_new"
+    variant: "Gfixed_0_0"
+    scheduler: "random"
+    map_seed: 17
+    traffic_seed: 101
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "checkpoint-level learned state"
+  - cell_id: "REV-02.Gfixed_0_0.m29.t101"
+    review_action: "REV-02"
+    subgroup: "component_ablation"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "minilm_mpnet"
+    method: "residual_mlp"
+    direction: "old_to_new"
+    variant: "Gfixed_0_0"
+    scheduler: "random"
+    map_seed: 29
+    traffic_seed: 101
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "checkpoint-level learned state"
+  - cell_id: "REV-02.Gfixed_0_0.m43.t101"
+    review_action: "REV-02"
+    subgroup: "component_ablation"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "minilm_mpnet"
+    method: "residual_mlp"
+    direction: "old_to_new"
+    variant: "Gfixed_0_0"
+    scheduler: "random"
+    map_seed: 43
+    traffic_seed: 101
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "checkpoint-level learned state"
+  - cell_id: "REV-03.rho05_safe.m17.t101"
+    review_action: "REV-03"
+    subgroup: "rho_safety"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "minilm_mpnet"
+    method: "residual_mlp"
+    direction: "old_to_new"
+    variant: "rho05_safe"
+    scheduler: "greedy"
+    map_seed: 17
+    traffic_seed: 101
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "policy activity counts"
+  - cell_id: "REV-03.rho05_safe.m29.t101"
+    review_action: "REV-03"
+    subgroup: "rho_safety"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "minilm_mpnet"
+    method: "residual_mlp"
+    direction: "old_to_new"
+    variant: "rho05_safe"
+    scheduler: "greedy"
+    map_seed: 29
+    traffic_seed: 101
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "policy activity counts"
+  - cell_id: "REV-03.rho05_safe.m43.t101"
+    review_action: "REV-03"
+    subgroup: "rho_safety"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "minilm_mpnet"
+    method: "residual_mlp"
+    direction: "old_to_new"
+    variant: "rho05_safe"
+    scheduler: "greedy"
+    map_seed: 43
+    traffic_seed: 101
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "policy activity counts"
+  - cell_id: "REV-03.rho05_unsafe.m17.t101"
+    review_action: "REV-03"
+    subgroup: "rho_safety"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "minilm_mpnet"
+    method: "residual_mlp"
+    direction: "old_to_new"
+    variant: "rho05_unsafe"
+    scheduler: "greedy"
+    map_seed: 17
+    traffic_seed: 101
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "policy activity counts"
+  - cell_id: "REV-03.rho05_unsafe.m29.t101"
+    review_action: "REV-03"
+    subgroup: "rho_safety"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "minilm_mpnet"
+    method: "residual_mlp"
+    direction: "old_to_new"
+    variant: "rho05_unsafe"
+    scheduler: "greedy"
+    map_seed: 29
+    traffic_seed: 101
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "policy activity counts"
+  - cell_id: "REV-03.rho05_unsafe.m43.t101"
+    review_action: "REV-03"
+    subgroup: "rho_safety"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "minilm_mpnet"
+    method: "residual_mlp"
+    direction: "old_to_new"
+    variant: "rho05_unsafe"
+    scheduler: "greedy"
+    map_seed: 43
+    traffic_seed: 101
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "policy activity counts"
+  - cell_id: "REV-03.rho1_safe.m17.t101"
+    review_action: "REV-03"
+    subgroup: "rho_safety"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "minilm_mpnet"
+    method: "residual_mlp"
+    direction: "old_to_new"
+    variant: "rho1_safe"
+    scheduler: "greedy"
+    map_seed: 17
+    traffic_seed: 101
+    parent_run_id: "REV-02-fiqa-g_r_c-m17-t101"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "policy activity counts"
+  - cell_id: "REV-03.rho1_safe.m29.t101"
+    review_action: "REV-03"
+    subgroup: "rho_safety"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "minilm_mpnet"
+    method: "residual_mlp"
+    direction: "old_to_new"
+    variant: "rho1_safe"
+    scheduler: "greedy"
+    map_seed: 29
+    traffic_seed: 101
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "policy activity counts"
+  - cell_id: "REV-03.rho1_safe.m43.t101"
+    review_action: "REV-03"
+    subgroup: "rho_safety"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "minilm_mpnet"
+    method: "residual_mlp"
+    direction: "old_to_new"
+    variant: "rho1_safe"
+    scheduler: "greedy"
+    map_seed: 43
+    traffic_seed: 101
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "policy activity counts"
+  - cell_id: "REV-03.rho1_unsafe.m17.t101"
+    review_action: "REV-03"
+    subgroup: "rho_safety"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "minilm_mpnet"
+    method: "residual_mlp"
+    direction: "old_to_new"
+    variant: "rho1_unsafe"
+    scheduler: "greedy"
+    map_seed: 17
+    traffic_seed: 101
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "policy activity counts"
+  - cell_id: "REV-03.rho1_unsafe.m29.t101"
+    review_action: "REV-03"
+    subgroup: "rho_safety"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "minilm_mpnet"
+    method: "residual_mlp"
+    direction: "old_to_new"
+    variant: "rho1_unsafe"
+    scheduler: "greedy"
+    map_seed: 29
+    traffic_seed: 101
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "policy activity counts"
+  - cell_id: "REV-03.rho1_unsafe.m43.t101"
+    review_action: "REV-03"
+    subgroup: "rho_safety"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "minilm_mpnet"
+    method: "residual_mlp"
+    direction: "old_to_new"
+    variant: "rho1_unsafe"
+    scheduler: "greedy"
+    map_seed: 43
+    traffic_seed: 101
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "policy activity counts"
+  - cell_id: "REV-03.rho2_safe.m17.t101"
+    review_action: "REV-03"
+    subgroup: "rho_safety"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "minilm_mpnet"
+    method: "residual_mlp"
+    direction: "old_to_new"
+    variant: "rho2_safe"
+    scheduler: "greedy"
+    map_seed: 17
+    traffic_seed: 101
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "policy activity counts"
+  - cell_id: "REV-03.rho2_safe.m29.t101"
+    review_action: "REV-03"
+    subgroup: "rho_safety"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "minilm_mpnet"
+    method: "residual_mlp"
+    direction: "old_to_new"
+    variant: "rho2_safe"
+    scheduler: "greedy"
+    map_seed: 29
+    traffic_seed: 101
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "policy activity counts"
+  - cell_id: "REV-03.rho2_safe.m43.t101"
+    review_action: "REV-03"
+    subgroup: "rho_safety"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "minilm_mpnet"
+    method: "residual_mlp"
+    direction: "old_to_new"
+    variant: "rho2_safe"
+    scheduler: "greedy"
+    map_seed: 43
+    traffic_seed: 101
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "policy activity counts"
+  - cell_id: "REV-03.rho2_unsafe.m17.t101"
+    review_action: "REV-03"
+    subgroup: "rho_safety"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "minilm_mpnet"
+    method: "residual_mlp"
+    direction: "old_to_new"
+    variant: "rho2_unsafe"
+    scheduler: "greedy"
+    map_seed: 17
+    traffic_seed: 101
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "policy activity counts"
+  - cell_id: "REV-03.rho2_unsafe.m29.t101"
+    review_action: "REV-03"
+    subgroup: "rho_safety"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "minilm_mpnet"
+    method: "residual_mlp"
+    direction: "old_to_new"
+    variant: "rho2_unsafe"
+    scheduler: "greedy"
+    map_seed: 29
+    traffic_seed: 101
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "policy activity counts"
+  - cell_id: "REV-03.rho2_unsafe.m43.t101"
+    review_action: "REV-03"
+    subgroup: "rho_safety"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "minilm_mpnet"
+    method: "residual_mlp"
+    direction: "old_to_new"
+    variant: "rho2_unsafe"
+    scheduler: "greedy"
+    map_seed: 43
+    traffic_seed: 101
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "policy activity counts"
+  - cell_id: "REV-03.uncertainty_proxy.m17.t101"
+    review_action: "REV-03"
+    subgroup: "uncertainty_proxy"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "minilm_mpnet"
+    method: "residual_mlp"
+    direction: "old_to_new"
+    variant: "cal_fit_score_residual_std_min20"
+    scheduler: "greedy"
+    map_seed: 17
+    traffic_seed: 101
+    parent_run_id: null
+    reuse: false
+    gate: "SIGNAL_OK + COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "proxy.json"
+      - "metrics.parquet"
+      - "policy metadata"
+  - cell_id: "REV-03.uncertainty_proxy.m29.t101"
+    review_action: "REV-03"
+    subgroup: "uncertainty_proxy"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "minilm_mpnet"
+    method: "residual_mlp"
+    direction: "old_to_new"
+    variant: "cal_fit_score_residual_std_min20"
+    scheduler: "greedy"
+    map_seed: 29
+    traffic_seed: 101
+    parent_run_id: null
+    reuse: false
+    gate: "SIGNAL_OK + COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "proxy.json"
+      - "metrics.parquet"
+      - "policy metadata"
+  - cell_id: "REV-03.uncertainty_proxy.m43.t101"
+    review_action: "REV-03"
+    subgroup: "uncertainty_proxy"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "minilm_mpnet"
+    method: "residual_mlp"
+    direction: "old_to_new"
+    variant: "cal_fit_score_residual_std_min20"
+    scheduler: "greedy"
+    map_seed: 43
+    traffic_seed: 101
+    parent_run_id: null
+    reuse: false
+    gate: "SIGNAL_OK + COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "proxy.json"
+      - "metrics.parquet"
+      - "policy metadata"
+  - cell_id: "REV-04.depth10.e2-op"
+    review_action: "REV-04"
+    subgroup: "depth10"
+    mode: "analysis"
+    dataset: "fiqa"
+    pair: "minilm_mpnet"
+    method: "OP"
+    direction: "posthoc"
+    variant: "E2 FiQA OP random m17/t101"
+    scheduler: "random"
+    map_seed: 17
+    traffic_seed: 101
+    parent_run_id: "E2 FiQA OP random m17/t101"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["top10"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "reviewer_manifest.json"
+      - "parent reference"
+  - cell_id: "REV-04.depth10.e2-mlp-greedy"
+    review_action: "REV-04"
+    subgroup: "depth10"
+    mode: "analysis"
+    dataset: "fiqa"
+    pair: "minilm_mpnet"
+    method: "residual_mlp"
+    direction: "posthoc"
+    variant: "E2 FiQA residual-MLP greedy m17/t101"
+    scheduler: "greedy"
+    map_seed: 17
+    traffic_seed: 101
+    parent_run_id: "E2 FiQA residual-MLP greedy m17/t101"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["top10"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "reviewer_manifest.json"
+      - "parent reference"
+  - cell_id: "REV-04.depth10.e7-op-greedy"
+    review_action: "REV-04"
+    subgroup: "depth10"
+    mode: "analysis"
+    dataset: "fiqa"
+    pair: "minilm_mpnet"
+    method: "OP"
+    direction: "posthoc"
+    variant: "E7 FiQA OP greedy m17/t101"
+    scheduler: "greedy"
+    map_seed: 17
+    traffic_seed: 101
+    parent_run_id: "E7 FiQA OP greedy m17/t101"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["top10"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "reviewer_manifest.json"
+      - "parent reference"
+  - cell_id: "REV-04.depth10.e6-weekly"
+    review_action: "REV-04"
+    subgroup: "depth10"
+    mode: "analysis"
+    dataset: "aol-ia"
+    pair: "minilm_mpnet"
+    method: "mixed"
+    direction: "posthoc"
+    variant: "E6 AOL weekly"
+    scheduler: "random"
+    map_seed: 17
+    traffic_seed: 101
+    parent_run_id: "E6 AOL accepted rankings"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["top10"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "reviewer_manifest.json"
+      - "parent reference"
+  - cell_id: "REV-04.depth20.e2-op"
+    review_action: "REV-04"
+    subgroup: "depth20"
+    mode: "analysis"
+    dataset: "fiqa"
+    pair: "minilm_mpnet"
+    method: "OP"
+    direction: "posthoc"
+    variant: "E2 FiQA OP random m17/t101"
+    scheduler: "random"
+    map_seed: 17
+    traffic_seed: 101
+    parent_run_id: "E2 FiQA OP random m17/t101"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["top20"]
+    expected_outputs:
+      - "retrieval.trec.gz"
+      - "metrics.parquet"
+      - "top10_prefix_check"
+  - cell_id: "REV-04.depth20.e2-mlp-greedy"
+    review_action: "REV-04"
+    subgroup: "depth20"
+    mode: "analysis"
+    dataset: "fiqa"
+    pair: "minilm_mpnet"
+    method: "residual_mlp"
+    direction: "posthoc"
+    variant: "E2 FiQA residual-MLP greedy m17/t101"
+    scheduler: "greedy"
+    map_seed: 17
+    traffic_seed: 101
+    parent_run_id: "E2 FiQA residual-MLP greedy m17/t101"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["top20"]
+    expected_outputs:
+      - "retrieval.trec.gz"
+      - "metrics.parquet"
+      - "top10_prefix_check"
+  - cell_id: "REV-04.depth20.e7-op-greedy"
+    review_action: "REV-04"
+    subgroup: "depth20"
+    mode: "analysis"
+    dataset: "fiqa"
+    pair: "minilm_mpnet"
+    method: "OP"
+    direction: "posthoc"
+    variant: "E7 FiQA OP greedy m17/t101"
+    scheduler: "greedy"
+    map_seed: 17
+    traffic_seed: 101
+    parent_run_id: "E7 FiQA OP greedy m17/t101"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["top20"]
+    expected_outputs:
+      - "retrieval.trec.gz"
+      - "metrics.parquet"
+      - "top10_prefix_check"
+  - cell_id: "REV-04.E5.random.m17"
+    review_action: "REV-04"
+    subgroup: "E5_posthoc"
+    mode: "analysis"
+    dataset: "msmarco-docs-v1"
+    pair: "arctic_v2"
+    method: "E5"
+    direction: "seen+heldout"
+    variant: "random_m17"
+    scheduler: "random"
+    map_seed: 17
+    traffic_seed: 101
+    parent_run_id: "E5-scale-random-m17-t101-59baabdbf9f2"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25", "0.50", "1.00"]
+    expected_outputs:
+      - "selection.parquet"
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+  - cell_id: "REV-04.E5.random.m29"
+    review_action: "REV-04"
+    subgroup: "E5_posthoc"
+    mode: "analysis"
+    dataset: "msmarco-docs-v1"
+    pair: "arctic_v2"
+    method: "E5"
+    direction: "seen+heldout"
+    variant: "random_m29"
+    scheduler: "random"
+    map_seed: 29
+    traffic_seed: 101
+    parent_run_id: "E5-scale-random-m29-t101-ca30a574a09c"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25", "0.50", "1.00"]
+    expected_outputs:
+      - "selection.parquet"
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+  - cell_id: "REV-04.E5.random.m43"
+    review_action: "REV-04"
+    subgroup: "E5_posthoc"
+    mode: "analysis"
+    dataset: "msmarco-docs-v1"
+    pair: "arctic_v2"
+    method: "E5"
+    direction: "seen+heldout"
+    variant: "random_m43"
+    scheduler: "random"
+    map_seed: 43
+    traffic_seed: 101
+    parent_run_id: "E5-scale-random-m43-t101-2cc4feda61a0"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25", "0.50", "1.00"]
+    expected_outputs:
+      - "selection.parquet"
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+  - cell_id: "REV-04.E5.degree.m17"
+    review_action: "REV-04"
+    subgroup: "E5_posthoc"
+    mode: "analysis"
+    dataset: "msmarco-docs-v1"
+    pair: "arctic_v2"
+    method: "E5"
+    direction: "seen+heldout"
+    variant: "degree_m17"
+    scheduler: "degree"
+    map_seed: 17
+    traffic_seed: 101
+    parent_run_id: "E5-scale-degree-m17-t101-310142bb1ee2"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25", "0.50", "1.00"]
+    expected_outputs:
+      - "selection.parquet"
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+  - cell_id: "REV-04.E5.degree.m29"
+    review_action: "REV-04"
+    subgroup: "E5_posthoc"
+    mode: "analysis"
+    dataset: "msmarco-docs-v1"
+    pair: "arctic_v2"
+    method: "E5"
+    direction: "seen+heldout"
+    variant: "degree_m29"
+    scheduler: "degree"
+    map_seed: 29
+    traffic_seed: 101
+    parent_run_id: "E5-scale-degree-m29-t101-ca194e98f844"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25", "0.50", "1.00"]
+    expected_outputs:
+      - "selection.parquet"
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+  - cell_id: "REV-04.E5.degree.m43"
+    review_action: "REV-04"
+    subgroup: "E5_posthoc"
+    mode: "analysis"
+    dataset: "msmarco-docs-v1"
+    pair: "arctic_v2"
+    method: "E5"
+    direction: "seen+heldout"
+    variant: "degree_m43"
+    scheduler: "degree"
+    map_seed: 43
+    traffic_seed: 101
+    parent_run_id: "E5-scale-degree-m43-t101-49ef754eb2c6"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25", "0.50", "1.00"]
+    expected_outputs:
+      - "selection.parquet"
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+  - cell_id: "REV-04.E5.read.m17"
+    review_action: "REV-04"
+    subgroup: "E5_posthoc"
+    mode: "analysis"
+    dataset: "msmarco-docs-v1"
+    pair: "arctic_v2"
+    method: "E5"
+    direction: "seen+heldout"
+    variant: "read_m17"
+    scheduler: "read"
+    map_seed: 17
+    traffic_seed: 101
+    parent_run_id: "E5-scale-read-m17-t101-2f342e8fe56d"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25", "0.50", "1.00"]
+    expected_outputs:
+      - "selection.parquet"
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+  - cell_id: "REV-04.E5.read.m29"
+    review_action: "REV-04"
+    subgroup: "E5_posthoc"
+    mode: "analysis"
+    dataset: "msmarco-docs-v1"
+    pair: "arctic_v2"
+    method: "E5"
+    direction: "seen+heldout"
+    variant: "read_m29"
+    scheduler: "read"
+    map_seed: 29
+    traffic_seed: 101
+    parent_run_id: "E5-scale-read-m29-t101-019dd03645c4"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25", "0.50", "1.00"]
+    expected_outputs:
+      - "selection.parquet"
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+  - cell_id: "REV-04.E5.read.m43"
+    review_action: "REV-04"
+    subgroup: "E5_posthoc"
+    mode: "analysis"
+    dataset: "msmarco-docs-v1"
+    pair: "arctic_v2"
+    method: "E5"
+    direction: "seen+heldout"
+    variant: "read_m43"
+    scheduler: "read"
+    map_seed: 43
+    traffic_seed: 101
+    parent_run_id: "E5-scale-read-m43-t101-98c382eb2ba7"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25", "0.50", "1.00"]
+    expected_outputs:
+      - "selection.parquet"
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+  - cell_id: "REV-04.E5.greedy.m17"
+    review_action: "REV-04"
+    subgroup: "E5_posthoc"
+    mode: "analysis"
+    dataset: "msmarco-docs-v1"
+    pair: "arctic_v2"
+    method: "E5"
+    direction: "seen+heldout"
+    variant: "greedy_m17"
+    scheduler: "greedy"
+    map_seed: 17
+    traffic_seed: 101
+    parent_run_id: "E5-scale-greedy-m17-t101-29c55cf5dc0c"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25", "0.50", "1.00"]
+    expected_outputs:
+      - "selection.parquet"
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+  - cell_id: "REV-04.E5.greedy.m29"
+    review_action: "REV-04"
+    subgroup: "E5_posthoc"
+    mode: "analysis"
+    dataset: "msmarco-docs-v1"
+    pair: "arctic_v2"
+    method: "E5"
+    direction: "seen+heldout"
+    variant: "greedy_m29"
+    scheduler: "greedy"
+    map_seed: 29
+    traffic_seed: 101
+    parent_run_id: "E5-scale-greedy-m29-t101-87682640c62c"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25", "0.50", "1.00"]
+    expected_outputs:
+      - "selection.parquet"
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+  - cell_id: "REV-04.E5.greedy.m43"
+    review_action: "REV-04"
+    subgroup: "E5_posthoc"
+    mode: "analysis"
+    dataset: "msmarco-docs-v1"
+    pair: "arctic_v2"
+    method: "E5"
+    direction: "seen+heldout"
+    variant: "greedy_m43"
+    scheduler: "greedy"
+    map_seed: 43
+    traffic_seed: 101
+    parent_run_id: "E5-scale-greedy-m43-t101-b57b9d5f86c1"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25", "0.50", "1.00"]
+    expected_outputs:
+      - "selection.parquet"
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+  - cell_id: "REV-05.op.m17.t101"
+    review_action: "REV-05"
+    subgroup: "trec_multiseed"
+    mode: "run"
+    dataset: "trec-covid"
+    pair: "minilm_mpnet"
+    method: "op"
+    direction: "old_to_new"
+    variant: "primary"
+    scheduler: "random"
+    map_seed: 17
+    traffic_seed: 101
+    parent_run_id: "E2-tuple-17-101"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25", "0.50", "1.00"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "paid-order/resume hashes"
+  - cell_id: "REV-05.op.m29.t103"
+    review_action: "REV-05"
+    subgroup: "trec_multiseed"
+    mode: "run"
+    dataset: "trec-covid"
+    pair: "minilm_mpnet"
+    method: "op"
+    direction: "old_to_new"
+    variant: "primary"
+    scheduler: "random"
+    map_seed: 29
+    traffic_seed: 103
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25", "0.50", "1.00"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "paid-order/resume hashes"
+  - cell_id: "REV-05.op.m43.t109"
+    review_action: "REV-05"
+    subgroup: "trec_multiseed"
+    mode: "run"
+    dataset: "trec-covid"
+    pair: "minilm_mpnet"
+    method: "op"
+    direction: "old_to_new"
+    variant: "primary"
+    scheduler: "random"
+    map_seed: 43
+    traffic_seed: 109
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25", "0.50", "1.00"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "paid-order/resume hashes"
+  - cell_id: "REV-05.la.m17.t101"
+    review_action: "REV-05"
+    subgroup: "trec_multiseed"
+    mode: "run"
+    dataset: "trec-covid"
+    pair: "minilm_mpnet"
+    method: "la"
+    direction: "old_to_new"
+    variant: "primary"
+    scheduler: "random"
+    map_seed: 17
+    traffic_seed: 101
+    parent_run_id: "E2-tuple-17-101"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25", "0.50", "1.00"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "paid-order/resume hashes"
+  - cell_id: "REV-05.la.m29.t103"
+    review_action: "REV-05"
+    subgroup: "trec_multiseed"
+    mode: "run"
+    dataset: "trec-covid"
+    pair: "minilm_mpnet"
+    method: "la"
+    direction: "old_to_new"
+    variant: "primary"
+    scheduler: "random"
+    map_seed: 29
+    traffic_seed: 103
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25", "0.50", "1.00"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "paid-order/resume hashes"
+  - cell_id: "REV-05.la.m43.t109"
+    review_action: "REV-05"
+    subgroup: "trec_multiseed"
+    mode: "run"
+    dataset: "trec-covid"
+    pair: "minilm_mpnet"
+    method: "la"
+    direction: "old_to_new"
+    variant: "primary"
+    scheduler: "random"
+    map_seed: 43
+    traffic_seed: 109
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25", "0.50", "1.00"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "paid-order/resume hashes"
+  - cell_id: "REV-05.residual_mlp.m17.t101"
+    review_action: "REV-05"
+    subgroup: "trec_multiseed"
+    mode: "run"
+    dataset: "trec-covid"
+    pair: "minilm_mpnet"
+    method: "residual_mlp"
+    direction: "old_to_new"
+    variant: "primary"
+    scheduler: "random"
+    map_seed: 17
+    traffic_seed: 101
+    parent_run_id: "E2-tuple-17-101"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25", "0.50", "1.00"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "paid-order/resume hashes"
+  - cell_id: "REV-05.residual_mlp.m29.t103"
+    review_action: "REV-05"
+    subgroup: "trec_multiseed"
+    mode: "run"
+    dataset: "trec-covid"
+    pair: "minilm_mpnet"
+    method: "residual_mlp"
+    direction: "old_to_new"
+    variant: "primary"
+    scheduler: "random"
+    map_seed: 29
+    traffic_seed: 103
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25", "0.50", "1.00"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "paid-order/resume hashes"
+  - cell_id: "REV-05.residual_mlp.m43.t109"
+    review_action: "REV-05"
+    subgroup: "trec_multiseed"
+    mode: "run"
+    dataset: "trec-covid"
+    pair: "minilm_mpnet"
+    method: "residual_mlp"
+    direction: "old_to_new"
+    variant: "primary"
+    scheduler: "random"
+    map_seed: 43
+    traffic_seed: 109
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25", "0.50", "1.00"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "paid-order/resume hashes"
+  - cell_id: "REV-06.fiqa-cost-m17"
+    review_action: "REV-06"
+    subgroup: "exclusive_cost"
+    mode: "benchmark"
+    dataset: "fiqa"
+    pair: "minilm_mpnet"
+    method: "cost"
+    direction: "measurement"
+    variant: "warmup+3-repeats"
+    scheduler: "exclusive"
+    map_seed: 17
+    traffic_seed: 101
+    parent_run_id: "REV-02-fiqa-g_r_c-m17-t101"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "timing tables"
+      - "storage inventory"
+      - "live encode sample"
+  - cell_id: "REV-07.bge_fiqa.OP.random.m17.t101"
+    review_action: "REV-07"
+    subgroup: "transition"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "bge_fiqa"
+    method: "OP"
+    direction: "old_to_new"
+    variant: "bge_fiqa"
+    scheduler: "random"
+    map_seed: 17
+    traffic_seed: 101
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "transition checkpoint state"
+  - cell_id: "REV-07.bge_fiqa.OP.random.m29.t103"
+    review_action: "REV-07"
+    subgroup: "transition"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "bge_fiqa"
+    method: "OP"
+    direction: "old_to_new"
+    variant: "bge_fiqa"
+    scheduler: "random"
+    map_seed: 29
+    traffic_seed: 103
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "transition checkpoint state"
+  - cell_id: "REV-07.bge_fiqa.OP.random.m43.t109"
+    review_action: "REV-07"
+    subgroup: "transition"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "bge_fiqa"
+    method: "OP"
+    direction: "old_to_new"
+    variant: "bge_fiqa"
+    scheduler: "random"
+    map_seed: 43
+    traffic_seed: 109
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "transition checkpoint state"
+  - cell_id: "REV-07.bge_fiqa.OP.read.m17.t101"
+    review_action: "REV-07"
+    subgroup: "transition"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "bge_fiqa"
+    method: "OP"
+    direction: "old_to_new"
+    variant: "bge_fiqa"
+    scheduler: "read"
+    map_seed: 17
+    traffic_seed: 101
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "transition checkpoint state"
+  - cell_id: "REV-07.bge_fiqa.OP.read.m29.t103"
+    review_action: "REV-07"
+    subgroup: "transition"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "bge_fiqa"
+    method: "OP"
+    direction: "old_to_new"
+    variant: "bge_fiqa"
+    scheduler: "read"
+    map_seed: 29
+    traffic_seed: 103
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "transition checkpoint state"
+  - cell_id: "REV-07.bge_fiqa.OP.read.m43.t109"
+    review_action: "REV-07"
+    subgroup: "transition"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "bge_fiqa"
+    method: "OP"
+    direction: "old_to_new"
+    variant: "bge_fiqa"
+    scheduler: "read"
+    map_seed: 43
+    traffic_seed: 109
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "transition checkpoint state"
+  - cell_id: "REV-07.bge_fiqa.MLP.random.m17.t101"
+    review_action: "REV-07"
+    subgroup: "transition"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "bge_fiqa"
+    method: "MLP"
+    direction: "old_to_new"
+    variant: "bge_fiqa"
+    scheduler: "random"
+    map_seed: 17
+    traffic_seed: 101
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "transition checkpoint state"
+  - cell_id: "REV-07.bge_fiqa.MLP.random.m29.t103"
+    review_action: "REV-07"
+    subgroup: "transition"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "bge_fiqa"
+    method: "MLP"
+    direction: "old_to_new"
+    variant: "bge_fiqa"
+    scheduler: "random"
+    map_seed: 29
+    traffic_seed: 103
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "transition checkpoint state"
+  - cell_id: "REV-07.bge_fiqa.MLP.random.m43.t109"
+    review_action: "REV-07"
+    subgroup: "transition"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "bge_fiqa"
+    method: "MLP"
+    direction: "old_to_new"
+    variant: "bge_fiqa"
+    scheduler: "random"
+    map_seed: 43
+    traffic_seed: 109
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "transition checkpoint state"
+  - cell_id: "REV-07.bge_fiqa.MLP.read.m17.t101"
+    review_action: "REV-07"
+    subgroup: "transition"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "bge_fiqa"
+    method: "MLP"
+    direction: "old_to_new"
+    variant: "bge_fiqa"
+    scheduler: "read"
+    map_seed: 17
+    traffic_seed: 101
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "transition checkpoint state"
+  - cell_id: "REV-07.bge_fiqa.MLP.read.m29.t103"
+    review_action: "REV-07"
+    subgroup: "transition"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "bge_fiqa"
+    method: "MLP"
+    direction: "old_to_new"
+    variant: "bge_fiqa"
+    scheduler: "read"
+    map_seed: 29
+    traffic_seed: 103
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "transition checkpoint state"
+  - cell_id: "REV-07.bge_fiqa.MLP.read.m43.t109"
+    review_action: "REV-07"
+    subgroup: "transition"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "bge_fiqa"
+    method: "MLP"
+    direction: "old_to_new"
+    variant: "bge_fiqa"
+    scheduler: "read"
+    map_seed: 43
+    traffic_seed: 109
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "transition checkpoint state"
+  - cell_id: "REV-07.nomic_fiqa.OP.random.m17.t101"
+    review_action: "REV-07"
+    subgroup: "transition"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "nomic_fiqa"
+    method: "OP"
+    direction: "old_to_new"
+    variant: "nomic_fiqa"
+    scheduler: "random"
+    map_seed: 17
+    traffic_seed: 101
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "transition checkpoint state"
+  - cell_id: "REV-07.nomic_fiqa.OP.random.m29.t103"
+    review_action: "REV-07"
+    subgroup: "transition"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "nomic_fiqa"
+    method: "OP"
+    direction: "old_to_new"
+    variant: "nomic_fiqa"
+    scheduler: "random"
+    map_seed: 29
+    traffic_seed: 103
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "transition checkpoint state"
+  - cell_id: "REV-07.nomic_fiqa.OP.random.m43.t109"
+    review_action: "REV-07"
+    subgroup: "transition"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "nomic_fiqa"
+    method: "OP"
+    direction: "old_to_new"
+    variant: "nomic_fiqa"
+    scheduler: "random"
+    map_seed: 43
+    traffic_seed: 109
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "transition checkpoint state"
+  - cell_id: "REV-07.nomic_fiqa.OP.read.m17.t101"
+    review_action: "REV-07"
+    subgroup: "transition"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "nomic_fiqa"
+    method: "OP"
+    direction: "old_to_new"
+    variant: "nomic_fiqa"
+    scheduler: "read"
+    map_seed: 17
+    traffic_seed: 101
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "transition checkpoint state"
+  - cell_id: "REV-07.nomic_fiqa.OP.read.m29.t103"
+    review_action: "REV-07"
+    subgroup: "transition"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "nomic_fiqa"
+    method: "OP"
+    direction: "old_to_new"
+    variant: "nomic_fiqa"
+    scheduler: "read"
+    map_seed: 29
+    traffic_seed: 103
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "transition checkpoint state"
+  - cell_id: "REV-07.nomic_fiqa.OP.read.m43.t109"
+    review_action: "REV-07"
+    subgroup: "transition"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "nomic_fiqa"
+    method: "OP"
+    direction: "old_to_new"
+    variant: "nomic_fiqa"
+    scheduler: "read"
+    map_seed: 43
+    traffic_seed: 109
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "transition checkpoint state"
+  - cell_id: "REV-07.nomic_fiqa.MLP.random.m17.t101"
+    review_action: "REV-07"
+    subgroup: "transition"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "nomic_fiqa"
+    method: "MLP"
+    direction: "old_to_new"
+    variant: "nomic_fiqa"
+    scheduler: "random"
+    map_seed: 17
+    traffic_seed: 101
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "transition checkpoint state"
+  - cell_id: "REV-07.nomic_fiqa.MLP.random.m29.t103"
+    review_action: "REV-07"
+    subgroup: "transition"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "nomic_fiqa"
+    method: "MLP"
+    direction: "old_to_new"
+    variant: "nomic_fiqa"
+    scheduler: "random"
+    map_seed: 29
+    traffic_seed: 103
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "transition checkpoint state"
+  - cell_id: "REV-07.nomic_fiqa.MLP.random.m43.t109"
+    review_action: "REV-07"
+    subgroup: "transition"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "nomic_fiqa"
+    method: "MLP"
+    direction: "old_to_new"
+    variant: "nomic_fiqa"
+    scheduler: "random"
+    map_seed: 43
+    traffic_seed: 109
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "transition checkpoint state"
+  - cell_id: "REV-07.nomic_fiqa.MLP.read.m17.t101"
+    review_action: "REV-07"
+    subgroup: "transition"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "nomic_fiqa"
+    method: "MLP"
+    direction: "old_to_new"
+    variant: "nomic_fiqa"
+    scheduler: "read"
+    map_seed: 17
+    traffic_seed: 101
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "transition checkpoint state"
+  - cell_id: "REV-07.nomic_fiqa.MLP.read.m29.t103"
+    review_action: "REV-07"
+    subgroup: "transition"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "nomic_fiqa"
+    method: "MLP"
+    direction: "old_to_new"
+    variant: "nomic_fiqa"
+    scheduler: "read"
+    map_seed: 29
+    traffic_seed: 103
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "transition checkpoint state"
+  - cell_id: "REV-07.nomic_fiqa.MLP.read.m43.t109"
+    review_action: "REV-07"
+    subgroup: "transition"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "nomic_fiqa"
+    method: "MLP"
+    direction: "old_to_new"
+    variant: "nomic_fiqa"
+    scheduler: "read"
+    map_seed: 43
+    traffic_seed: 109
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "retrieval.trec.gz"
+      - "transition checkpoint state"
+  - cell_id: "REV-07.nomic_identity.random.m17.t101"
+    review_action: "REV-07"
+    subgroup: "identity_control"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "nomic_fiqa"
+    method: "identity"
+    direction: "same_space"
+    variant: "nomic_identity"
+    scheduler: "random"
+    map_seed: 17
+    traffic_seed: 101
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "identity control metadata"
+  - cell_id: "REV-07.nomic_identity.random.m29.t103"
+    review_action: "REV-07"
+    subgroup: "identity_control"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "nomic_fiqa"
+    method: "identity"
+    direction: "same_space"
+    variant: "nomic_identity"
+    scheduler: "random"
+    map_seed: 29
+    traffic_seed: 103
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "identity control metadata"
+  - cell_id: "REV-07.nomic_identity.random.m43.t109"
+    review_action: "REV-07"
+    subgroup: "identity_control"
+    mode: "run"
+    dataset: "fiqa"
+    pair: "nomic_fiqa"
+    method: "identity"
+    direction: "same_space"
+    variant: "nomic_identity"
+    scheduler: "random"
+    map_seed: 43
+    traffic_seed: 109
+    parent_run_id: null
+    reuse: false
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap", "0.05", "0.10", "0.25"]
+    expected_outputs:
+      - "metrics.parquet"
+      - "identity control metadata"
+  - cell_id: "REV-08.orcas-split"
+    review_action: "REV-08"
+    subgroup: "heldout_split"
+    mode: "analysis"
+    dataset: "msmarco-docs-v1"
+    pair: "arctic_v2"
+    method: "ORCAS"
+    direction: "normalized_text_disjoint"
+    variant: "seen+heldout"
+    scheduler: "none"
+    map_seed: 17
+    traffic_seed: 101
+    parent_run_id: "REV-04.E5.*"
+    reuse: true
+    gate: "SPLIT_FROZEN + VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["n/a"]
+    expected_outputs:
+      - "selection.parquet"
+      - "split hash"
+      - "coverage denominator"
+  - cell_id: "REV-08.random.m17.bootstrap"
+    review_action: "REV-08"
+    subgroup: "snapshot_eval"
+    mode: "analysis"
+    dataset: "msmarco-docs-v1"
+    pair: "arctic_v2"
+    method: "E5"
+    direction: "seen+heldout"
+    variant: "bootstrap"
+    scheduler: "random"
+    map_seed: 17
+    traffic_seed: 101
+    parent_run_id: "E5-scale-random-m17-t101-59baabdbf9f2"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap"]
+    expected_outputs:
+      - "per-query metrics"
+      - "ranking output"
+      - "coverage counts"
+  - cell_id: "REV-08.random.m17.f_0.05"
+    review_action: "REV-08"
+    subgroup: "snapshot_eval"
+    mode: "analysis"
+    dataset: "msmarco-docs-v1"
+    pair: "arctic_v2"
+    method: "E5"
+    direction: "seen+heldout"
+    variant: "f_0.05"
+    scheduler: "random"
+    map_seed: 17
+    traffic_seed: 101
+    parent_run_id: "E5-scale-random-m17-t101-59baabdbf9f2"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["f_0.05"]
+    expected_outputs:
+      - "per-query metrics"
+      - "ranking output"
+      - "coverage counts"
+  - cell_id: "REV-08.random.m17.f_0.10"
+    review_action: "REV-08"
+    subgroup: "snapshot_eval"
+    mode: "analysis"
+    dataset: "msmarco-docs-v1"
+    pair: "arctic_v2"
+    method: "E5"
+    direction: "seen+heldout"
+    variant: "f_0.10"
+    scheduler: "random"
+    map_seed: 17
+    traffic_seed: 101
+    parent_run_id: "E5-scale-random-m17-t101-59baabdbf9f2"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["f_0.10"]
+    expected_outputs:
+      - "per-query metrics"
+      - "ranking output"
+      - "coverage counts"
+  - cell_id: "REV-08.random.m17.f_0.25"
+    review_action: "REV-08"
+    subgroup: "snapshot_eval"
+    mode: "analysis"
+    dataset: "msmarco-docs-v1"
+    pair: "arctic_v2"
+    method: "E5"
+    direction: "seen+heldout"
+    variant: "f_0.25"
+    scheduler: "random"
+    map_seed: 17
+    traffic_seed: 101
+    parent_run_id: "E5-scale-random-m17-t101-59baabdbf9f2"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["f_0.25"]
+    expected_outputs:
+      - "per-query metrics"
+      - "ranking output"
+      - "coverage counts"
+  - cell_id: "REV-08.random.m29.bootstrap"
+    review_action: "REV-08"
+    subgroup: "snapshot_eval"
+    mode: "analysis"
+    dataset: "msmarco-docs-v1"
+    pair: "arctic_v2"
+    method: "E5"
+    direction: "seen+heldout"
+    variant: "bootstrap"
+    scheduler: "random"
+    map_seed: 29
+    traffic_seed: 101
+    parent_run_id: "E5-scale-random-m29-t101-ca30a574a09c"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap"]
+    expected_outputs:
+      - "per-query metrics"
+      - "ranking output"
+      - "coverage counts"
+  - cell_id: "REV-08.random.m29.f_0.05"
+    review_action: "REV-08"
+    subgroup: "snapshot_eval"
+    mode: "analysis"
+    dataset: "msmarco-docs-v1"
+    pair: "arctic_v2"
+    method: "E5"
+    direction: "seen+heldout"
+    variant: "f_0.05"
+    scheduler: "random"
+    map_seed: 29
+    traffic_seed: 101
+    parent_run_id: "E5-scale-random-m29-t101-ca30a574a09c"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["f_0.05"]
+    expected_outputs:
+      - "per-query metrics"
+      - "ranking output"
+      - "coverage counts"
+  - cell_id: "REV-08.random.m29.f_0.10"
+    review_action: "REV-08"
+    subgroup: "snapshot_eval"
+    mode: "analysis"
+    dataset: "msmarco-docs-v1"
+    pair: "arctic_v2"
+    method: "E5"
+    direction: "seen+heldout"
+    variant: "f_0.10"
+    scheduler: "random"
+    map_seed: 29
+    traffic_seed: 101
+    parent_run_id: "E5-scale-random-m29-t101-ca30a574a09c"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["f_0.10"]
+    expected_outputs:
+      - "per-query metrics"
+      - "ranking output"
+      - "coverage counts"
+  - cell_id: "REV-08.random.m29.f_0.25"
+    review_action: "REV-08"
+    subgroup: "snapshot_eval"
+    mode: "analysis"
+    dataset: "msmarco-docs-v1"
+    pair: "arctic_v2"
+    method: "E5"
+    direction: "seen+heldout"
+    variant: "f_0.25"
+    scheduler: "random"
+    map_seed: 29
+    traffic_seed: 101
+    parent_run_id: "E5-scale-random-m29-t101-ca30a574a09c"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["f_0.25"]
+    expected_outputs:
+      - "per-query metrics"
+      - "ranking output"
+      - "coverage counts"
+  - cell_id: "REV-08.random.m43.bootstrap"
+    review_action: "REV-08"
+    subgroup: "snapshot_eval"
+    mode: "analysis"
+    dataset: "msmarco-docs-v1"
+    pair: "arctic_v2"
+    method: "E5"
+    direction: "seen+heldout"
+    variant: "bootstrap"
+    scheduler: "random"
+    map_seed: 43
+    traffic_seed: 101
+    parent_run_id: "E5-scale-random-m43-t101-2cc4feda61a0"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap"]
+    expected_outputs:
+      - "per-query metrics"
+      - "ranking output"
+      - "coverage counts"
+  - cell_id: "REV-08.random.m43.f_0.05"
+    review_action: "REV-08"
+    subgroup: "snapshot_eval"
+    mode: "analysis"
+    dataset: "msmarco-docs-v1"
+    pair: "arctic_v2"
+    method: "E5"
+    direction: "seen+heldout"
+    variant: "f_0.05"
+    scheduler: "random"
+    map_seed: 43
+    traffic_seed: 101
+    parent_run_id: "E5-scale-random-m43-t101-2cc4feda61a0"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["f_0.05"]
+    expected_outputs:
+      - "per-query metrics"
+      - "ranking output"
+      - "coverage counts"
+  - cell_id: "REV-08.random.m43.f_0.10"
+    review_action: "REV-08"
+    subgroup: "snapshot_eval"
+    mode: "analysis"
+    dataset: "msmarco-docs-v1"
+    pair: "arctic_v2"
+    method: "E5"
+    direction: "seen+heldout"
+    variant: "f_0.10"
+    scheduler: "random"
+    map_seed: 43
+    traffic_seed: 101
+    parent_run_id: "E5-scale-random-m43-t101-2cc4feda61a0"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["f_0.10"]
+    expected_outputs:
+      - "per-query metrics"
+      - "ranking output"
+      - "coverage counts"
+  - cell_id: "REV-08.random.m43.f_0.25"
+    review_action: "REV-08"
+    subgroup: "snapshot_eval"
+    mode: "analysis"
+    dataset: "msmarco-docs-v1"
+    pair: "arctic_v2"
+    method: "E5"
+    direction: "seen+heldout"
+    variant: "f_0.25"
+    scheduler: "random"
+    map_seed: 43
+    traffic_seed: 101
+    parent_run_id: "E5-scale-random-m43-t101-2cc4feda61a0"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["f_0.25"]
+    expected_outputs:
+      - "per-query metrics"
+      - "ranking output"
+      - "coverage counts"
+  - cell_id: "REV-08.degree.m17.bootstrap"
+    review_action: "REV-08"
+    subgroup: "snapshot_eval"
+    mode: "analysis"
+    dataset: "msmarco-docs-v1"
+    pair: "arctic_v2"
+    method: "E5"
+    direction: "seen+heldout"
+    variant: "bootstrap"
+    scheduler: "degree"
+    map_seed: 17
+    traffic_seed: 101
+    parent_run_id: "E5-scale-degree-m17-t101-310142bb1ee2"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap"]
+    expected_outputs:
+      - "per-query metrics"
+      - "ranking output"
+      - "coverage counts"
+  - cell_id: "REV-08.degree.m17.f_0.05"
+    review_action: "REV-08"
+    subgroup: "snapshot_eval"
+    mode: "analysis"
+    dataset: "msmarco-docs-v1"
+    pair: "arctic_v2"
+    method: "E5"
+    direction: "seen+heldout"
+    variant: "f_0.05"
+    scheduler: "degree"
+    map_seed: 17
+    traffic_seed: 101
+    parent_run_id: "E5-scale-degree-m17-t101-310142bb1ee2"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["f_0.05"]
+    expected_outputs:
+      - "per-query metrics"
+      - "ranking output"
+      - "coverage counts"
+  - cell_id: "REV-08.degree.m17.f_0.10"
+    review_action: "REV-08"
+    subgroup: "snapshot_eval"
+    mode: "analysis"
+    dataset: "msmarco-docs-v1"
+    pair: "arctic_v2"
+    method: "E5"
+    direction: "seen+heldout"
+    variant: "f_0.10"
+    scheduler: "degree"
+    map_seed: 17
+    traffic_seed: 101
+    parent_run_id: "E5-scale-degree-m17-t101-310142bb1ee2"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["f_0.10"]
+    expected_outputs:
+      - "per-query metrics"
+      - "ranking output"
+      - "coverage counts"
+  - cell_id: "REV-08.degree.m17.f_0.25"
+    review_action: "REV-08"
+    subgroup: "snapshot_eval"
+    mode: "analysis"
+    dataset: "msmarco-docs-v1"
+    pair: "arctic_v2"
+    method: "E5"
+    direction: "seen+heldout"
+    variant: "f_0.25"
+    scheduler: "degree"
+    map_seed: 17
+    traffic_seed: 101
+    parent_run_id: "E5-scale-degree-m17-t101-310142bb1ee2"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["f_0.25"]
+    expected_outputs:
+      - "per-query metrics"
+      - "ranking output"
+      - "coverage counts"
+  - cell_id: "REV-08.degree.m29.bootstrap"
+    review_action: "REV-08"
+    subgroup: "snapshot_eval"
+    mode: "analysis"
+    dataset: "msmarco-docs-v1"
+    pair: "arctic_v2"
+    method: "E5"
+    direction: "seen+heldout"
+    variant: "bootstrap"
+    scheduler: "degree"
+    map_seed: 29
+    traffic_seed: 101
+    parent_run_id: "E5-scale-degree-m29-t101-ca194e98f844"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap"]
+    expected_outputs:
+      - "per-query metrics"
+      - "ranking output"
+      - "coverage counts"
+  - cell_id: "REV-08.degree.m29.f_0.05"
+    review_action: "REV-08"
+    subgroup: "snapshot_eval"
+    mode: "analysis"
+    dataset: "msmarco-docs-v1"
+    pair: "arctic_v2"
+    method: "E5"
+    direction: "seen+heldout"
+    variant: "f_0.05"
+    scheduler: "degree"
+    map_seed: 29
+    traffic_seed: 101
+    parent_run_id: "E5-scale-degree-m29-t101-ca194e98f844"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["f_0.05"]
+    expected_outputs:
+      - "per-query metrics"
+      - "ranking output"
+      - "coverage counts"
+  - cell_id: "REV-08.degree.m29.f_0.10"
+    review_action: "REV-08"
+    subgroup: "snapshot_eval"
+    mode: "analysis"
+    dataset: "msmarco-docs-v1"
+    pair: "arctic_v2"
+    method: "E5"
+    direction: "seen+heldout"
+    variant: "f_0.10"
+    scheduler: "degree"
+    map_seed: 29
+    traffic_seed: 101
+    parent_run_id: "E5-scale-degree-m29-t101-ca194e98f844"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["f_0.10"]
+    expected_outputs:
+      - "per-query metrics"
+      - "ranking output"
+      - "coverage counts"
+  - cell_id: "REV-08.degree.m29.f_0.25"
+    review_action: "REV-08"
+    subgroup: "snapshot_eval"
+    mode: "analysis"
+    dataset: "msmarco-docs-v1"
+    pair: "arctic_v2"
+    method: "E5"
+    direction: "seen+heldout"
+    variant: "f_0.25"
+    scheduler: "degree"
+    map_seed: 29
+    traffic_seed: 101
+    parent_run_id: "E5-scale-degree-m29-t101-ca194e98f844"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["f_0.25"]
+    expected_outputs:
+      - "per-query metrics"
+      - "ranking output"
+      - "coverage counts"
+  - cell_id: "REV-08.degree.m43.bootstrap"
+    review_action: "REV-08"
+    subgroup: "snapshot_eval"
+    mode: "analysis"
+    dataset: "msmarco-docs-v1"
+    pair: "arctic_v2"
+    method: "E5"
+    direction: "seen+heldout"
+    variant: "bootstrap"
+    scheduler: "degree"
+    map_seed: 43
+    traffic_seed: 101
+    parent_run_id: "E5-scale-degree-m43-t101-49ef754eb2c6"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap"]
+    expected_outputs:
+      - "per-query metrics"
+      - "ranking output"
+      - "coverage counts"
+  - cell_id: "REV-08.degree.m43.f_0.05"
+    review_action: "REV-08"
+    subgroup: "snapshot_eval"
+    mode: "analysis"
+    dataset: "msmarco-docs-v1"
+    pair: "arctic_v2"
+    method: "E5"
+    direction: "seen+heldout"
+    variant: "f_0.05"
+    scheduler: "degree"
+    map_seed: 43
+    traffic_seed: 101
+    parent_run_id: "E5-scale-degree-m43-t101-49ef754eb2c6"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["f_0.05"]
+    expected_outputs:
+      - "per-query metrics"
+      - "ranking output"
+      - "coverage counts"
+  - cell_id: "REV-08.degree.m43.f_0.10"
+    review_action: "REV-08"
+    subgroup: "snapshot_eval"
+    mode: "analysis"
+    dataset: "msmarco-docs-v1"
+    pair: "arctic_v2"
+    method: "E5"
+    direction: "seen+heldout"
+    variant: "f_0.10"
+    scheduler: "degree"
+    map_seed: 43
+    traffic_seed: 101
+    parent_run_id: "E5-scale-degree-m43-t101-49ef754eb2c6"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["f_0.10"]
+    expected_outputs:
+      - "per-query metrics"
+      - "ranking output"
+      - "coverage counts"
+  - cell_id: "REV-08.degree.m43.f_0.25"
+    review_action: "REV-08"
+    subgroup: "snapshot_eval"
+    mode: "analysis"
+    dataset: "msmarco-docs-v1"
+    pair: "arctic_v2"
+    method: "E5"
+    direction: "seen+heldout"
+    variant: "f_0.25"
+    scheduler: "degree"
+    map_seed: 43
+    traffic_seed: 101
+    parent_run_id: "E5-scale-degree-m43-t101-49ef754eb2c6"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["f_0.25"]
+    expected_outputs:
+      - "per-query metrics"
+      - "ranking output"
+      - "coverage counts"
+  - cell_id: "REV-08.read.m17.bootstrap"
+    review_action: "REV-08"
+    subgroup: "snapshot_eval"
+    mode: "analysis"
+    dataset: "msmarco-docs-v1"
+    pair: "arctic_v2"
+    method: "E5"
+    direction: "seen+heldout"
+    variant: "bootstrap"
+    scheduler: "read"
+    map_seed: 17
+    traffic_seed: 101
+    parent_run_id: "E5-scale-read-m17-t101-2f342e8fe56d"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap"]
+    expected_outputs:
+      - "per-query metrics"
+      - "ranking output"
+      - "coverage counts"
+  - cell_id: "REV-08.read.m17.f_0.05"
+    review_action: "REV-08"
+    subgroup: "snapshot_eval"
+    mode: "analysis"
+    dataset: "msmarco-docs-v1"
+    pair: "arctic_v2"
+    method: "E5"
+    direction: "seen+heldout"
+    variant: "f_0.05"
+    scheduler: "read"
+    map_seed: 17
+    traffic_seed: 101
+    parent_run_id: "E5-scale-read-m17-t101-2f342e8fe56d"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["f_0.05"]
+    expected_outputs:
+      - "per-query metrics"
+      - "ranking output"
+      - "coverage counts"
+  - cell_id: "REV-08.read.m17.f_0.10"
+    review_action: "REV-08"
+    subgroup: "snapshot_eval"
+    mode: "analysis"
+    dataset: "msmarco-docs-v1"
+    pair: "arctic_v2"
+    method: "E5"
+    direction: "seen+heldout"
+    variant: "f_0.10"
+    scheduler: "read"
+    map_seed: 17
+    traffic_seed: 101
+    parent_run_id: "E5-scale-read-m17-t101-2f342e8fe56d"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["f_0.10"]
+    expected_outputs:
+      - "per-query metrics"
+      - "ranking output"
+      - "coverage counts"
+  - cell_id: "REV-08.read.m17.f_0.25"
+    review_action: "REV-08"
+    subgroup: "snapshot_eval"
+    mode: "analysis"
+    dataset: "msmarco-docs-v1"
+    pair: "arctic_v2"
+    method: "E5"
+    direction: "seen+heldout"
+    variant: "f_0.25"
+    scheduler: "read"
+    map_seed: 17
+    traffic_seed: 101
+    parent_run_id: "E5-scale-read-m17-t101-2f342e8fe56d"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["f_0.25"]
+    expected_outputs:
+      - "per-query metrics"
+      - "ranking output"
+      - "coverage counts"
+  - cell_id: "REV-08.read.m29.bootstrap"
+    review_action: "REV-08"
+    subgroup: "snapshot_eval"
+    mode: "analysis"
+    dataset: "msmarco-docs-v1"
+    pair: "arctic_v2"
+    method: "E5"
+    direction: "seen+heldout"
+    variant: "bootstrap"
+    scheduler: "read"
+    map_seed: 29
+    traffic_seed: 101
+    parent_run_id: "E5-scale-read-m29-t101-019dd03645c4"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap"]
+    expected_outputs:
+      - "per-query metrics"
+      - "ranking output"
+      - "coverage counts"
+  - cell_id: "REV-08.read.m29.f_0.05"
+    review_action: "REV-08"
+    subgroup: "snapshot_eval"
+    mode: "analysis"
+    dataset: "msmarco-docs-v1"
+    pair: "arctic_v2"
+    method: "E5"
+    direction: "seen+heldout"
+    variant: "f_0.05"
+    scheduler: "read"
+    map_seed: 29
+    traffic_seed: 101
+    parent_run_id: "E5-scale-read-m29-t101-019dd03645c4"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["f_0.05"]
+    expected_outputs:
+      - "per-query metrics"
+      - "ranking output"
+      - "coverage counts"
+  - cell_id: "REV-08.read.m29.f_0.10"
+    review_action: "REV-08"
+    subgroup: "snapshot_eval"
+    mode: "analysis"
+    dataset: "msmarco-docs-v1"
+    pair: "arctic_v2"
+    method: "E5"
+    direction: "seen+heldout"
+    variant: "f_0.10"
+    scheduler: "read"
+    map_seed: 29
+    traffic_seed: 101
+    parent_run_id: "E5-scale-read-m29-t101-019dd03645c4"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["f_0.10"]
+    expected_outputs:
+      - "per-query metrics"
+      - "ranking output"
+      - "coverage counts"
+  - cell_id: "REV-08.read.m29.f_0.25"
+    review_action: "REV-08"
+    subgroup: "snapshot_eval"
+    mode: "analysis"
+    dataset: "msmarco-docs-v1"
+    pair: "arctic_v2"
+    method: "E5"
+    direction: "seen+heldout"
+    variant: "f_0.25"
+    scheduler: "read"
+    map_seed: 29
+    traffic_seed: 101
+    parent_run_id: "E5-scale-read-m29-t101-019dd03645c4"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["f_0.25"]
+    expected_outputs:
+      - "per-query metrics"
+      - "ranking output"
+      - "coverage counts"
+  - cell_id: "REV-08.read.m43.bootstrap"
+    review_action: "REV-08"
+    subgroup: "snapshot_eval"
+    mode: "analysis"
+    dataset: "msmarco-docs-v1"
+    pair: "arctic_v2"
+    method: "E5"
+    direction: "seen+heldout"
+    variant: "bootstrap"
+    scheduler: "read"
+    map_seed: 43
+    traffic_seed: 101
+    parent_run_id: "E5-scale-read-m43-t101-98c382eb2ba7"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap"]
+    expected_outputs:
+      - "per-query metrics"
+      - "ranking output"
+      - "coverage counts"
+  - cell_id: "REV-08.read.m43.f_0.05"
+    review_action: "REV-08"
+    subgroup: "snapshot_eval"
+    mode: "analysis"
+    dataset: "msmarco-docs-v1"
+    pair: "arctic_v2"
+    method: "E5"
+    direction: "seen+heldout"
+    variant: "f_0.05"
+    scheduler: "read"
+    map_seed: 43
+    traffic_seed: 101
+    parent_run_id: "E5-scale-read-m43-t101-98c382eb2ba7"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["f_0.05"]
+    expected_outputs:
+      - "per-query metrics"
+      - "ranking output"
+      - "coverage counts"
+  - cell_id: "REV-08.read.m43.f_0.10"
+    review_action: "REV-08"
+    subgroup: "snapshot_eval"
+    mode: "analysis"
+    dataset: "msmarco-docs-v1"
+    pair: "arctic_v2"
+    method: "E5"
+    direction: "seen+heldout"
+    variant: "f_0.10"
+    scheduler: "read"
+    map_seed: 43
+    traffic_seed: 101
+    parent_run_id: "E5-scale-read-m43-t101-98c382eb2ba7"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["f_0.10"]
+    expected_outputs:
+      - "per-query metrics"
+      - "ranking output"
+      - "coverage counts"
+  - cell_id: "REV-08.read.m43.f_0.25"
+    review_action: "REV-08"
+    subgroup: "snapshot_eval"
+    mode: "analysis"
+    dataset: "msmarco-docs-v1"
+    pair: "arctic_v2"
+    method: "E5"
+    direction: "seen+heldout"
+    variant: "f_0.25"
+    scheduler: "read"
+    map_seed: 43
+    traffic_seed: 101
+    parent_run_id: "E5-scale-read-m43-t101-98c382eb2ba7"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["f_0.25"]
+    expected_outputs:
+      - "per-query metrics"
+      - "ranking output"
+      - "coverage counts"
+  - cell_id: "REV-08.greedy.m17.bootstrap"
+    review_action: "REV-08"
+    subgroup: "snapshot_eval"
+    mode: "analysis"
+    dataset: "msmarco-docs-v1"
+    pair: "arctic_v2"
+    method: "E5"
+    direction: "seen+heldout"
+    variant: "bootstrap"
+    scheduler: "greedy"
+    map_seed: 17
+    traffic_seed: 101
+    parent_run_id: "E5-scale-greedy-m17-t101-29c55cf5dc0c"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap"]
+    expected_outputs:
+      - "per-query metrics"
+      - "ranking output"
+      - "coverage counts"
+  - cell_id: "REV-08.greedy.m17.f_0.05"
+    review_action: "REV-08"
+    subgroup: "snapshot_eval"
+    mode: "analysis"
+    dataset: "msmarco-docs-v1"
+    pair: "arctic_v2"
+    method: "E5"
+    direction: "seen+heldout"
+    variant: "f_0.05"
+    scheduler: "greedy"
+    map_seed: 17
+    traffic_seed: 101
+    parent_run_id: "E5-scale-greedy-m17-t101-29c55cf5dc0c"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["f_0.05"]
+    expected_outputs:
+      - "per-query metrics"
+      - "ranking output"
+      - "coverage counts"
+  - cell_id: "REV-08.greedy.m17.f_0.10"
+    review_action: "REV-08"
+    subgroup: "snapshot_eval"
+    mode: "analysis"
+    dataset: "msmarco-docs-v1"
+    pair: "arctic_v2"
+    method: "E5"
+    direction: "seen+heldout"
+    variant: "f_0.10"
+    scheduler: "greedy"
+    map_seed: 17
+    traffic_seed: 101
+    parent_run_id: "E5-scale-greedy-m17-t101-29c55cf5dc0c"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["f_0.10"]
+    expected_outputs:
+      - "per-query metrics"
+      - "ranking output"
+      - "coverage counts"
+  - cell_id: "REV-08.greedy.m17.f_0.25"
+    review_action: "REV-08"
+    subgroup: "snapshot_eval"
+    mode: "analysis"
+    dataset: "msmarco-docs-v1"
+    pair: "arctic_v2"
+    method: "E5"
+    direction: "seen+heldout"
+    variant: "f_0.25"
+    scheduler: "greedy"
+    map_seed: 17
+    traffic_seed: 101
+    parent_run_id: "E5-scale-greedy-m17-t101-29c55cf5dc0c"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["f_0.25"]
+    expected_outputs:
+      - "per-query metrics"
+      - "ranking output"
+      - "coverage counts"
+  - cell_id: "REV-08.greedy.m29.bootstrap"
+    review_action: "REV-08"
+    subgroup: "snapshot_eval"
+    mode: "analysis"
+    dataset: "msmarco-docs-v1"
+    pair: "arctic_v2"
+    method: "E5"
+    direction: "seen+heldout"
+    variant: "bootstrap"
+    scheduler: "greedy"
+    map_seed: 29
+    traffic_seed: 101
+    parent_run_id: "E5-scale-greedy-m29-t101-87682640c62c"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap"]
+    expected_outputs:
+      - "per-query metrics"
+      - "ranking output"
+      - "coverage counts"
+  - cell_id: "REV-08.greedy.m29.f_0.05"
+    review_action: "REV-08"
+    subgroup: "snapshot_eval"
+    mode: "analysis"
+    dataset: "msmarco-docs-v1"
+    pair: "arctic_v2"
+    method: "E5"
+    direction: "seen+heldout"
+    variant: "f_0.05"
+    scheduler: "greedy"
+    map_seed: 29
+    traffic_seed: 101
+    parent_run_id: "E5-scale-greedy-m29-t101-87682640c62c"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["f_0.05"]
+    expected_outputs:
+      - "per-query metrics"
+      - "ranking output"
+      - "coverage counts"
+  - cell_id: "REV-08.greedy.m29.f_0.10"
+    review_action: "REV-08"
+    subgroup: "snapshot_eval"
+    mode: "analysis"
+    dataset: "msmarco-docs-v1"
+    pair: "arctic_v2"
+    method: "E5"
+    direction: "seen+heldout"
+    variant: "f_0.10"
+    scheduler: "greedy"
+    map_seed: 29
+    traffic_seed: 101
+    parent_run_id: "E5-scale-greedy-m29-t101-87682640c62c"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["f_0.10"]
+    expected_outputs:
+      - "per-query metrics"
+      - "ranking output"
+      - "coverage counts"
+  - cell_id: "REV-08.greedy.m29.f_0.25"
+    review_action: "REV-08"
+    subgroup: "snapshot_eval"
+    mode: "analysis"
+    dataset: "msmarco-docs-v1"
+    pair: "arctic_v2"
+    method: "E5"
+    direction: "seen+heldout"
+    variant: "f_0.25"
+    scheduler: "greedy"
+    map_seed: 29
+    traffic_seed: 101
+    parent_run_id: "E5-scale-greedy-m29-t101-87682640c62c"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["f_0.25"]
+    expected_outputs:
+      - "per-query metrics"
+      - "ranking output"
+      - "coverage counts"
+  - cell_id: "REV-08.greedy.m43.bootstrap"
+    review_action: "REV-08"
+    subgroup: "snapshot_eval"
+    mode: "analysis"
+    dataset: "msmarco-docs-v1"
+    pair: "arctic_v2"
+    method: "E5"
+    direction: "seen+heldout"
+    variant: "bootstrap"
+    scheduler: "greedy"
+    map_seed: 43
+    traffic_seed: 101
+    parent_run_id: "E5-scale-greedy-m43-t101-b57b9d5f86c1"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["bootstrap"]
+    expected_outputs:
+      - "per-query metrics"
+      - "ranking output"
+      - "coverage counts"
+  - cell_id: "REV-08.greedy.m43.f_0.05"
+    review_action: "REV-08"
+    subgroup: "snapshot_eval"
+    mode: "analysis"
+    dataset: "msmarco-docs-v1"
+    pair: "arctic_v2"
+    method: "E5"
+    direction: "seen+heldout"
+    variant: "f_0.05"
+    scheduler: "greedy"
+    map_seed: 43
+    traffic_seed: 101
+    parent_run_id: "E5-scale-greedy-m43-t101-b57b9d5f86c1"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["f_0.05"]
+    expected_outputs:
+      - "per-query metrics"
+      - "ranking output"
+      - "coverage counts"
+  - cell_id: "REV-08.greedy.m43.f_0.10"
+    review_action: "REV-08"
+    subgroup: "snapshot_eval"
+    mode: "analysis"
+    dataset: "msmarco-docs-v1"
+    pair: "arctic_v2"
+    method: "E5"
+    direction: "seen+heldout"
+    variant: "f_0.10"
+    scheduler: "greedy"
+    map_seed: 43
+    traffic_seed: 101
+    parent_run_id: "E5-scale-greedy-m43-t101-b57b9d5f86c1"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["f_0.10"]
+    expected_outputs:
+      - "per-query metrics"
+      - "ranking output"
+      - "coverage counts"
+  - cell_id: "REV-08.greedy.m43.f_0.25"
+    review_action: "REV-08"
+    subgroup: "snapshot_eval"
+    mode: "analysis"
+    dataset: "msmarco-docs-v1"
+    pair: "arctic_v2"
+    method: "E5"
+    direction: "seen+heldout"
+    variant: "f_0.25"
+    scheduler: "greedy"
+    map_seed: 43
+    traffic_seed: 101
+    parent_run_id: "E5-scale-greedy-m43-t101-b57b9d5f86c1"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["f_0.25"]
+    expected_outputs:
+      - "per-query metrics"
+      - "ranking output"
+      - "coverage counts"
+  - cell_id: "REV-08.heldout-contrasts"
+    review_action: "REV-08"
+    subgroup: "heldout_contrasts"
+    mode: "analysis"
+    dataset: "msmarco-docs-v1"
+    pair: "arctic_v2"
+    method: "read-random/read-degree"
+    direction: "paired_query"
+    variant: "heldout"
+    scheduler: "read"
+    map_seed: 17
+    traffic_seed: 101
+    parent_run_id: "REV-08.snapshot_eval.*"
+    reuse: true
+    gate: "COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["0.10", "0.25"]
+    expected_outputs:
+      - "paired contrasts"
+      - "bootstrap/Holm table"
+      - "coverage summary"
+  - cell_id: "REV-09.aol-click-proxy"
+    review_action: "REV-09"
+    subgroup: "aol_proxy"
+    mode: "analysis"
+    dataset: "aol-ia"
+    pair: "minilm_mpnet"
+    method: "click_proxy"
+    direction: "temporal_posthoc"
+    variant: "random/read/degree/greedy"
+    scheduler: "mixed"
+    map_seed: 17
+    traffic_seed: 101
+    parent_run_id: "E6 accepted rankings"
+    reuse: true
+    gate: "SIGNAL_JOINED + COMPUTE_DONE + SYNC_VERIFIED"
+    status: "completed"
+    budget_checkpoints: ["weeks 1-8"]
+    expected_outputs:
+      - "proxy metrics"
+      - "coverage funnel"
+      - "user-block bootstrap"

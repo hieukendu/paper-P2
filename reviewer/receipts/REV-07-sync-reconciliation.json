@@ -1,0 +1,29 @@
+{
+  "manifest_sha256": "31d6a27eda7d71556619f58151666fa396dbf4dd77a4601fd093c3df7a795ac3",
+  "marker_path": "runs/REV-07-bge-fiqa-op-read-m17-t101/c78ada8464624d2aa79875e042ff01bc4a9ad2e0d7d7d45d69d49645ed66a778/COMPLETED.json",
+  "marker_repo": "deadgod3005/mixindex-runs-002",
+  "marker_revision": "cf7580f234c61379b189873f28a0c6b0df20448c",
+  "parts": [
+    {
+      "files": 3,
+      "prefix": "runs/REV-07-bge-fiqa-op-read-m17-t101/c78ada8464624d2aa79875e042ff01bc4a9ad2e0d7d7d45d69d49645ed66a778",
+      "repo_id": "deadgod3005/mixindex-runs-002",
+      "revision": "8b666282857e322d460d4369215577d1a138d2cb"
+    },
+    {
+      "files": 121,
+      "prefix": "runs/REV-07-bge-fiqa-op-read-m17-t101/c78ada8464624d2aa79875e042ff01bc4a9ad2e0d7d7d45d69d49645ed66a778",
+      "repo_id": "deadgod3005/mixindex-runs-003",
+      "revision": "21665f5b4acfd3ea5387fbe39df6572dc7f1ae24"
+    }
+  ],
+  "payload_id": "c78ada8464624d2aa79875e042ff01bc4a9ad2e0d7d7d45d69d49645ed66a778",
+  "representative_restore_load": {
+    "bytes": 3145904,
+    "path": "checkpoints/accessed-000002020/M0.safetensors",
+    "sha256": "91869df686e037f4c6da8424d4dff2e0c4ea114c6214b9770776b5ae3ae6304b",
+    "tensors": ["weight"]
+  },
+  "status": "VERIFIED",
+  "verified_files": 124
+}

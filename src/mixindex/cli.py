@@ -52,6 +52,10 @@ def main(argv=None):
     plan.add_argument("--experiment", choices=["E2", "E3", "E4", "E5", "E6", "E7"], required=True)
     plan.add_argument("--config", default="configs/experiments/e2.yaml")
     plan.add_argument("--output", type=Path, default=Path("configs/jobs.yaml"))
+    reviewer = commands.add_parser("reviewer", help="Validate or plan the frozen reviewer supplemental matrix")
+    reviewer.add_argument("action", choices=["validate", "plan", "aggregate"])
+    reviewer.add_argument("--protocol", type=Path, default=Path("configs/reviewer_v1.yaml"))
+    reviewer.add_argument("--output", type=Path, default=Path("configs/reviewer_jobs.yaml"))
     enqueue = commands.add_parser("enqueue", help="Add explicit immutable jobs without executing dependencies")
     enqueue.add_argument("--jobs", type=Path, required=True)
     queue = commands.add_parser("queue", help="Run ready subprocess workers within measured resource limits")
@@ -62,8 +66,22 @@ def main(argv=None):
     worker.add_argument("--task-file", type=Path, required=True)
     args = parser.parse_args(argv)
     root = project_root(args.root)
-    cfg = load_config(getattr(args, "config", None), root=root)
+    cfg = None if args.command == "reviewer" else load_config(getattr(args, "config", None), root=root)
     try:
+        if args.command == "reviewer":
+            from .reviewer_plan import load_protocol, validate_protocol, write_jobs
+            protocol = (args.protocol if args.protocol.is_absolute() else root / args.protocol).resolve()
+            if args.action == "validate":
+                result = validate_protocol(load_protocol(protocol))
+            elif args.action == "plan":
+                output = args.output if args.output.is_absolute() else root / args.output
+                result = write_jobs(protocol, output.resolve())
+            else:
+                from .reviewer_aggregate import run as aggregate_reviewer
+                output = args.output if args.output.is_absolute() else root / args.output
+                result = aggregate_reviewer(root, output.resolve())
+            print(json.dumps(result, indent=2, sort_keys=True))
+            return 0
         if args.command == "_worker":
             from .queue import run_single
             task = read_json(args.task_file)

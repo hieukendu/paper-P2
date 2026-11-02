@@ -12,7 +12,7 @@ dependencies = [
   "transformers==4.51.3", "sentence-transformers==4.1.0",
   "huggingface-hub==0.34.4", "safetensors==0.5.3", "einops==0.8.1",
   "scikit-learn==1.6.1", "pyarrow==20.0.0", "PyYAML==6.0.2",
-  "python-dotenv==1.1.0", "psutil==7.0.0", "nvidia-ml-py==12.575.51",
+  "python-dotenv==1.1.0", "psutil==7.0.0", "lz4==4.4.4", "nvidia-ml-py==12.575.51",
   "hnswlib @ git+https://github.com/nmslib/hnswlib.git@d9b3608c83d83b46c96e25088cb1d729b29dcfe9",
   "pytrec-eval-terrier==0.5.7",
 ]
