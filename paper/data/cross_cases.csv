@@ -1,4 +1,4 @@
-dataset,pair,map,policy,ndcg,arr,qrel_coverage,schedule_groups
+dataset,pair,map,policy,ndcg,overlap10,qrel_coverage,schedule_groups
 fiqa,minilm_mpnet,OP,Greedy,0.2862996637372217,0.3938271604938272,1.0,4400
 fiqa,minilm_mpnet,MLP,Greedy,0.2833805262087632,0.3878086419753086,1.0,4400
 fiqa,minilm_mpnet,MLP,Random,0.28052413286240674,0.38518518518518524,1.0,4400

@@ -129,7 +129,6 @@ def _live_encode(model_path: Path, texts: list[str], rows: np.ndarray, batch_siz
         encode_once(selected[: min(batch_size, len(selected))])
     records = [encode_once(selected) for _ in range(3)]
     model.to("cpu")
-    del model, tokenizer
     if torch.cuda.is_available():
         torch.cuda.empty_cache()
     return records

@@ -26,7 +26,7 @@ def grouped(ax,data,category,x,y):
 
 d=pd.read_csv(DATA/'mapping_curves.csv')
 fig,axs=plt.subplots(1,2,figsize=(4.8,2.25))
-for ax,key,ylabel in zip(axs,['ndcg','arr'],['nDCG@10','Agreement@10']):
+for ax,key,ylabel in zip(axs,['ndcg','overlap10'],['nDCG@10','Overlap@10']):
     grouped(ax,d,'map','fraction',key)
     ax.set(xlabel='Target-vector access fraction',ylabel=ylabel,xlim=(0,1))
     ax.set_xticks([0,.25,.5,.75,1])
@@ -42,19 +42,19 @@ fig.savefig(OUT/'mapping_curves.pdf');plt.close(fig)
 d=pd.read_csv(DATA/'fiqa_policies.csv')
 fig,ax=plt.subplots(figsize=(4.8,1.95))
 for _,r in d.iterrows():
-    ax.plot(r['arr'],r['ndcg'],'o',color=COLORS[r['policy']],markersize=5)
+    ax.plot(r['overlap10'],r['ndcg'],'o',color=COLORS[r['policy']],markersize=5)
     offsets={'Random':(-7,8),'Degree':(6,1),'Read':(-12,8),'Greedy':(-8,-13)}
-    ax.annotate(r['policy'],(r['arr'],r['ndcg']),xytext=offsets[r['policy']],textcoords='offset points',fontsize=8)
-ax.set(xlabel='Agreement@10 with exact target',ylabel='Judged nDCG@10',xlim=(.38,.425),ylim=(.222,.294))
+    ax.annotate(r['policy'],(r['overlap10'],r['ndcg']),xytext=offsets[r['policy']],textcoords='offset points',fontsize=8)
+ax.set(xlabel='Overlap@10 with exact target',ylabel='Judged nDCG@10',xlim=(.38,.425),ylim=(.222,.294))
 ax.grid(alpha=.18);fig.tight_layout(pad=.6);fig.savefig(OUT/'policy_tradeoff.pdf');plt.close(fig)
 
 d=pd.read_csv(DATA/'msmarco_curves.csv');t=pd.read_csv(DATA/'aol_curves.csv')
 fig,axs=plt.subplots(1,2,figsize=(4.8,2.25))
-grouped(axs[0],d,'policy','fraction','arr')
-grouped(axs[1],t,'policy','week','arr')
-axs[0].set(xlabel='Target-vector access fraction',ylabel='Agreement@10',title='MS MARCO 50k: known queries',xlim=(0,1))
+grouped(axs[0],d,'policy','fraction','overlap10')
+grouped(axs[1],t,'policy','week','overlap10')
+axs[0].set(xlabel='Target-vector access fraction',ylabel='Overlap@10',title='MS MARCO 50k: known queries',xlim=(0,1))
 axs[0].set_xticks([0,.25,.5,.75,1])
-axs[1].set(xlabel='Evaluation week',ylabel='Log-row-weighted agreement@10',title='AOL 50k: subsequent weeks')
+axs[1].set(xlabel='Evaluation week',ylabel='Log-row-weighted Overlap@10',title='AOL 50k: subsequent weeks')
 axs[1].set_xticks([2,4,6,8])
 handles,labels=axs[0].get_legend_handles_labels()
 fig.legend(handles,labels,loc='lower center',ncol=4,frameon=False,bbox_to_anchor=(.5,-.01))

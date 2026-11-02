@@ -9,7 +9,6 @@ from pathlib import Path
 
 import numpy as np
 
-from .config import load_config
 from .encoders import model_specs
 from .io import file_digest, read_json
 from .nomic_adapter import NomicEncoderAdapter
@@ -72,7 +71,6 @@ def _encode_nomic(record: dict, texts: list[str], prefix: str, batch_size: int) 
 
 def encode_pair(root: Path, pair: str, role: str, output: Path, batch_size: int = 8) -> dict:
     root = Path(root)
-    cfg = load_config(Path("configs/base.yaml"), root=root)
     specs = model_specs(pair, root)
     record = _record_for(specs[role], root)
     docs_path = root / "runs/reviewer_inputs/fiqa_text/documents.jsonl"

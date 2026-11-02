@@ -9,7 +9,6 @@ calibration intervention changes between cells.
 from __future__ import annotations
 
 import argparse
-from copy import deepcopy
 from dataclasses import asdict
 import gzip
 import json
@@ -255,7 +254,9 @@ def run_cell(cfg_path: Path, root: Path, variant: str, map_seed: int, traffic_se
     base_pools = sample_document_pools(doc_ids, cfg)
     roles_for_accessor = {"train": base_pools["train"], "validation": base_pools["validation"],
                            "backfill": np.arange(len(doc_ids), dtype=np.int64)}
-    source = lambda rows: np.asarray(new[np.asarray(rows, dtype=np.int64)], dtype=np.float32)
+    def source(rows):
+        return np.asarray(new[np.asarray(rows, dtype=np.int64)], dtype=np.float32)
+
     accessor = PaidEmbeddingAccessor(source, roles_for_accessor, len(doc_ids), mode="cached_access")
     # Regional assignments depend only on the frozen old-vector snapshot and
     # map seed.  Reuse the immutable parent partition for the seed17 smoke and
@@ -306,7 +307,7 @@ def run_cell(cfg_path: Path, root: Path, variant: str, map_seed: int, traffic_se
                "map_seed": map_seed, "traffic_seed": traffic_seed, "analysis_only": False,
                "new_migration": True, "performance_claim": False,
                "hardware_scope": "NVIDIA H100 80GB HBM3 MIG 2g.20gb"}
-    records, retrieval = [], []
+    records = []
     try:
         target_index = ExactIndex(np.asarray(new), doc_ids, np.ones(len(doc_ids), dtype=bool), chunk_rows=cfg["search"]["chunk_rows"])
         old_index = ExactIndex(np.asarray(old), doc_ids, np.ones(len(doc_ids), dtype=bool), chunk_rows=cfg["search"]["chunk_rows"])
@@ -368,8 +369,8 @@ def run_cell(cfg_path: Path, root: Path, variant: str, map_seed: int, traffic_se
             for target in sorted(set(targets)):
                 if target <= len(accessor.paid):
                     continue
-                result = run_migration(state, [target], traffic=traffic,
-                                       scheduling_refresh=(cached_scheduling_refresh if traffic is not None else None))
+                run_migration(state, [target], traffic=traffic,
+                              scheduling_refresh=(cached_scheduling_refresh if traffic is not None else None))
                 label = f"accessed-{len(accessor.paid):09d}"
                 current = state.index.search(eval_new, k=10)
                 rows, rankings = _rows_for_result(eval_ids, current, doc_ids, labels, full_rankings)

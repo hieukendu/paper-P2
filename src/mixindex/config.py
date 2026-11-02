@@ -90,6 +90,11 @@ def validate_config(cfg) -> None:
     require(cfg["experiment"]["map_seed"] in cfg["evaluation"]["map_seeds"], "Undeclared map seed")
     require(cfg["experiment"]["traffic_seed"] in cfg["evaluation"]["traffic_seeds"], "Undeclared traffic seed")
     require(isinstance(cfg["sync"]["private"], bool), "sync.private must be a boolean")
+    require(cfg["reviewer"]["study_id"] == "reviewer_v1", "Reviewer study must be reviewer_v1")
+    require(cfg["reviewer"]["radius_multiplier"] > 0, "Reviewer radius multiplier must be positive")
+    require(isinstance(cfg["reviewer"]["safety"], bool), "Reviewer safety must be a boolean")
+    require(0 < cfg["reviewer"]["rbo_p"] < 1, "Reviewer RBO p must be between zero and one")
+    require(cfg["reviewer"]["bootstrap_draws"] >= 1000, "Reviewer bootstrap count is too small")
     require(0 < cfg["calibration"]["quantile"] <= 1, "Invalid residual quantile")
     for name in ("batch_fraction", "refit_fraction"):
         require(0 < cfg["scheduler"][name] <= 1, f"Invalid {name}")
