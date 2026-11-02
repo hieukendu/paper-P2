@@ -1,8 +1,8 @@
 # M17 — Kế hoạch thí nghiệm bổ sung theo reviewer
 
-Ngày lập: **31/10/2026, Asia/Saigon**. Trạng thái hiện tại: **EXPERIMENTS + HF VERIFIED; REV-01–REV-09 complete, REV.10 manuscript-only rows và Git handoff còn mở**. Đây là phần bổ sung của [plan.md](plan.md), không thay thế các kết quả E0–E7 đã có. Checklist duy nhất vẫn là [checklist.md ở gốc](../checklist.md).
+Ngày lập: **31/10/2026, Asia/Saigon**. Trạng thái hiện tại: **EXPERIMENTS + HF VERIFIED + MANUSCRIPT/RESULT EXPORT COMPLETE; REV-01–REV-09 và REV.10 đã đóng, Git handoff đã có**. Đây là phần bổ sung của [plan.md](plan.md), không thay thế các kết quả E0–E7 đã có. Checklist duy nhất vẫn là [checklist.md ở gốc](../checklist.md).
 
-**Kết quả rà soát tiếp:** đã đối chiếu từng dòng PDF với kế hoạch: **9/9 nhóm thí nghiệm/đo bổ sung, 11/11 mục wording và 7/7 Questions for Authors đều có nơi xử lý**; xem bảng đầy đủ ở [mục 10](#10-đối-chiếu-đầy-đủ-với-pdf-reviewer). Bốn mục NO ACTION được giữ, mở rộng corpus là mục EXCLUDED duy nhất. Đây là xác nhận **đủ kế hoạch**, chưa phải đủ kết quả. Lần rà soát này đọc lại toàn bộ PDF và source local; không coi các kiểm tra HF mẫu đã ghi ở mục 2 là restore toàn bộ artifacts.
+**Kết quả rà soát cuối:** đã đối chiếu từng dòng PDF với artifact và manuscript: **9/9 nhóm thí nghiệm/đo bổ sung, 11/11 mục wording và 7/7 Questions for Authors đều có evidence hoặc disposition**; xem bảng đầy đủ ở [mục 10](#10-đối-chiếu-đầy-đủ-với-pdf-reviewer). Bốn mục NO ACTION được giữ, mở rộng corpus là mục EXCLUDED duy nhất. Protocol có `165/165` cells completed, catalog có `104/104` markers verified, và phần main/supplemental results đã xuất trong `result/`.
 
 ## 1. Phạm vi và nguồn yêu cầu
 
@@ -130,7 +130,7 @@ Chọn **RBO thay Kendall tau** vì các top-k lists có thể không cùng tậ
 
 1. Post-hoc từ E2/E7 accepted `retrieval.trec.gz`: `Overlap@{1,3,10}` và RBO depth10 cho old/full-new/migration checkpoints. Đổi **display name** ARR thành **Overlap@10**; schema cũ `arr_at_10` được giữ như alias đọc lịch sử, không sửa immutable bundles.
 2. Để có `Overlap@20`, restore cùng index/calibration/epoch rồi search top20 và full-new exact top20. Kiểm top10 prefix vẫn khớp ranking cũ; nếu không khớp, dừng reuse và điều tra backend/config/graph. Không pad thêm 10 doc, không suy từ top10, không rebuild HNSW rồi gọi đó là graph cũ.
-3. E5 phải search lại snapshots trên **seen và held-out** queries, xuất per-query outputs mới; mean ARR cũ không đủ tính RBO hoặc paired CI. Query embedding chưa có thì encode query ở pinned revision; không re-embed documents nếu snapshot đủ.
+3. E5 phải search lại snapshots trên **seen và held-out** queries, xuất per-query outputs mới; mean Overlap@10 cũ không đủ tính RBO hoặc paired CI. Query embedding chưa có thì encode query ở pinned revision; không re-embed documents nếu snapshot đủ.
 4. E6 metric mới giữ record weights, weekly population và user blocks. Cấm gom query×seed×week thành iid samples. Kết quả post-hoc ghi exploratory và parent artifact refs.
 
 Test các lists identical/disjoint/reversed-same-set, top1 khác nhưng Overlap@10=1, unique doc IDs/tie-break, rank depth thiếu và query populations lệch. Một metric mới cũng là run có artifacts/sync riêng.
@@ -346,31 +346,31 @@ Quy trình này ưu tiên hơn các hướng dẫn cũ về tạo PR trong lúc 
 6. Cập nhật root checklist, results tables/response mapping và tài liệu phương pháp; kiểm no secrets/large caches trong diff. **Lúc này mới commit code/config/tests/docs/results summary**, trên chính branch đó. Source payload của commit phải khớp frozen tested source dùng trong runs; thay đổi khoa học sau run cần revision/rerun trước commit. Docs bàn giao cuối có thể thêm receipts/PR link mà không đổi scientific source.
 7. Push branch, **tạo đúng một PR** về main (hoặc cập nhật PR cùng branch đã có). PR nêu problem/change, validation, actual cell counts, negative/inconclusive findings, P2 pending, HF pinned links và source snapshot hashes. Không auto-merge. Nếu cần sửa review thì tiếp tục commit vào cùng branch và cập nhật cùng PR, sau khi checks/affected experiments xong.
 
-Vòng revise hiện đã **đóng experiments + HF verification + Git handoff**: protocol `reviewer_v1` có `165/165` cells completed; catalog audit pinned có `104/104` markers verified; REV-07 marker/parts đã reconcile; E5 degree-m29 đủ sáu graph checkpoints và representative load PASS; REV-04 E5 có `12/12` snapshot cells/`1,080,000` per-query rows; REV-08 có `960,000` held-out contrast rows trên map seeds `17/29/43`; aggregate v6 và Q1–Q7 status nằm trong [`reviewer/results/REV-11-final-audit.json`](../reviewer/results/REV-11-final-audit.json). Commit `cc19ba3` đã push trên branch `codex/reviewer-experiments`, PR duy nhất là [#5](https://github.com/hieukendu/paper-P2/pull/5). REV.10 còn 5 dòng manuscript-only cố ý để sau theo scope hiện tại.
+Vòng revise hiện đã **đóng experiments + HF verification + manuscript wording + result export + Git handoff**: protocol `reviewer_v1` có `165/165` cells completed; catalog audit pinned có `104/104` markers verified; REV-07 marker/parts đã reconcile; E5 degree-m29 đủ sáu graph checkpoints và representative load PASS; REV-04 E5 có `12/12` snapshot cells/`1,080,000` per-query rows; REV-08 có `960,000` held-out contrast rows trên map seeds `17/29/43`; aggregate v6 và Q1–Q7 status nằm trong [`reviewer/results/REV-11-final-audit.json`](../reviewer/results/REV-11-final-audit.json). Main E0–E7 và supplemental reviewer results nằm trong [`result/12_reviewer_supplemental.md`](../result/12_reviewer_supplemental.md) và [`result/12_reviewer_final_audit.json`](../result/12_reviewer_final_audit.json). Commit `cc19ba3`/`e02b480` đã push trên branch `codex/reviewer-experiments`, PR duy nhất là [#5](https://github.com/hieukendu/paper-P2/pull/5).
 
 ## 10. Đối chiếu đầy đủ với PDF reviewer
 
-Đối chiếu trên **PDF duy nhất, đủ 5 trang**, theo SHA256 ở mục 1. `CÓ PLAN` nghĩa là protocol/công việc và gate đã được viết; chưa chứng nhận đã implement, compute hoặc sync. P2 và các nhánh “nếu khả thi” vẫn nằm trong kế hoạch; chỉ được ghi thiếu điều kiện bằng evidence cụ thể. Gói minimum/strong response ở trang 4–5 là cách ưu tiên lại cùng các mục dưới, không phải thí nghiệm thứ mười.
+Đối chiếu trên **PDF duy nhất, đủ 5 trang**, theo SHA256 ở mục 1. Các dòng dưới đây là bảng mapping của kế hoạch ban đầu; trạng thái bàn giao hiện tại đã được đối chiếu với artifact/manuscript và được ghi là **DONE**, **NO ACTION** hoặc **EXCLUDED**. Gói minimum/strong response ở trang 4–5 là cách ưu tiên lại cùng các mục dưới, không phải thí nghiệm thứ mười.
 
 ### 10.1. Toàn bộ 9 yêu cầu chạy/đo — PDF mục 2
 
 | # | Yêu cầu PDF / trang / câu hỏi | Nơi xử lý | Kiểm đầy đủ trước khi đóng yêu cầu |
 |---|---|---|---|
-| 1 | Matched query-side/conversion baseline — tr.1, Q1 | REV-01; checklist `REV.01.*` | CÓ PLAN: 18 query-side/forward controls, cùng paid/train/val IDs; relevance + agreement + latency/cost/access; feasibility converter/QDC riêng |
-| 2 | Component ablation — tr.1, Q4 | REV-02; `REV.02.*` | CÓ PLAN: sáu variants tách learned global/regional/calibration, cùng paid union/random prefix; cả relevance/agreement, trọng tâm 10% |
-| 3 | Coverage-greedy sensitivity — tr.1–2, Q2 | REV-03; `REV.03.*` | CÓ PLAN: 0.5ρ/ρ/2ρ × safety on/off ×3 seeds; activity/fallback; tối đa một proxy có feasibility gate |
-| 4 | Rank-sensitive agreement — tr.2, Q5 | REV-04; `REV.04.*` | CÓ PLAN: RBO đáp ứng lựa chọn “RBO hoặc Kendall”; Overlap@1/@3/@20 ngoài @10; depth20 phải search thực, E5 có per-query outputs |
-| 5 | TREC-COVID multiple seeds — tr.2 | REV-05; `REV.05.*` | CÓ PLAN: OP/LA/MLP × random ×3 map/backfill tuples, mean/std/range và CI; không đếm fallback alias như policy mới |
-| 6 | Compute/storage overhead — tr.2, Q7 | REV-06; `REV.06.*` | CÓ PLAN: calibration/regional refit wall/batch, RAM/VRAM, artifact/storage bytes; đối chiếu live target encoding và migration/backfill, ba measured repeats |
-| 7 | Cross-transition generalization — tr.2 | REV-07; `REV.07.*` | CÓ PLAN: hai additional transition scopes trên cùng FiQA648/query split/checkpoints/metrics; smoke/forecast và evidence nếu thiếu resource |
-| 8 | MS MARCO/ORCAS unseen queries — tr.2 | REV-08; `REV.08.*` | CÓ PLAN: normalized-text-disjoint held-out, cùng 50k corpus; read vs random/degree trên cùng 12 trajectories, per-query agreement/CI và coverage |
-| 9 | AOL temporal relevance proxy — tr.2, Q6 | REV-09; `REV.09.*` | CÓ PLAN CÓ ĐIỀU KIỆN: audit clicks/joins/cutoffs; proxy có denominators/coverage/user blocks hoặc ghi thiếu signal, không suy user utility |
+| 1 | Matched query-side/conversion baseline — tr.1, Q1 | REV-01; checklist `REV.01.*` | **DONE**: 18 query-side/forward controls, cùng paid/train/val IDs; relevance + agreement + latency/cost/access; feasibility converter/QDC riêng |
+| 2 | Component ablation — tr.1, Q4 | REV-02; `REV.02.*` | **DONE**: sáu variants tách learned global/regional/calibration, cùng paid union/random prefix; cả relevance/agreement, trọng tâm 10% |
+| 3 | Coverage-greedy sensitivity — tr.1–2, Q2 | REV-03; `REV.03.*` | **DONE**: 0.5ρ/ρ/2ρ × safety on/off ×3 seeds; activity/fallback; proxy có feasibility gate |
+| 4 | Rank-sensitive agreement — tr.2, Q5 | REV-04; `REV.04.*` | **DONE**: RBO, Overlap@1/@3/@20 ngoài @10; depth20 search thực, E5 có per-query outputs |
+| 5 | TREC-COVID multiple seeds — tr.2 | REV-05; `REV.05.*` | **DONE**: OP/LA/MLP × random ×3 map/backfill tuples, mean/std/range và CI; fallback không đếm như policy mới |
+| 6 | Compute/storage overhead — tr.2, Q7 | REV-06; `REV.06.*` | **DONE**: calibration/regional refit wall/batch, RAM/VRAM, artifact/storage bytes; live target encoding và migration/backfill, ba measured repeats |
+| 7 | Cross-transition generalization — tr.2 | REV-07; `REV.07.*` | **DONE**: hai additional transition scopes trên cùng FiQA648/query split/checkpoints/metrics; smoke/forecast và resource evidence |
+| 8 | MS MARCO/ORCAS unseen queries — tr.2 | REV-08; `REV.08.*` | **DONE**: normalized-text-disjoint held-out, cùng 50k corpus; read vs random/degree trên cùng 12 trajectories, per-query agreement/CI và coverage |
+| 9 | AOL temporal relevance proxy — tr.2, Q6 | REV-09; `REV.09.*` | **DONE**: audit clicks/joins/cutoffs; proxy có denominators/coverage/user blocks và không suy user utility |
 
 Không ép metric relevance có nhãn vào ORCAS nếu chỉ có graph clicks; FiQA/TREC và REV-01–03/07 báo judged relevance cùng agreement, ORCAS giữ agreement, AOL chỉ có click-derived proxy khi đủ tín hiệu. Mọi bảng ghi rõ loại nhãn và population; không tạo thêm labels hoặc mở corpus để làm đầy bảng.
 
 ### 10.2. Toàn bộ 11 wording/clarification — PDF mục 3
 
-| # | Yêu cầu PDF / trang | Nơi xử lý trong REV-10 / checklist | Evidence/nội dung cần gắn vào manuscript khi thực thi |
+| # | Yêu cầu PDF / trang | Nơi xử lý trong REV-10 / checklist | Evidence/nội dung đã gắn vào manuscript |
 |---|---|---|---|
 | 1 | Rename ARR@10 — tr.2–3 | `REV.10.rename` | Overlap@10 xuyên suốt abstract/method/results/figures; legacy alias một lần |
 | 2 | Exact degree construction — tr.3, Q3 | `REV.10.degree` | Formal graph/node/edge source, distinct neighbors, duplicate/tie và recompute rule đúng code |
@@ -406,4 +406,4 @@ Không ép metric relevance có nhãn vào ORCAS nếu chỉ có graph clicks; F
 | Q6 — AOL relevance proxy | REV-09; `REV.09.feasibility`, `REV.09.compute`, `REV.09.sync`, `REV.10.aol`; blocked vẫn chưa compute |
 | Q7 — Compute/storage cost | REV-06; `REV.06.compute`, `REV.06.sync` |
 
-**Kết luận kiểm độ phủ:** không thiếu nhóm thí nghiệm nào trong PDF sau khi loại corpus expansion. Phần còn thiếu là implementation, official measurements, verified sync và final response/manuscript evidence. Khi aggregate phải đi lại bảng này theo artifacts thực, ghi `completed/reused/blocked/deferred/excluded/no-action` cho từng yêu cầu và link run/receipt; không dùng trạng thái PLAN_READY để tick kết quả.
+**Kết luận kiểm độ phủ:** không thiếu nhóm thí nghiệm nào trong PDF sau khi loại corpus expansion. Các implementation, official measurements, verified sync và final response/manuscript evidence đều đã được đối chiếu; checklist dùng trạng thái `completed/reused/excluded/no-action` và link run/receipt, không dùng PLAN_READY để tick kết quả.

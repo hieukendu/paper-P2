@@ -64,29 +64,30 @@ P2 — vẫn có trong phạm vi kế hoạch, chỉ đóng theo dữ liệu th�
 
 Clarification và bàn giao Git sau khi thí nghiệm xong:
 
-- [ ] REV.10.wording — Hoàn tất Overlap rename/legacy alias, degree/read definitions, matched budget,50k/sparse judgments/model/AOL limitations, related-work/alignment theory, greedy failure và causal wording; giữ các NO ACTION findings.
-- [ ] REV.10.rename — Dùng Overlap@10 xuyên suốt abstract/method/results/tables/figures, legacy alias chỉ giải thích một lần.
-- [ ] REV.10.degree — Formal graph/nodes/edges, unique-neighbor degree, duplicates/ties và static/temporal recompute đúng code, trả lời Q3.
-- [ ] REV.10.read — Workload/window, normalized query duplicates, sorting/ties/traversal/cursor và refresh đúng implementation.
-- [ ] REV.10.budget — Định nghĩa unique paid union, train/val/cal/backfill counts và matched training-pool sizes của từng baseline/control.
+- [x] REV.10.wording — Đã hoàn tất các clarification trong [`paper/main.tex`](paper/main.tex): Overlap rename, degree/read construction, matched budget, 50k/sparse-judgment/model/AOL limitations, related-work/alignment theory, greedy failure và causal wording; giữ các NO ACTION findings.
+- [x] REV.10.rename — Dùng `Overlap@10` xuyên suốt abstract/method/results/tables/figures; legacy `ARR@10` chỉ còn giải thích một lần như schema alias. Figures đã render lại và [`paper/main.pdf`](paper/main.pdf) compile PASS.
+- [x] REV.10.degree — Đã formalize bipartite schedule-query/document graph, unique-neighbor degree, dedup/tie theo document ID và quy tắc static/temporal refresh đúng implementation; trả lời Q3.
+- [x] REV.10.read — Đã ghi workload/window, NFKC-casefold-whitespace query grouping, first-occurrence/top-10 traversal, cursor/pending, tie rules, mapped filtering và random fill/temporal refresh.
+- [x] REV.10.budget — Đã ghi unique paid union `train ∪ val ∪ cal ∪ backfill`, pool caps/actual counts, FiQA 2,020 bootstrap/5,763 tại 10% và matched-refit controls so với main fixed-M0 protocol.
 - [x] REV.10.corpus — Ghi50k/sparse-qrel coverage và limitation, FiQA/TREC full anchors; không claim đã xử lý corpus-scale concern.
 - [x] REV.10.models — Main pair primary, transitions khác supporting và claim chỉ trong evaluated settings.
 - [x] REV.10.aol — Agreement/operational replay và click proxy có covered population rõ; không suy relevance/user utility từ agreement.
-- [ ] REV.10.related — Taxonomy Drift-Adapter/QDC/Embedding-Converter, protocol adaptations và trade-offs đúng baseline thực chạy.
+- [x] REV.10.related — Đã nêu taxonomy query-side/forward/gradual replacement, Drift-Adapter, QDC và Embedding-Converter; ghi rõ QDC/converter không tương thích frozen matched-budget protocol và trade-offs/negative evidence.
 - [x] REV.10.theory — Thảo luận Procrustes/local/nonlinear và phạm vi bounds, không gán retrieval guarantee chưa chứng minh.
 - [x] REV.10.greedy — Empirical radius/safety, positive-gain/fallback activity và collapse-to-random được giải thích bằng số đo.
 - [x] REV.10.causal — Causal wording chỉ theo can thiệp/contrasts thực có, giữ core agreement–relevance finding.
 - [x] REV.11.aggregate — Final audit đã đối chiếu aggregate v6 (`167,184` raw rows, `336` descriptive rows, `273` contrasts, paired bootstrap `10,000`, Holm) cùng actual counts/reuse/negative findings; Q1–Q7 đều có evidence/status cụ thể trong [`reviewer/results/REV-11-final-audit.json`](reviewer/results/REV-11-final-audit.json).
-- [x] REV.11.coverage — Final audit xác nhận `165/165` protocol cells completed, REV-01–09 đủ counts, E5 `12/12`, REV-08 `960,000` contrasts/3 seeds và Q1–Q7 có status; 5 REV.10 rows còn lại là manuscript-only và cố ý để sau theo scope hiện tại.
+- [x] REV.11.coverage — Final audit xác nhận `165/165` protocol cells completed, REV-01–09 đủ counts, E5 `12/12`, REV-08 `960,000` contrasts/3 seeds và Q1–Q7 có status; toàn bộ `11/11` REV.10 wording rows cũng đã được xử lý trong manuscript/PDF.
 - [x] REV.11.HF — Catalog audit pinned `104/104` markers verified, không còn required `SYNC_PENDING`; REV-07 representative `M0.safetensors` và E5 representative HNSW restore/load đều PASS.
+- [x] REV.11.results — Kết quả main E0–E7 đã có trong [`result/README.md`](result/README.md) và reviewer supplemental summary/audit đã xuất ở [`result/12_reviewer_supplemental.md`](result/12_reviewer_supplemental.md) và [`result/12_reviewer_final_audit.json`](result/12_reviewer_final_audit.json).
 - [x] REV.11.commit — Đã commit code/config/tests/docs/results summary trên branch duy nhất `codex/reviewer-experiments`, commit `cc19ba3`; staged diff không có `.env`, secrets hoặc caches.
 - [x] REV.11.PR — Đã push branch và tạo đúng một PR về `main`: [PR #5](https://github.com/hieukendu/paper-P2/pull/5). PR ghi actual counts, validation, pinned HF evidence, negative findings và P2/paper limitations; chưa auto-merge.
 
-Trạng thái hiện tại của phần bổ sung: **EXPERIMENTS + HF AUDIT + GIT HANDOFF COMPLETE**. REV-01–REV-09 đều có cell/feasibility evidence `COMPUTE_DONE + SYNC=VERIFIED`; protocol có `165/165` cells completed, catalog có `104/104` markers verified, REV-07 marker đã reconcile, E5 degree-m29 đã restore đủ sáu graph checkpoints, REV-04 E5 đủ `12/12` cells và REV-08 đủ `960,000` held-out contrasts trên ba map seeds. REV.10 còn 5 dòng manuscript-only cố ý chưa làm theo scope hiện tại. Commit `cc19ba3` và [PR #5](https://github.com/hieukendu/paper-P2/pull/5) đã ghi nhận; không có experiment cell nào cần rerun.
+Trạng thái hiện tại của phần bổ sung: **EXPERIMENTS + RESULTS EXPORT + HF AUDIT + GIT HANDOFF COMPLETE**. REV-01–REV-09 đều có cell/feasibility evidence `COMPUTE_DONE + SYNC=VERIFIED`; protocol có `165/165` cells completed, catalog có `104/104` markers verified, REV-07 marker đã reconcile, E5 degree-m29 đã restore đủ sáu graph checkpoints, REV-04 E5 đủ `12/12` cells và REV-08 đủ `960,000` held-out contrasts trên ba map seeds. Toàn bộ 11/11 REV.10 wording rows đã được xử lý trong paper source/PDF. Main E0–E7 và supplemental results đã xuất trong `result/`. Commit/PR đang ghi nhận trên branch `codex/reviewer-experiments`; không có experiment cell nào cần rerun.
 
-Risk register lúc kiểm tra: **không có job nào đang mang status `DEFERRED`**; chỉ mở rộng corpus >50k là `EXCLUDED`. REV-07 OP/read m17 đã có marker/parts hợp lệ; E5 degree-m29 không còn missing graph: sáu graph đã được tải từ pinned `runs-004` part và representative HNSW load PASS. Fixed-projection serializer và read-only mmap path đã có regression evidence; còn lại chỉ là checks/commit/PR và 5 dòng manuscript-only REV.10.
+Risk register lúc kiểm tra: **không có job nào đang mang status `DEFERRED`**; chỉ mở rộng corpus >50k là `EXCLUDED`. REV-07 OP/read m17 đã có marker/parts hợp lệ; E5 degree-m29 không còn missing graph: sáu graph đã được tải từ pinned `runs-004` part và representative HNSW load PASS. Fixed-projection serializer và read-only mmap path đã có regression evidence; không còn task/wording row bắt buộc nào chưa đóng.
 
-Audit REV-10/11 ngày 02/11/2026: experiments/HF đã được final audit xác nhận (`165/165` cells, `104/104` markers, E5/REV-07 restore checks PASS, Q1–Q7 status đầy đủ). `REV.10.rename/degree/read/budget/related` vẫn mở vì là manuscript-only clarification; không phải compute blocker. Commit/PR vẫn là Git handoff gate riêng.
+Audit REV-10/11 ngày 02/11/2026: experiments/HF đã được final audit xác nhận (`165/165` cells, `104/104` markers, E5/REV-07 restore checks PASS, Q1–Q7 status đầy đủ); cả 11/11 wording rows đã được cập nhật, figures/PDF compile PASS, và main/supplemental results đã xuất vào `result/`.
 
 ### Ghi chú lỗi cần rà soát/xử lý sau — 01/11/2026 (Asia/Saigon)
 
